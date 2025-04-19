@@ -1,0 +1,29 @@
+package com.proj.calendar.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.session.SqlSession;
+import org.springframework.stereotype.Repository;
+
+import com.proj.calendar.vo.CalendarGoVO;
+
+import lombok.RequiredArgsConstructor;
+
+@Repository
+@RequiredArgsConstructor
+public class CalendarGoDAO {
+
+    private final SqlSession sqlSession;
+
+    private static final String NAMESPACE = "com.proj.calendar.mapper.CalendarGoMapper";
+
+    public List<CalendarGoVO> selectCalendarGoList(CalendarGoVO vo) {
+        return sqlSession.selectList(NAMESPACE + ".selectCalendarGoList", vo);
+    }
+
+    public int insertCalendar(CalendarGoVO vo) {
+        return sqlSession.insert(NAMESPACE + ".insertCalendar", vo);
+    }
+
+    // 필요에 따라 update, delete 등 추가
+}

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.ci.ciMgt.mapper.CollectMgtMapper">
+<!--    <select id="selectAll" resultType="kr.go.culture.xr.ci.com.entity.Common">-->
+<!--        SELECT ERR_ID-->
+<!--             , ERR_CLSF_NM-->
+<!--             , ERR_CODE-->
+<!--             , ERR_CN-->
+<!--        FROM TX_ERR_CD-->
+<!--    </select>-->
+
+    <select id="selectDagExecHistory" parameterType="kr.go.culture.xr.admin.collectMgt.vo.FrmCollectSrchVO" resultType="kr.go.culture.xr.ci.ciMgt.entity.DagExecHistory" >
+        SELECT
+              A.*
+            , #{recordCountPerPage}	AS RECORD_COUNT_PER_PAGE
+            , #{pagePerBlock}			AS PAGE_PER_BLOCK
+            , #{currentPage}			AS CURRENT_PAGE
+            , #{calculPage}			AS CALCUL_PAGE
+            , #{totalRecord}			AS TOTAL_RECORD
+            , #{totalPage}				AS TOTAL_PAGE
+        FROM (
+        SELECT
+              row_number() over (order by T01.DAG_ID ASC) AS ROW_NUMBER
+            , T01.DAG_ID
+            , T01.JOB_ID
+            , T01.INST_NM
+            , T02.GRP_ID
+            , T01.CLCT_STTS_NM
+            , T01.JOB_BGNG_DT
+            , T01.JOB_END_DT
+         FROM TX_CLCT_JOB_HSTRY T01
+        LEFT OUTER JOIN TX_MNGR_GROUP_INFO T02 ON T01.INST_NM = T02.GRP_NM
+        WHERE 1=1
+            <if test="dagId != null and dagId != ''">
+            AND T01.DAG_ID = #{dagId}
+            </if>
+        <if test="instId != null and instId != ''">AND T02.GRP_ID = #{instId}
+            </if>
+        ) A
+        OFFSET #{calculPage} ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+    </select>
+
+    <select id="selectDagExecHistoryCnt" parameterType="kr.go.culture.xr.admin.collectMgt.vo.FrmCollectSrchVO" resultType="java.lang.Integer">
+        SELECT
+            COUNT(1) AS CNT
+        FROM (
+        SELECT
+          T01.DAG_ID
+        , T01.JOB_ID
+        , T01.INST_NM
+        , T02.GRP_ID
+        , T01.CLCT_STTS_NM
+        , T01.JOB_BGNG_DT
+        , T01.JOB_END_DT
+        FROM TX_CLCT_JOB_HSTRY T01
+        LEFT OUTER JOIN TX_MNGR_GROUP_INFO T02 ON T01.INST_NM = T02.GRP_NM
+        WHERE 1=1
+        <if test="dagId != null and dagId != ''">
+            AND T01.DAG_ID = #{dagId}
+        </if>
+        <if test="instId != null and instId != ''">AND T02.GRP_ID = #{instId}
+        </if>
+        ) A
+
+    </select>
+</mapper>

@@ -1,0 +1,9 @@
+package com.proj.calendar.service;
+
+import java.util.List;
+
+import com.proj.calendar.vo.CalendarGoVO;
+
+public interface CalendarGoService {
+	public List<CalendarGoVO> selectCalendarGoList(CalendarGoVO calendarGoVO);
+}

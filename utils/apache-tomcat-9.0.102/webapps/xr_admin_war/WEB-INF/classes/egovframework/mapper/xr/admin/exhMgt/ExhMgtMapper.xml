@@ -1,0 +1,769 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper">
+
+	<!-- 포털 전시관리 목록 목록보기 -->
+	<select id="selectPrtlDispInfoList" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO" resultType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPrtlDispInfoList */
+			   XTPDI.DISP_LIST_NO AS DISP_LIST_NO
+			 , XTPDI.DISP_ID
+			 , XTPDI.DISP_TYPE_CD
+			 , XTPDI.DISP_NM
+			 , XTPDI.EXBI_BGNG_YMD AS EXBI_BGNG_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+			 		<property name="paramSeparator" value="'-'"/>
+			 		<property name="paramYmd" value="XTPDI.EXBI_BGNG_YMD"/>
+				</include>) AS EXBI_BGNG_YMD_V10
+			 , XTPDI.EXBI_END_YMD AS EXBI_END_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+			 		<property name="paramSeparator" value="'-'"/>
+			 		<property name="paramYmd" value="XTPDI.EXBI_END_YMD"/>
+				</include>) AS EXBI_END_YMD_V10
+			 , XTPDI.RPRS_IMG_GROUP_ID AS RPRS_IMG_GROUP_ID
+			 , XTPDI.EXBI_EXPLN_CN AS EXBI_EXPLN_CN
+			 , XTPDI.USE_YN
+			 , (CASE WHEN XTPDI.USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS USE_YN_NM
+			 , (SELECT COUNT(TPDLI.DSPY_ITEM_ID)
+				  FROM TX_PRTL_DSPY_LIST_INFO TPDLI
+		<if test="paramSrchDispTypeCd != null and paramSrchDispTypeCd != ''">
+			<if test="paramSrchDispTypeCd == 'PTDPTY0001'">
+				 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO TDCMI
+					ON (TPDLI.DSPY_ITEM_ID = TDCMI.CLRCS_ID)
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0002'">
+				 INNER JOIN TX_EXBI_INFO TEI 
+					ON (TPDLI.DSPY_ITEM_ID = TEI.EXBI_ID)
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0003'">
+				 INNER JOIN TX_INST_INFO TII 
+					ON (	TPDLI.DSPY_ITEM_ID = TII.INST_ID
+						AND TII.DEL_YN = 'N')
+			</if>
+		</if>
+				 WHERE TPDLI.DSPY_ID = XTPDI.DISP_ID) AS DISP_LIST_CNT
+			 , XTPDI.FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XTPDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XTPDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTPDI.FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XTPDI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTPDI.LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XTPDI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XTPDI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTPDI.LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XTPDI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TPDI.DSPY_ID ASC) AS DISP_LIST_NO
+					 , TPDI.DSPY_ID AS DISP_ID
+					 , TPDI.DSPY_TYPE_CD AS DISP_TYPE_CD
+					 , TPDI.DSPY_NM AS DISP_NM
+					 , TPDI.EXBI_BGNG_YMD AS EXBI_BGNG_YMD
+					 , TPDI.EXBI_END_YMD AS EXBI_END_YMD
+					 , TPDI.RPRS_IMG_GROUP_ID AS RPRS_IMG_GROUP_ID
+					 , TPDI.EXBI_EXPLN_CN AS EXBI_EXPLN_CN
+					 , TPDI.USE_YN AS USE_YN
+					 , TPDI.FRST_RGTR_ID AS FRST_RGTR_ID
+					 , TPDI.FRST_REG_DT AS FRST_REG_DT
+					 , TPDI.LAST_MDFR_ID AS LAST_MDFR_ID
+					 , TPDI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+				  FROM TX_PRTL_DSPY_INFO TPDI
+				 WHERE TPDI.DEL_YN = 'N'
+		<if test="paramSrchDispTypeCd != null and paramSrchDispTypeCd != ''">
+				   AND TPDI.DSPY_TYPE_CD = #{paramSrchDispTypeCd}
+		</if>
+		<if test="paramSrchDispDiv != null and paramSrchDispDiv != '' and paramSrchDispString != null and paramSrchDispString != ''">
+			<if test="paramSrchDispDiv == 'ID'">
+				   AND TPDI.DSPY_ID LIKE CONCAT('%', TRIM(#{paramSrchDispString}), '%')
+			</if>
+			<if test="paramSrchDispDiv == 'NM'">
+				   AND TPDI.DSPY_NM LIKE CONCAT('%', TRIM(#{paramSrchDispString}), '%')
+			</if>
+		</if>
+		<if test='paramSrchUseYn != null and paramSrchUseYn != ""'>
+				   AND TPDI.USE_YN = #{paramSrchUseYn}
+		</if>
+			   ) XTPDI
+		 ORDER BY XTPDI.DISP_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}
+	</select>
+	
+	
+	<!-- 포털 전시관리 수 -->
+	<select id="selectPrtlDispTotListCnt" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPrtlDispTotListCnt */
+			   COUNT(TPDI.DSPY_ID) AS TOT_LIST_CNT
+		  FROM TX_PRTL_DSPY_INFO TPDI
+		 WHERE TPDI.DEL_YN = 'N'
+		<if test="paramSrchDispTypeCd != null and paramSrchDispTypeCd != ''">
+		   AND TPDI.DSPY_TYPE_CD = #{paramSrchDispTypeCd}
+		</if>
+		<if test="paramSrchDispDiv != null and paramSrchDispDiv != '' and paramSrchDispString != null and paramSrchDispString != ''">
+			<if test="paramSrchDispDiv == 'ID'">
+		   AND TPDI.DSPY_ID LIKE CONCAT('%', TRIM(#{paramSrchDispString}), '%')
+			</if>
+			<if test="paramSrchDispDiv == 'NM'">
+		   AND TPDI.DSPY_NM LIKE CONCAT('%', TRIM(#{paramSrchDispString}), '%')
+			</if>
+		</if>
+	</select>
+	
+	
+	<!-- 포털 전시관리 상세 -->
+	<select id="selectPrtlDispInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO" resultType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPrtlDispInfo */
+			   TPDI.DSPY_ID AS DISP_ID
+			 , TPDI.DSPY_TYPE_CD AS DISP_TYPE_CD
+			 , TPDI.DSPY_NM AS DISP_NM
+			 , TPDI.EXBI_BGNG_YMD AS EXBI_BGNG_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+			 		<property name="paramSeparator" value="'-'"/>
+			 		<property name="paramYmd" value="TPDI.EXBI_BGNG_YMD"/>
+				</include>) AS EXBI_BGNG_YMD_V10
+			 , TPDI.EXBI_END_YMD AS EXBI_END_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+			 		<property name="paramSeparator" value="'-'"/>
+			 		<property name="paramYmd" value="TPDI.EXBI_END_YMD"/>
+				</include>) AS EXBI_END_YMD_V10
+			 , TPDI.RPRS_IMG_GROUP_ID AS RPRS_IMG_GROUP_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+ 				 		<property name="paramInfoCd" value="'OPATH'"/>
+ 				 		<property name="paramAtchFileGroupId" value="TPDI.RPRS_IMG_GROUP_ID"/>
+ 					</include>) AS FILE_PATH
+ 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+ 			 		<property name="paramInfoCd" value="'ORGNM'"/>
+ 			 		<property name="paramAtchFileGroupId" value="TPDI.RPRS_IMG_GROUP_ID"/>
+ 				</include>) AS ORGNL_ATCH_FILE_NM
+ 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+ 					<property name="paramInfoCd" value="'STRGNM'"/> 
+ 			 		<property name="paramAtchFileGroupId" value="TPDI.RPRS_IMG_GROUP_ID"/>
+ 				</include>) AS STRG_FILE_NM
+			 , TPDI.EXBI_EXPLN_CN AS EXBI_EXPLN_CN
+			 , TPDI.CONTS_CNJT_EFCT_EXPLN_CN AS CONTS_CNJT_EFCT_EXPLN_CN
+			 , TPDI.USE_YN AS USE_YN
+			 , (SELECT COUNT(TPDLI.DSPY_ITEM_ID)
+				  FROM TX_PRTL_DSPY_LIST_INFO TPDLI
+				 WHERE TPDLI.DSPY_ID = TPDI.DSPY_ID) AS DISP_LIST_CNT
+			 , TPDI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TPDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TPDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TPDI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TPDI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TPDI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TPDI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TPDI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , TPDI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TPDI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_PRTL_DSPY_INFO TPDI
+		 WHERE TPDI.DEL_YN = 'N'
+		   AND TPDI.DSPY_ID = #{paramDispId}
+	</select>
+	
+	
+	<!-- 포털 전시관리 아이디 가져오기  -->
+	<select id="selectPrtlDispId" resultType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPrtlDispId */
+			   CONCAT('PTDP', RIGHT(CONCAT('000000', NEXTVAL('SQ_TX_PRTL_DSPY_INFO_01')), 6)) AS DISP_ID
+	</select>
+	
+	
+	<!-- 포털 전시관리 등록  -->
+	<insert id="insertPrtlDispInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.insertPrtlDispInfo */
+					TX_PRTL_DSPY_INFO
+			   (
+			   DSPY_ID
+			 , DSPY_TYPE_CD
+			 , DSPY_NM
+			 , EXBI_BGNG_YMD
+			 , EXBI_END_YMD
+			 , RPRS_IMG_GROUP_ID
+			 , EXBI_EXPLN_CN
+			 , CONTS_CNJT_EFCT_EXPLN_CN
+			 , USE_YN
+			 , DEL_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{dispId}
+			 , #{dispTypeCd}
+			 , #{dispNm}
+			 , #{exbiBgngYmd}
+			 , #{exbiEndYmd}
+			 , #{rprsImgGroupId}
+			 , #{exbiExplnCn}
+			 , #{contsCnjtEfctExplnCn}
+			 , COALESCE(#{useYn}, 'Y')
+			 , COALESCE(#{delYn}, 'N')
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 포털 전시관리 수정 -->
+	<update id="updatePrtlDispInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.updatePrtlDispInfo */
+			   TX_PRTL_DSPY_INFO
+		   SET DSPY_NM = #{dispNm}
+			 , EXBI_BGNG_YMD = #{exbiBgngYmd}
+			 , EXBI_END_YMD = #{exbiEndYmd}
+			 , RPRS_IMG_GROUP_ID = #{rprsImgGroupId}
+			 , EXBI_EXPLN_CN = #{exbiExplnCn}
+			 , CONTS_CNJT_EFCT_EXPLN_CN = #{contsCnjtEfctExplnCn}
+			 , USE_YN = #{useYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE DSPY_ID = #{dispId}
+		   AND DEL_YN = 'N'
+	</update>
+	
+	
+	<!-- 포털 전시관리 삭제 -->
+	<update id="deletePrtlDispInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.deletePrtlDispInfo */
+			   TX_PRTL_DSPY_INFO
+		   SET DEL_YN = 'Y'
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE DSPY_ID = #{dispId}
+		   AND DEL_YN = 'N'
+	</update>
+	
+	
+	<!-- 포털 전시관리 사용여부 변경  -->
+	<update id="updatePrtlDispUseInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.updatePrtlDispUseInfo */
+			   TX_PRTL_DSPY_INFO
+		   SET USE_YN = #{useYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE DSPY_ID = #{paramDispId}
+		   AND DEL_YN = 'N'
+	</update>
+	
+	
+	<!-- 포털 전시 목록보기 -->
+	<select id="selectPrtlDispListInfoList" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispInfoVO" resultType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispListInfoVO">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPrtlDispListInfoList */
+			   XTPDLI.DISP_ITEM_LIST_NO AS DISP_ITEM_LIST_NO
+			 , XTPDLI.SORT_SN AS SORT_SN
+			 , XTPDLI.DSPY_ITEM_ID AS DSPY_ITEM_ID
+		<if test="paramSrchDispTypeCd != null and paramSrchDispTypeCd != ''">
+			<if test="paramSrchDispTypeCd == 'PTDPTY0001'">
+			 , TDCMI.CLRCS_NM AS DSPY_ITEM_NM
+			 , TDCMI.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instNm'"/>
+					<property name="paramInstId" value="TDCMI.INST_ID"/>
+				</include>) AS INST_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instCd'"/>
+					<property name="paramInstId" value="TDCMI.INST_ID"/>
+				</include>) AS INST_CD
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0002'">
+			 , TEI.EXBI_NM AS DSPY_ITEM_NM
+			 , TEI.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instNm'"/>
+					<property name="paramInstId" value="TEI.INST_ID"/>
+				</include>) AS INST_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instCd'"/>
+					<property name="paramInstId" value="TEI.INST_ID"/>
+				</include>) AS INST_CD
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0003'">
+			 , TII.INST_NM AS DSPY_ITEM_NM
+			 , TII.INST_ID AS INST_ID
+			 , TII.INST_NM AS INST_NM
+			 , TII.INST_CD AS INST_CD
+			</if>
+		</if>
+			 , XTPDLI.RLS_YN AS RLS_YN
+			 , XTPDLI.FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTPDLI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTPDLI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTPDLI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTPDLI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTPDLI.LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTPDLI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTPDLI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTPDLI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTPDLI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+			<if test="paramSrchDispTypeCd == 'PTDPTY0002'">
+			 , (SELECT COUNT(TECRI.CLRCS_ID)
+				  FROM TX_EXBI_CLRCS_REL_INFO TECRI
+				 WHERE TECRI.EXBI_ID = TEI.EXBI_ID) AS DGTL_CLRCS_CNT
+			</if>
+		  FROM (
+				SELECT 
+					   ROW_NUMBER()OVER(ORDER BY TPDLI.SORT_SN ASC) AS DISP_ITEM_LIST_NO
+					 , TPDLI.DSPY_ID AS DISP_ID
+					 , TPDLI.SORT_SN
+					 , TPDLI.DSPY_ITEM_ID
+					 , TPDLI.RLS_YN
+					 , TPDLI.FRST_RGTR_ID
+					 , TPDLI.FRST_REG_DT
+					 , TPDLI.LAST_MDFR_ID
+					 , TPDLI.LAST_MDFCN_DT
+				  FROM TX_PRTL_DSPY_LIST_INFO TPDLI
+				 WHERE TPDLI.DSPY_ID = #{paramDispId}
+		<if test='paramTabRlsYn != null and paramTabRlsYn != ""'>
+				   AND TPDLI.RLS_YN = #{paramTabRlsYn}
+		</if>
+			   ) XTPDLI
+		<if test="paramSrchDispTypeCd != null and paramSrchDispTypeCd != ''">
+			<if test="paramSrchDispTypeCd == 'PTDPTY0001'">
+		 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO TDCMI
+			ON (	XTPDLI.DSPY_ITEM_ID = TDCMI.CLRCS_ID
+				/* AND TDCMI.RLS_YN = 'Y' */
+			   )
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0002'">
+		 INNER JOIN TX_EXBI_INFO TEI
+			ON (	XTPDLI.DSPY_ITEM_ID = TEI.EXBI_ID
+				/*  AND TEI.RLS_YN = 'Y' */
+			   )
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0003'">
+		 INNER JOIN TX_INST_INFO TII
+			ON (	XTPDLI.DSPY_ITEM_ID = TII.INST_ID
+				/* AND TII.RLS_YN = 'Y' */
+			   )
+			</if>
+		</if>
+		 WHERE 1 = 1
+		<if test="paramTabDgtlDiv != null and paramTabDgtlDiv != '' and paramTabDgtlString != null and paramTabDgtlString != '' ">
+			<if test="paramSrchDispTypeCd == 'PTDPTY0001'">
+				<if test="paramTabDgtlDiv == 'ID'">
+		   AND TDCMI.CLRCS_ID LIKE CONCAT('%', TRIM(#{paramTabDgtlString}), '%')
+				</if>
+				<if test="paramTabDgtlDiv == 'NM'">
+		   AND TDCMI.CLRCS_NM LIKE CONCAT('%', TRIM(#{paramTabDgtlString}), '%')
+				</if>
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0002'">
+				<if test="paramTabDgtlDiv == 'ID'">
+		   AND TEI.EXBI_ID LIKE CONCAT('%', TRIM(#{paramTabDgtlString}), '%')
+				</if>
+				<if test="paramTabDgtlDiv == 'NM'">
+		   AND TEI.EXBI_NM LIKE CONCAT('%', TRIM(#{paramTabDgtlString}), '%')
+				</if>
+			</if>
+		</if>
+		<if test="paramTabInstDiv != null and paramTabInstDiv != '' and paramTabInstString != null and paramTabInstString != '' ">
+			<if test="paramSrchDispTypeCd == 'PTDPTY0001'">
+				<if test="paramTabInstDiv == 'NM'">
+		  AND TDCMI.INST_ID IN (SELECT INST_ID 
+								   FROM TX_INST_INFO TII
+								  WHERE TII.INST_NM LIKE CONCAT('%', TRIM(#{paramTabInstString}), '%'))
+			</if>
+				<if test="paramTabInstDiv == 'CD'">
+		   AND TDCMI.INST_ID IN (SELECT INST_ID 
+								   FROM TX_INST_INFO TII
+								  WHERE TII.INST_CD LIKE CONCAT('%', TRIM(#{paramTabInstString}), '%'))
+				</if>
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0002'">
+				<if test="paramTabInstDiv == 'NM'">
+		   AND TEI.INST_ID IN (SELECT INST_ID 
+								   FROM TX_INST_INFO TII
+								  WHERE TII.INST_NM LIKE CONCAT('%', TRIM(#{paramTabInstString}), '%'))
+				</if>
+				<if test="paramTabInstDiv == 'CD'">
+		   AND TEI.INST_ID IN (SELECT INST_ID 
+								   FROM TX_INST_INFO TII
+								  WHERE TII.INST_CD LIKE CONCAT('%', TRIM(#{paramTabInstString}), '%'))
+				</if>
+			</if>
+			<if test="paramSrchDispTypeCd == 'PTDPTY0003'">
+				<if test="paramTabInstDiv == 'NM'">
+		   AND TII.INST_NM LIKE CONCAT('%', TRIM(#{paramTabInstString}), '%')
+				</if>
+				<if test="paramTabInstDiv == 'CD'">
+		   AND TII.INST_CD LIKE CONCAT('%', TRIM(#{paramTabInstString}), '%')
+				</if>
+			</if>
+		</if>
+	</select>
+	
+	
+	<!-- 전시품목 등록 -->
+	<insert id="insertPrtlDispListInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispListInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.insertPrtlDispListInfo */
+					TX_PRTL_DSPY_LIST_INFO
+			   (
+			   DSPY_ID
+			 , SORT_SN
+			 , DSPY_ITEM_ID
+			 , RLS_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{dispId}
+			 , #{sortSn}
+			 , #{dspyItemId}
+			 , COALESCE(#{rlsYn}, 'Y')
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 전시품목 수정 -->
+	<update id="updatePrtlDispListInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispListInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.updatePrtlDispListInfo */
+			   TX_PRTL_DSPY_LIST_INFO
+		   SET SORT_SN = #{sortSn} 
+			 , RLS_YN = #{rlsYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE DSPY_ID = #{dispId}
+		   AND DSPY_ITEM_ID = #{dspyItemId}
+	</update>
+	
+	
+	<!-- 전시품목 삭제 -->
+	<delete id="deletePrtlDispListInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispListInfoVO">
+		DELETE /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.deletePrtlDispListInfo */
+		  FROM TX_PRTL_DSPY_LIST_INFO
+		 WHERE DSPY_ID = #{dispId}
+		   AND DSPY_ITEM_ID = #{dspyItemId} 
+	</delete>
+
+
+	<!-- 전시품목 전시상태 변경 -->
+	<update id="upatePrtlDispListRlsInfo" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PrtlDispListInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.upatePrtlDispListRlsInfo */
+			   TX_PRTL_DSPY_LIST_INFO
+		   SET RLS_YN = #{rlsYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE DSPY_ID = #{dispId}
+		   AND DSPY_ITEM_ID = #{dspyItemId}
+	</update>
+	
+	
+	<!-- 팝업 문화자원 목록 수 -->
+	<select id="selectPopExhDgtlItemTotListCnt" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPopExhDgtlItemTotListCnt */
+			   COUNT(TDCMI.CLRCS_ID) AS TOT_POP_LIST_CNT
+		  FROM TX_DGTL_CLRCS_MTDT_INFO TDCMI
+		 WHERE TDCMI.DEL_WTNG_YN = 'N'
+		<if test="paramPopDgtlDiv != null and paramPopDgtlDiv != '' and paramPopDgtlString != null and paramPopDgtlString != ''">
+			<if test="paramPopDgtlDiv == 'ID'">
+		   AND TDCMI.CLRCS_ID LIKE CONCAT('%', TRIM(#{paramPopDgtlString}), '%')
+			</if>
+			<if test="paramPopDgtlDiv == 'NM'">
+		   AND TDCMI.CLRCS_NM LIKE CONCAT('%', TRIM(#{paramPopDgtlString}), '%')
+			</if>
+		</if>
+		<if test="paramPopInstDiv != null and paramPopInstDiv != '' and paramPopInstString != null and paramPopInstString != ''">
+			<if test="paramPopInstDiv == 'ID'">
+		   AND TDCMI.INST_ID LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+			<if test="paramPopInstDiv == 'NM'">
+		   AND TDCMI.INST_ID IN (SELECT TII.INST_ID
+								   FROM TX_INST_INFO TII
+								  WHERE TII.DEL_YN = 'N'
+									AND TII.INST_NM LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%'))
+			</if>
+		</if>
+	</select>
+	
+	
+	<!-- 팝업 문화자원 목록 -->
+	<select id="selectPopExhDgtlItemList" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO" resultType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPopExhDgtlItemList */
+			   XTDCMI.LIST_POP_NO AS LIST_POP_NO
+			 , XTDCMI.CLRCS_ID AS CLRCS_ID
+			 , XTDCMI.CLRCS_NM AS CLRCS_NM
+			 , XTDCMI.CLRCS_RLS_YN AS CLRCS_RLS_YN
+			 , XTDCMI.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+			 		<property name="paramColNm" value="'instCd'"/>
+			 		<property name="paramInstId" value="XTDCMI.INST_ID"/>
+				</include>) AS INST_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+			 		<property name="paramColNm" value="'instNm'"/>
+			 		<property name="paramInstId" value="XTDCMI.INST_ID"/>
+				</include>) AS INST_NM
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TDCMI.CLRCS_ID ASC) AS LIST_POP_NO
+					 , TDCMI.CLRCS_ID AS CLRCS_ID
+					 , TDCMI.CLRCS_NM AS CLRCS_NM
+					 , TDCMI.RLS_YN AS CLRCS_RLS_YN
+					 , TDCMI.INST_ID AS INST_ID
+				  FROM TX_DGTL_CLRCS_MTDT_INFO TDCMI
+				 WHERE TDCMI.DEL_WTNG_YN = 'N'
+		<if test="paramPopDgtlDiv != null and paramPopDgtlDiv != '' and paramPopDgtlString != null and paramPopDgtlString != ''">
+			<if test="paramPopDgtlDiv == 'ID'">
+				   AND TDCMI.CLRCS_ID LIKE CONCAT('%', TRIM(#{paramPopDgtlString}), '%')
+			</if>
+			<if test="paramPopDgtlDiv == 'NM'">
+				   AND TDCMI.CLRCS_NM LIKE CONCAT('%', TRIM(#{paramPopDgtlString}), '%')
+			</if>
+		</if>
+		<if test="paramPopInstDiv != null and paramPopInstDiv != '' and paramPopInstString != null and paramPopInstString != ''">
+			<if test="paramPopInstDiv == 'ID'">
+				   AND TDCMI.INST_ID LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+			<if test="paramPopInstDiv == 'NM'">
+				   AND TDCMI.INST_ID IN (SELECT TII.INST_ID
+										   FROM TX_INST_INFO TII
+										  WHERE TII.DEL_YN = 'N'
+											AND TII.INST_NM LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%'))
+			</if>
+		</if>
+			   ) XTDCMI
+		 ORDER BY XTDCMI.LIST_POP_NO DESC
+		 LIMIT #{paramPopPageRecordCnt}
+		OFFSET (#{paramPopPageNo} - 1) * #{paramPopPageRecordCnt}
+	</select>
+	
+	
+	<!-- 팝업 컬렉션 목록 수 -->
+	<select id="selectPopExhDgtlClcItemTotListCnt" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPopExhDgtlItemTotListCnt */
+			   COUNT(TEI.EXBI_ID) AS TOT_POP_LIST_CNT
+		  FROM TX_EXBI_INFO TEI
+		 WHERE 1 = 1
+		<if test="paramPopDgtlClcDiv != null and paramPopDgtlClcDiv != '' and paramPopDgtlClcString != null and paramPopDgtlClcString != ''">
+			<if test="paramPopDgtlClcDiv == 'ID'">
+		   AND TEI.EXBI_ID LIKE CONCAT('%', TRIM(#{paramPopDgtlClcString}), '%')
+			</if>
+			<if test="paramPopDgtlClcDiv == 'NM'">
+		   AND TEI.EXBI_NM LIKE CONCAT('%', TRIM(#{paramPopDgtlClcString}), '%')
+			</if>
+		</if>
+		<if test="paramPopInstDiv != null and paramPopInstDiv != '' and paramPopInstString != null and paramPopInstString != ''">
+			<if test="paramPopInstDiv == 'ID'">
+		   AND TEI.INST_ID LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+			<if test="paramPopInstDiv == 'NM'">
+		   AND TEI.INST_ID IN (SELECT TII.INST_ID
+								   FROM TX_INST_INFO TII
+								  WHERE TII.DEL_YN = 'N'
+									AND TII.INST_NM LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+								)
+			</if>
+		</if>
+	</select>
+	
+	
+	<!-- 팝업 컬렉션 목록 -->
+	<select id="selectPopExhDgtlClcItemList" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO" resultType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPopExhDgtlClcItemList */
+			   XTEI.LIST_POP_NO AS LIST_POP_NO
+			 , XTEI.EXBI_ID AS EXBI_ID
+			 , XTEI.EXBI_NM AS EXBI_NM
+			 , XTEI.EXBI_RLS_YN AS EXBI_RLS_YN
+			 , XTEI.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+			 		<property name="paramColNm" value="'instCd'"/>
+			 		<property name="paramInstId" value="XTEI.INST_ID"/>
+				</include>) AS INST_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+			 		<property name="paramColNm" value="'instNm'"/>
+			 		<property name="paramInstId" value="XTEI.INST_ID"/>
+				</include>) AS INST_NM
+			 , (SELECT COUNT(TECRI.CLRCS_ID)
+				  FROM TX_EXBI_CLRCS_REL_INFO TECRI
+				 WHERE TECRI.EXBI_ID = XTEI.EXBI_ID) AS EXBI_CLRCS_CNT
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TEI.EXBI_ID ASC) AS LIST_POP_NO
+					 , TEI.EXBI_ID AS EXBI_ID
+					 , TEI.EXBI_NM AS EXBI_NM
+					 , TEI.RLS_YN AS EXBI_RLS_YN
+					 , TEI.INST_ID AS INST_ID
+				  FROM TX_EXBI_INFO TEI
+				 WHERE 1 = 1
+		<if test="paramPopDgtlClcDiv != null and paramPopDgtlClcDiv != '' and paramPopDgtlClcString != null and paramPopDgtlClcString != ''">
+			<if test="paramPopDgtlClcDiv == 'ID'">
+				   AND TEI.EXBI_ID LIKE CONCAT('%', TRIM(#{paramPopDgtlClcString}), '%')
+			</if>
+			<if test="paramPopDgtlClcDiv == 'NM'">
+				   AND TEI.EXBI_NM LIKE CONCAT('%', TRIM(#{paramPopDgtlClcString}), '%')
+			</if>
+		</if>
+		<if test="paramPopInstDiv != null and paramPopInstDiv != '' and paramPopInstString != null and paramPopInstString != ''">
+			<if test="paramPopInstDiv == 'ID'">
+				   AND TEI.INST_ID LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+			<if test="paramPopInstDiv == 'NM'">
+				   AND TEI.INST_ID IN (SELECT TII.INST_ID
+										 FROM TX_INST_INFO TII
+										WHERE TII.DEL_YN = 'N'
+										  AND TII.INST_NM LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%'))
+			</if>
+		</if>
+			   ) XTEI
+		 ORDER BY XTEI.LIST_POP_NO DESC
+		 LIMIT #{paramPopPageRecordCnt}
+		OFFSET (#{paramPopPageNo} - 1) * #{paramPopPageRecordCnt}
+	</select>
+	
+	
+	<!-- 팝업 기관 목록 수 -->
+	<select id="selectPopExhInstItemTotListCnt" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPopExhInstItemTotListCnt */
+			   COUNT(TII.INST_ID) AS TOT_POP_LIST_CNT
+		  FROM TX_INST_INFO TII
+		 WHERE TII.DEL_YN = 'N'
+		<if test="paramPopInstDiv != null and paramPopInstDiv != '' and paramPopInstString != null and paramPopInstString != ''">
+			<if test="paramPopInstDiv == 'ID'">
+		   AND TII.INST_ID LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+			<if test="paramPopInstDiv == 'NM'">
+		   AND TII.INST_NM LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+		</if>
+		<if test="paramPopInstTypeCd != null and paramPopInstTypeCd != ''">
+		   AND TII.INST_TYPE_CD = #{paramPopInstTypeCd}
+		</if>
+		<if test="paramPopFildTypeCd != null and paramPopFildTypeCd != ''">
+		   AND TII.FILD_TYPE_CD = #{paramPopFildTypeCd}
+		</if>
+		<if test="paramPopClctTypeCd != null and paramPopClctTypeCd != ''">
+		   AND TII.CLCT_TYPE_CD = #{paramPopClctTypeCd}
+		</if>
+	</select>
+	
+	
+	<!-- 팝업 기관 목록 -->
+	<select id="selectPopExhInstItemList" parameterType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO" resultType="kr.go.culture.xr.admin.exhMgt.vo.PopExhItemInfoVO">
+		SELECT /* kr.go.culture.xr.admin.exhMgt.mapper.ExhMgtMapper.selectPopExhInstItemList */
+			   XTII.LIST_POP_NO AS LIST_POP_NO
+			 , XTII.INST_ID AS INST_ID
+			 , XTII.INST_CD AS INST_CD
+			 , XTII.INST_NM AS INST_NM
+			 , XTII.INST_RLS_YN AS INST_RLS_YN
+			 , XTII.INST_TYPE_CD AS INST_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000002'"/>
+					<property name="paramCdId" value="XTII.INST_TYPE_CD"/>
+				</include>) AS INST_TYPE_NM
+			 , XTII.FILD_TYPE_CD AS FILD_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000003'"/>
+					<property name="paramCdId" value="XTII.FILD_TYPE_CD"/>
+				</include>) AS FILD_TYPE_NM
+			 , XTII.CLCT_TYPE_CD AS CLCT_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000004'"/>
+					<property name="paramCdId" value="XTII.CLCT_TYPE_CD"/>
+				</include>) AS CLCT_TYPE_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRegClrcsCnt">
+					<property name="paramInstId" value="XTII.INST_ID"/>
+				</include>) AS INST_CLRCS_CNT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRegExbiCnt">
+					<property name="paramInstId" value="XTII.INST_ID"/>
+				</include>) AS INST_EXBI_CNT
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TII.INST_ID ASC) AS LIST_POP_NO
+					 , TII.INST_ID AS INST_ID
+					 , TII.INST_CD AS INST_CD
+					 , TII.INST_NM AS INST_NM
+					 , TII.RLS_YN AS INST_RLS_YN
+					 , TII.INST_TYPE_CD AS INST_TYPE_CD
+					 , TII.FILD_TYPE_CD AS FILD_TYPE_CD
+					 , TII.CLCT_TYPE_CD AS CLCT_TYPE_CD
+				  FROM TX_INST_INFO TII
+				 WHERE TII.DEL_YN = 'N'
+		<if test="paramPopInstDiv != null and paramPopInstDiv != '' and paramPopInstString != null and paramPopInstString != ''">
+			<if test="paramPopInstDiv == 'ID'">
+				   AND TII.INST_ID LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+			<if test="paramPopInstDiv == 'NM'">
+				   AND TII.INST_NM LIKE CONCAT('%', TRIM(#{paramPopInstString}), '%')
+			</if>
+		</if>
+		<if test="paramPopInstTypeCd != null and paramPopInstTypeCd != ''">
+				   AND TII.INST_TYPE_CD = #{paramPopInstTypeCd}
+		</if>
+		<if test="paramPopFildTypeCd != null and paramPopFildTypeCd != ''">
+				   AND TII.FILD_TYPE_CD = #{paramPopFildTypeCd}
+		</if>
+		<if test="paramPopClctTypeCd != null and paramPopClctTypeCd != ''">
+				   AND TII.CLCT_TYPE_CD = #{paramPopClctTypeCd}
+		</if>
+			   ) XTII
+		 ORDER BY XTII.LIST_POP_NO DESC
+		 LIMIT #{paramPopPageRecordCnt}
+		OFFSET (#{paramPopPageNo} - 1) * #{paramPopPageRecordCnt}
+	</select>
+	
+</mapper>

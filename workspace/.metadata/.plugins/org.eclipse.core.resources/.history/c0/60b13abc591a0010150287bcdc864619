@@ -1,0 +1,5 @@
+package com.proj.calendar.service;
+
+public class CalendarGoService {
+
+}

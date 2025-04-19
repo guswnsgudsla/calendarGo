@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="58" height="58" viewBox="0 0 58 58">
+    <g data-name="그룹 169" transform="translate(-1151 -174)">
+        <rect data-name="사각형 15" width="58" height="58" rx="20" transform="translate(1151 174)" style="fill:#ededed"/>
+        <g data-name="그룹 8">
+            <g data-name="Icon feather-box">
+                <g data-name="패스 1" style="fill:none;stroke-linecap:round;stroke-linejoin:round">
+                    <path d="M33.79 25.787V12.766a3.256 3.256 0 0 0-1.627-2.816L20.772 3.439a3.254 3.254 0 0 0-3.254 0L6.127 9.95A3.256 3.256 0 0 0 4.5 12.766v13.021A3.256 3.256 0 0 0 6.127 28.6l11.391 6.511a3.254 3.254 0 0 0 3.254 0L32.163 28.6a3.256 3.256 0 0 0 1.627-2.813z" style="stroke:none" transform="translate(1160.5 183.997)"/>
+                    <path d="M19.145 35.55c.562 0 1.124-.145 1.627-.436l11.39-6.51a3.256 3.256 0 0 0 1.628-2.817V12.766a3.256 3.256 0 0 0-1.627-2.816l-11.39-6.51a3.254 3.254 0 0 0-3.255 0L6.128 9.95A3.256 3.256 0 0 0 4.5 12.766v13.021a3.256 3.256 0 0 0 1.627 2.816l11.39 6.51c.504.292 1.066.437 1.628.437m0 2a5.26 5.26 0 0 1-2.622-.701l-11.388-6.51A5.27 5.27 0 0 1 2.5 25.79V12.766a5.272 5.272 0 0 1 2.635-4.552l11.388-6.51a5.26 5.26 0 0 1 5.244 0l11.388 6.51.008.004a5.27 5.27 0 0 1 2.627 4.546v13.023a5.272 5.272 0 0 1-2.627 4.548l-.008.004-11.388 6.51a5.261 5.261 0 0 1-2.622.701z" style="fill:#858585;stroke:none" transform="translate(1160.5 183.997)"/>
+                </g>
+                <path data-name="패스 2" d="m4.9 10.44 14.241 7.66 14.235-7.66" transform="translate(1160.504 184.812)" style="stroke:#858585;stroke-width:2px;fill:none;stroke-linecap:round;stroke-linejoin:round"/>
+                <path data-name="패스 3" d="M18 33.285V18" transform="translate(1161.645 186.386)" style="stroke:#858585;stroke-width:2px;fill:none;stroke-linecap:round;stroke-linejoin:round"/>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper">
+
+	<!--  아이디 만들기 (Sequence 활용)함수 -->
+	<sql id="getSequenceId">
+		SELECT 
+			   CONCAT(${paramDivTxt}, RIGHT(CONCAT('00000000000000000000', NEXTVAL(${paramSequenceNm})), ${paramCdLength} - LENGTH(${paramDivTxt})))
+	</sql>
+	
+	<sql id="getCmmnClsfCdNm">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnClsfCdNm */
+			   CLSF_NM
+		  FROM TX_CMMN_CLSF_CD
+		 WHERE USE_YN = 'Y'
+		   AND APRV_YN = 'Y'
+		   AND CLSF_CD = ${paramClsfCd}
+	</sql>
+	
+	
+	<sql id="getCmmnCdNm">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm */
+			   CD_NM
+		  FROM TX_CMMN_CD
+		 WHERE USE_YN = 'Y'
+		   AND APRV_YN = 'Y'
+		   AND CLSF_CD = ${paramClsfCd}
+		   AND CD_ID = ${paramCdId}
+	</sql>
+	
+	<sql id="getUserInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo */
+			   CASE WHEN ${paramColNm} = 'userNm'
+						 THEN USER_NM
+					WHEN ${paramColNm} = 'userNcm'
+						 THEN USER_NCM_NM
+					ELSE ''
+			   END
+		  FROM TX_USER_INFO
+		 WHERE DEL_YN = 'N'
+		   AND USER_ID = ${paramUserId}
+	</sql>
+	
+	
+	<sql id="getInstInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo */
+			   CASE WHEN ${paramColNm} = 'instNm'
+						 THEN INST_NM
+					WHEN ${paramColNm} = 'instCd'
+						 THEN INST_CD
+					WHEN ${paramColNm} = 'instTypeCd'
+						 THEN INST_TYPE_CD
+					WHEN ${paramColNm} = 'fildTypeCd'
+						 THEN FILD_TYPE_CD
+					ELSE ''
+			   END
+		  FROM TX_INST_INFO
+		 WHERE DEL_YN = 'N'
+		   AND INST_ID = ${paramInstId}
+	</sql>
+	
+	
+	<!--  -->
+	<sql id="getYmdToChar10">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10 */
+			   CASE WHEN LENGTH(${paramYmd}) = 8
+						 THEN CONCAT(SUBSTRING(${paramYmd}, 1, 4), ${paramSeparator}, SUBSTRING(${paramYmd}, 5, 2), ${paramSeparator}, SUBSTRING(${paramYmd}, 7, 2))
+					WHEN LENGTH(${paramYmd}) = 6
+						 THEN CONCAT(SUBSTRING(${paramYmd}, 1, 4), ${paramSeparator}, SUBSTRING(${paramYmd}, 5, 2))
+					WHEN LENGTH(${paramYmd}) = 4
+						 THEN ${paramYmd}
+					ELSE COALESCE(${paramYmd}, '-')
+			   END
+	</sql>
+	
+	
+	<!--  -->
+	<sql id="getTimestampToChar">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar */
+			   CASE WHEN ${paramDate} IS NULL
+						 THEN '-'
+					ELSE CASE WHEN 'CHAR4' = ${paramDateFormat}
+								   THEN TO_CHAR(${paramDate}, 'YYYY')
+							  WHEN 'CHAR6' = ${paramDateFormat}
+								   THEN TO_CHAR(${paramDate}, 'YYYYMM')
+							  WHEN 'CHAR8' = ${paramDateFormat}
+								   THEN TO_CHAR(${paramDate}, 'YYYYMMDD')
+							  WHEN 'CHAR10' = ${paramDateFormat}
+								   THEN TO_CHAR(${paramDate}, 'YYYY-MM-DD')
+							  WHEN 'CHAR19' = ${paramDateFormat}
+								   THEN TO_CHAR(${paramDate}, 'YYYY-MM-DD HH24:MI:SS')
+							  ELSE ''
+						 END
+			   END 
+	</sql>	
+	
+	
+	<!-- 등록 문화자원 수 -->
+	<sql id="getRegClrcsCnt">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRegClrcsCnt */
+			   COUNT(clrcs_id)
+		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		 WHERE INST_ID = ${paramInstId}
+		   AND DEL_WTNG_YN = 'N'
+	</sql>
+	
+	<!-- 등록 컬렉션 수 -->
+	<sql id="getRegExbiCnt">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRegExbiCnt */
+			   COUNT(exbi_id)
+		  FROM TX_EXBI_INFO
+		 WHERE INST_ID = ${paramInstId}
+	</sql>
+	
+	<!-- 게시판 분류명 -->
+	<sql id="getBbsClsfNm">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getBbsClsfNm */
+				TBCC.CLSF_NM
+		  FROM TX_BBS_CLSF_CD TBCC
+		 WHERE TBCC.BBS_ID = ${paramBbsId}
+		   AND TBCC.CLSF_CD = ${paramClsfCd}
+	</sql>
+	
+	
+	<sql id="getBbsAtchPsbltyFileUseYn">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getBbsAtchPsbltyFileUseYn */
+			   (CASE WHEN COUNT(TBAPFI.FILE_EXTN_CD) = 0
+						  THEN 'N'
+					 ELSE 'Y'
+				END) AS FILE_EXTN_USE_YN
+		  FROM TX_BBS_ATCH_PSBLTY_FILE_INFO TBAPFI
+		 WHERE TBAPFI.BBS_ID = ${paramBbsId}
+		   AND TBAPFI.FILE_EXTN_CD = ${paramFileExtnCd}
+	</sql>
+	
+	
+	<sql id="getAuthrtNm">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getAuthrtNm */
+			   TAI.AUTHRT_NM AS AUTHRT_NM
+		  FROM TX_AUTHRT_INFO TAI
+		 WHERE TAI.AUTHRT_ID = ${paramAuthrtId}
+		   AND TAI.USE_YN = 'Y'
+	</sql>
+
+
+	<sql id="getMbrInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo */
+			   MBR_NCM_NM
+		  FROM TX_MBR_INFO TMI
+		 WHERE TMI.MBR_ID = ${paramMbrId}
+	</sql>
+
+
+	<sql id="getDgtlClrcsNm">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getDgtlClrcsNm */
+			   CASE WHEN ${paramColNm} = 'KOR'
+						 THEN TDCMI.CLRCS_NM
+					WHEN ${paramColNm} = 'ENG'
+						 THEN COALESCE(TDCMI.CLRCS_ENG_NM, '-')
+					WHEN ${paramColNm} = 'CHN'
+						 THEN COALESCE(TDCMI.CLRCS_CHN_NM, '-')
+					ELSE '-'
+			   END
+		  FROM TX_DGTL_CLRCS_MTDT_INFO TDCMI
+		 WHERE TDCMI.CLRCS_ID = ${paramClrcsId}
+	</sql>
+	
+	
+	<sql id="getRprsImgPathInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo */
+			   CASE WHEN ${paramInfoCd} = 'ID'
+						 THEN TAFDI.ATCH_FILE_ID
+					WHEN ${paramInfoCd} = 'ORGNM'
+						 THEN TAFDI.ORGNL_ATCH_FILE_NM
+					WHEN ${paramInfoCd} = 'STRGNM'
+						 THEN TAFDI.STRG_FILE_NM
+					WHEN ${paramInfoCd} = 'PATH'
+						 THEN CONCAT('/', TAFDI.FILE_STRG_PATH_NM, '/', TAFDI.STRG_FILE_NM)	 
+					WHEN ${paramInfoCd} = 'OPATH'
+						 THEN TAFDI.FILE_STRG_PATH_NM	 
+					ELSE '-'
+			   END
+		  FROM TX_ATCH_FILE_DTL_INFO TAFDI
+		 WHERE TAFDI.ATCH_FILE_GROUP_ID = ${paramAtchFileGroupId}
+		   AND TAFDI.ATCH_FILE_SN = (SELECT MIN(ATCH_FILE_SN)
+									   FROM TX_ATCH_FILE_DTL_INFO STAFDI
+									  WHERE STAFDI.ATCH_FILE_GROUP_ID = ${paramAtchFileGroupId}
+									)
+	</sql>
+
+
+	<sql id="getDgtlClrcsCtgryInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getDgtlClrcsCtgryInfo */
+			   TCCCI.CTGRY_NM
+		  FROM TX_CLRCS_CLSF_CTGRY_INFO TCCCI
+		 WHERE TCCCI.CTGRY_TYPE_CD = ${paramCtgryTypeCd}
+		   AND TCCCI.CTGRY_ID = ${paramCtgryId}
+		   AND TCCCI.INST_ID = ${paramInstId}
+		   AND TCCCI.USE_YN = 'Y'
+	</sql>
+
+
+	<sql id="getAuthrtInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getAuthrtInfo */
+			   TAI.AUTHRT_NM
+		  FROM TX_AUTHRT_INFO TAI
+		 WHERE TAI.AUTHRT_ID = ${paramAuthrtId}
+		   AND TAI.USE_YN = 'Y'
+	</sql>
+
+
+	<sql id="getMenuInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMenuInfo */
+			   (CASE WHEN ${paramInfoCd} = 'MENUNM'
+						  THEN TMI.MENU_NM
+					 WHEN ${paramInfoCd} = 'UPMENUID'
+						  THEN TMI.UP_MENU_ID
+					 WHEN ${paramInfoCd} = 'UPMENUNM'
+						  THEN (SELECT
+									   STMI.MENU_NM
+								  FROM TX_MENU_INFO STMI
+								 WHERE STMI.MENU_ID = TMI.UP_MENU_ID)
+					 WHEN ${paramInfoCd} = 'URIADDR'
+						  THEN TMI.SCRN_URI_ADDR
+					 ELSE '-'
+				END)
+		  FROM TX_MENU_INFO TMI
+		 WHERE TMI.MENU_ID = ${paramMenuId}
+		   AND TMI.USE_YN = 'Y'
+	</sql>
+
+	<sql id="getPositionInfo">
+		SELECT /* kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getPositionInfo */
+			   POSITION(${paramText} IN ${oaramTarget}) 
+	</sql>
+	
+</mapper>

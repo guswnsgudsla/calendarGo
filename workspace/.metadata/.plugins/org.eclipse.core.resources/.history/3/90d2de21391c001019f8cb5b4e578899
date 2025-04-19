@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.proj.calendar.dao.CalendarGoDAO">
+	<select id="selectCalendarGoList" parameterType="com.proj.calendar.vo.CalendarGoVO" resultType="com.proj.calendar.vo.CalendarGoVO">
+		/* 캘린더 정보 조회 calendarGoDAO.selectCalendarGoList */
+		SELECT
+			CAL_ID as calId,
+			CAL_STR_DATE as calStrDate,
+			CAL_END_DATE as calEndDate,
+			CAL_CONT as calCont,
+			CAL_REG_DATE as calRegDate,
+			CAL_DEL_YN as calDelYn,
+			CAL_MOD_DATE as calModDate,
+			CAL_ANV_YN as calAnvYn
+		FROM
+			TB_CALLENDAR
+		WHERE
+			1 = 1
+			AND CAL_DEL_YN = 'N'
+		ORDER BY
+			CAL_STR_DATE ASC,
+			CAL_ID ASC
+	</select>
+	
+	<insert id="insertCalendarGo" parameterType="calendarGoVO">
+		/* 캘린더 등록 calendarGoDAO.insertCalendarGo */
+		INSERT INTO TB_CALLENDAR (
+			CAL_STR_DATE,
+			CAL_END_DATE,
+			CAL_CONT,
+			CAL_REG_DATE,
+			CAL_DEL_YN,
+			CAL_ANV_YN,
+			CAL_ANV_YEAR
+		) VALUES (
+			DATE_FORMAT(#{vStrDt}, '%Y-%m-%d'),
+			DATE_ADD(DATE_FORMAT(#{vEndDt}, '%Y-%m-%d'), INTERVAL 1 DAY),
+			#{vCont},
+			NOW(),
+			'N',
+			#{calAnvYn},
+			#{calAnvYear}
+		)
+	</insert>
+	
+	<update id="editCalendarGo" parameterType="calendarGoVO">
+		/* 캘린더 수정 calendarGoDAO.editCalendarGo */
+		UPDATE
+			TB_CALLENDAR
+		SET
+			CAL_STR_DATE = #{vStrDt},
+			CAL_END_DATE = DATE_ADD(DATE_FORMAT(#{vEndDt}, '%Y-%m-%d'), INTERVAL 1 DAY),
+			CAL_CONT     = #{vCont},
+			CAL_MOD_DATE = NOW()
+		WHERE
+			CAL_ID = #{vCalId}
+	</update>
+	
+	<update id="deleteCalendarGo" parameterType="calendarGoVO">
+		/* 캘린더 수정 calendarGoDAO.deleteCalendarGo */
+		UPDATE
+			TB_CALLENDAR
+		SET
+			CAL_DEL_YN   = 'Y',
+			CAL_MOD_DATE = NOW()
+		WHERE
+			CAL_ID = #{vCalId}
+	</update>
+	
+	<select id="selectAnvList" parameterType="com.proj.calendar.vo.CalendarGoVO" resultType="com.proj.calendar.vo.CalendarGoVO">
+		/* 공휴일정보가있는지 calendarGoDAO.selectAnvList */
+		select
+			CAL_ANV_YEAR as calAnvYear
+		from
+			TB_CALLENDAR
+		where
+			1 = 1
+			and CAL_DEL_YN = 'N'
+			and CAL_ANV_YN = 'Y'
+		group by
+			CAL_ANV_YEAR
+	</select>
+</mapper>

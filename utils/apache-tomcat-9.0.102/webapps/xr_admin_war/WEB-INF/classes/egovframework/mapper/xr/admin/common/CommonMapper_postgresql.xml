@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.com.mapper.CommonMapper">
+    <select id="selectbyId" resultType="kr.go.culture.xr.admin.com.entity.Common">
+        SELECT MBR_ID
+             , AUTHRT_ID
+             , MBR_NCM_NM
+             , ITRST_CLSF_REG_NTFC_YN
+             , NTFC_STNG_DT
+             , FRST_RGTR_ID
+             , FRST_REG_DT
+             , LAST_MDFR_ID
+             , LAST_MDFCN_DT
+        FROM TBL_MBR_INFO
+        WHERE MBR_ID = #{mbrId}
+    </select>
+</mapper>

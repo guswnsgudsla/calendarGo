@@ -1,0 +1,3589 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper">
+
+	<sql id="sqlDgtlCltRscInfo">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+			 , T01.DWNLD_APLCN_YN		/* 다운로드적용여부 */
+			 , TO_CHAR(T01.LAST_MDFCN_DT,'YYYY.MM.DD') AS LAST_MDFCN_DT /* 최종수정일시 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT001'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INST_CTGRY_NM			/* 기관(레거시)카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT002'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS DATA_TYPE_CTGRY_NM		/* 데이터유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT003'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS CONTS_TYPE_CTGRY_NM		/* 콘텐츠유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT004'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS SRVC_TYPE_CTGRY_NM		/* 서비스유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT005'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INDR_TYPE_CTGRY_NM		/* 산업유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT006'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS NTN_TAGE_TYPE_CTGRY_NM	/* 국가지역시대유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT007'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS MTR_TYPE_CTGRY_NM		/* 재질유형카테고리명 */
+			<if test='mbrId != null and !mbrId.equals("")'>
+			, CASE WHEN EXISTS (
+		        SELECT 1
+		        FROM TX_MBR_CLRCS_EXCN_HSTRY T11
+		        WHERE T11.MBR_ID = #{mbrId}  
+			      AND T11.CLRCS_ID = T01.CLRCS_ID
+			      AND T11.RCS_EXCN_CD = '02'
+			      AND T11.DEL_YN = 'N'
+		    ) THEN 'Y' ELSE 'N' END AS RCMDTN_YN /*좋아요 여부*/
+			</if> 
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y' 
+		 <if test='clrcsId != null and !clrcsId.equals("")'>
+		   AND T01.CLRCS_ID = #{clrcsId} 
+		 </if> 
+		 <if test='srchInstId != null and !srchInstId.equals("")'>
+		   AND T01.INST_ID = #{srchInstId} 
+		 </if> 
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN CONTS_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+		   AND T01.INST_ID IN (
+		   		SELECT INST_ID
+			 	  FROM TX_INST_INFO
+			 	 WHERE RGN_CD = #{srchRgnCd}
+		       )
+		 </if>
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		 	   	SELECT T01.CLRCS_ID
+		 	   	  FROM TX_EXBI_CLRCS_REL_INFO T01
+				 INNER JOIN (
+						SELECT DSPY_ITEM_ID AS EXBI_ID
+						     , SORT_SN
+						  FROM TX_PRTL_DSPY_LIST_INFO 
+						  WHERE DSPY_ID = #{exbiId}
+							AND RLS_YN = 'Y'
+				  	   ) T02
+				  	ON T02.EXBI_ID = T01.EXBI_ID
+		 	   	 WHERE 1 = 1
+		 	   	   AND T01.RLS_YN = 'Y'
+		       )
+		 </if>
+		<choose>
+			<when test='srchTagVal != null and !srchTagVal.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_CLRCS_TAG_INFO
+			 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+		       )
+			</when>
+			<when test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 	</when>
+		</choose>
+		<choose>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+			</when>
+		</choose>
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					T01.DWNLD_CNT DESC, T01.CLRCS_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T01.FRST_REG_DT DESC, T01.CLRCS_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					T01.INQ_CNT DESC, T01.CLRCS_NM ASC
+				</when>
+				<otherwise>
+					T01.INQ_CNT DESC, T01.CLRCS_NM ASC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<sql id="sqlDgtlCltRscCntInfo">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y' 
+		 <if test='clrcsId != null and !clrcsId.equals("")'>
+		   AND T01.CLRCS_ID = #{clrcsId} 
+		 </if> 
+		 <if test='srchInstId != null and !srchInstId.equals("")'>
+		   AND T01.INST_ID = #{srchInstId} 
+		 </if> 
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN CONTS_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+		   AND T01.INST_ID IN (
+		   		SELECT INST_ID
+			 	  FROM TX_INST_INFO
+			 	 WHERE RGN_CD = #{srchRgnCd}
+		       )
+		 </if>
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		 	   	SELECT T01.CLRCS_ID
+		 	   	  FROM TX_EXBI_CLRCS_REL_INFO T01
+				 INNER JOIN (
+						SELECT DSPY_ITEM_ID AS EXBI_ID
+						     , SORT_SN
+						  FROM TX_PRTL_DSPY_LIST_INFO 
+						  WHERE DSPY_ID = #{exbiId}
+							AND RLS_YN = 'Y'
+				  	   ) T02
+				  	ON T02.EXBI_ID = T01.EXBI_ID
+		 	   	 WHERE 1 = 1
+		 	   	   AND T01.RLS_YN = 'Y'
+		       )
+		 </if>
+		<choose>
+			<when test='srchTagVal != null and !srchTagVal.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_CLRCS_TAG_INFO
+			 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+		       )
+			</when>
+			<when test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 	</when>
+		</choose>
+		<choose>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+			</when>
+		</choose>
+	</sql>
+
+	<sql id="sqlDgtlCltRscWithInfo">
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+			, DATA_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID = #{srchDataTypeCtgryId}
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN DATA_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+			, CONTS_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID IN 
+				 	    <foreach collection="srchContsTypeCtgryIdArr" item="srchContsTypeCtgryItem" open="(" close=")" separator=",">
+				 	    #{srchContsTypeCtgryItem}
+				 	    </foreach>
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN CONTS_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+			, NTN_TAGE_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID = #{srchNtnTageTypeCtgryId}
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN NTN_TAGE_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+	</sql>
+
+	<select id="selectDgtlCltRscInfoCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer" >
+		/* 디지털문화자원정보 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltRscInfoCnt */
+		<include refid="sqlDgtlCltRscWithInfo" />
+		SELECT 
+			   COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlDgtlCltRscCntInfo" />
+		 	   ) A
+	</select>
+
+	<select id="selectDgtlCltRscInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 디지털문화자원정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltRscInfoList */
+		<include refid="sqlDgtlCltRscWithInfo" />
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+			<include refid="sqlDgtlCltRscInfo" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<select id="selectDgtlCltRscInfoDtl" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 디지털문화자원정보 상세 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltRscInfoDtl */
+		<include refid="sqlDgtlCltRscWithInfo" />
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+			<include refid="sqlDgtlCltRscInfo" />
+			   ) A
+	</select>
+	
+	<update id="saveDgtlCltRscInfoInqCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo">
+		UPDATE /* 디지털문화자원정보 조회수 저장 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.saveDgtlCltRscInfoInqCnt */
+		       TX_DGTL_CLRCS_MTDT_INFO
+		   SET INQ_CNT = INQ_CNT + 1
+		 WHERE CLRCS_ID = #{clrcsId}
+	</update>
+	
+	<update id="saveDgtlCltRscInfoRcmdtnCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo">
+		UPDATE /* 디지털문화자원정보 추천수 저장 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.saveDgtlCltRscInfoRcmdtnCnt */
+		       TX_DGTL_CLRCS_MTDT_INFO
+		   SET RCMDTN_CNT = RCMDTN_CNT + #{rcmdtnChgCnt}
+		 WHERE CLRCS_ID = #{clrcsId}
+	</update>
+	
+	<select id="selectDgtlCltRscInfoRcmdtnCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer" >
+		SELECT /* 디지털문화자원정보 추천수 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltRscInfoRcmdtnCnt */
+			   RCMDTN_CNT		/* 추천수 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		 WHERE CLRCS_ID = #{clrcsId} 
+	</select>
+	
+	
+	<update id="saveDgtlCltRscInfoDwnldCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo">
+		UPDATE /* 디지털문화자원정보 다운로드수 저장 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.saveDgtlCltRscInfoDwnldCnt */
+		       TX_DGTL_CLRCS_MTDT_INFO
+		   SET DWNLD_CNT = DWNLD_CNT + 1
+		 WHERE CLRCS_ID = #{clrcsId}
+	</update>
+	
+	<insert id="regMbrClturRcsExcnHstry" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.MbrClturRcsExcnHstryVo">
+		INSERT /* 회원문화자원실행이력 등록 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.regMbrClturRcsExcnHstry */
+		  INTO TX_MBR_CLRCS_EXCN_HSTRY
+		     (
+			   HSTRY_SN			/* 이력일련번호 */
+			 , MBR_ID			/* 회원아이디 */
+			 , CLRCS_ID			/* 문화자원아이디 */
+			 , RCS_EXCN_CD		/* 자원실행코드 */
+			 , DEL_YN			/* 삭제여부 */
+			 , FRST_RGTR_ID		/* 최초등록자아이디 */
+			 , FRST_REG_DT		/* 최초등록일시 */
+			 , LAST_MDFR_ID		/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT	/* 최종수정일시 */
+		     ) VALUES (
+			   NEXTVAL('SQ_TX_MBR_CLRCS_EXCN_HSTRY_01')
+			 , #{mbrId}
+			 , #{clrcsId}
+			 , #{rcsExcnCd}
+			 , 'N'
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+		     )
+	</insert>
+	
+	<update id="delMbrClturRcsExcnHstry" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.MbrClturRcsExcnHstryVo">
+		UPDATE /* 회원문화자원실행이력 삭제 (좋아요 해제) kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.saveDgtlCltClctInfoInqCnt */
+		       TX_MBR_CLRCS_EXCN_HSTRY
+		   SET DEL_YN = 'Y'
+		     , LAST_MDFR_ID = #{mbrId}
+		     , LAST_MDFCN_DT = CURRENT_TIMESTAMP  
+		 WHERE MBR_ID = #{mbrId}  
+		   AND CLRCS_ID = #{clrcsId}
+		   AND RCS_EXCN_CD = #{rcsExcnCd}
+	</update>
+	
+	<insert id="regMbrDwnldHstry" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.MbrDwnldHstryVo">
+		INSERT /* 회원다운로드이력 등록 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.regMbrDwnldHstry */
+		  INTO TX_MBR_DWNLD_HSTRY
+		     (
+			   MBR_ID						/* 회원아이디 */
+			 , DWNLD_SN						/* 다운로드일련번호 */
+			 , CLRCS_ID						/* 문화자원아이디 */
+			 , PRDCT_SN						/* 산출물일련번호 */
+			 , CONTS_USE_TYPE_CD			/* 콘텐츠사용유형코드 */
+			 , CONTS_PVSN_TYPE_CD			/* 콘텐츠제공유형코드 */
+			 , CONTS_CNJT_TYPE_CD			/* 콘텐츠활용유형코드 */
+-- 			 , CONTS_CNJT_EFCT_EXPLN_CN		/* 콘텐츠활용효과설명 */
+			 , PRVC_CLCT_AGRE_YN			/* 개인정보수집동의여부 */
+			 , CONTS_USE_AGRE_YN			/* 콘텐츠사용동의여부 */
+			 , PRDCT_TRCK_ID				/* 산출물추적아이디 */
+			 , CONTS_USE_URL_ADDR				/* 콘텐츠사용URL */
+			 , FRST_RGTR_ID					/* 최초등록자아이디 */
+			 , FRST_REG_DT					/* 최초등록일시 */
+			 , LAST_MDFR_ID					/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT				/* 최종수정일시 */
+		     ) VALUES (
+			   #{mbrId}
+			 , (
+			 	SELECT COALESCE(MAX(DWNLD_SN),0) + 1
+			 	  FROM TX_MBR_DWNLD_HSTRY
+			 	 WHERE MBR_ID = #{mbrId}
+			   )
+			 , #{clrcsId}
+			 , COALESCE(#{prdctSn}::NUMERIC,0)
+			 , #{contsUseTypeCd}
+			 , #{contsPvsnTypeCd}
+			 , #{contsCnjtTypeCd}
+			 , #{contsCnjtEfctExpln}
+			 , #{prvcClctAgreYn}
+			 , #{contsUseAgreYn}
+			 , #{prdctTrckId}
+			 , #{contsUseUrl}
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+		     )
+	</insert>
+
+	<select id="selectClrcsClsfCtgryList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ClrcsClsfCtgryInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ClrcsClsfCtgryInfoVo">
+		<if test='ctgryTypeCd != null and ctgryTypeCd.equals("CLRCSCT006")'>
+		WITH RECURSIVE NTN_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = #{ctgryTypeCd}
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN NTN_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		)
+		</if>
+		SELECT /* 문화자원분류범주 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectClrcsClsfCtgryList */
+			   CTGRY_ID			/* 범주아이디 */
+			 , UP_CTGRY_ID		/* 상위범주아이디 */
+			 , CTGRY_NM			/* 범주명 */
+			 , CTGRY_WHOL_NM	/* 범주전체명 */
+			 , CTGRY_TYPE_CD	/* 범주유형코드 */
+			 , CTGRY_STEP_NO	/* 범주단계번호 */
+			 , SORT_SN			/* 정렬일련번호 */
+			 , USE_YN			/* 사용여부 */
+			 , FRST_RGTR_ID		/* 최초등록자아이디 */
+			 , FRST_REG_DT		/* 최초등록일시 */
+			 , LAST_MDFR_ID		/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT	/* 최종수정일시 */
+		  FROM TX_CLRCS_CLSF_CTGRY_INFO
+		 WHERE 1 = 1
+		   AND USE_YN = 'Y' 
+		 <if test='ctgryId != null and !ctgryId.equals("")'>
+		   AND CTGRY_ID = #{ctgryId} 
+		 </if> 
+		 <if test='upCtgryId != null and !upCtgryId.equals("")'>
+		   AND UP_CTGRY_ID = #{upCtgryId} 
+		 </if> 
+		 <if test='ctgryNm != null and !ctgryNm.equals("")'>
+		   AND CTGRY_NM LIKE '%'||#{ctgryNm}||'%' 
+		 </if> 
+		 <if test='ctgryWholNm != null and !ctgryWholNm.equals("")'>
+		   AND CTGRY_WHOL_NM LIKE '%'||#{ctgryWholNm}||'%' 
+		 </if> 
+		 <if test='ctgryTypeCd != null and !ctgryTypeCd.equals("")'>
+		   AND CTGRY_TYPE_CD = #{ctgryTypeCd} 
+		 </if> 
+		 <if test='ctgryStepNo != null and !ctgryStepNo.equals("")'>
+		   AND CTGRY_STEP_NO = #{ctgryStepNo}::NUMERIC 
+		 </if> 
+		 <if test='ctgryTypeCd != null and ctgryTypeCd.equals("CLRCSCT006")'>
+		   AND CTGRY_ID IN (
+		   		SELECT UNNEST(PATH)
+		   		  FROM NTN_TYPE_ROOT_CTGRY
+		   		 WHERE CTGRY_ID IN (
+		   		 		SELECT CTGRY_ID
+		   		 		  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO
+		   		 	   )
+		   	   )
+		 </if>
+		 ORDER BY SORT_SN ASC
+	</select>
+	
+	<sql id="sqlDgtlCltClctInfo">
+		SELECT
+		       T001.*
+			 , ROW_NUMBER() OVER(ORDER BY 
+		<choose>
+			<when test='orderByKey != null and orderByKey.equals("A")'>
+				T001.DWNLD_CNT DESC, T001.EXBI_NM ASC
+			</when>
+			<when test='orderByKey != null and orderByKey.equals("B")'>
+				T001.FRST_REG_DT DESC, T001.EXBI_NM ASC
+			</when>
+			<when test='orderByKey != null and orderByKey.equals("C")'>
+				T001.INQ_CNT DESC, T001.EXBI_NM ASC
+			</when>
+			<otherwise>
+				T001.INQ_CNT DESC, T001.EXBI_NM ASC
+			</otherwise>
+		</choose>
+			   ) AS ROW_SN
+		  FROM (
+			SELECT 
+				   T01.EXBI_ID				/* 전시회아이디 */
+				 , T01.INST_ID				/* 기관아이디 */
+				 , (
+				 	SELECT T08.INST_NM
+				 	  FROM TX_INST_INFO T08
+				 	 WHERE T08.INST_ID = T01.INST_ID
+				   ) AS INST_NM				/* 기관명 */
+				 , T01.EXBI_NM					/* 전시회명 */
+				 , T01.EXBI_TYPE_CD				/* 전시회유형코드 */
+-- 				 , T01.EXBI_BGNG_YMD			/* 전시회시작일자 */
+-- 				 , T01.EXBI_END_YMD				/* 전시회종료일자 */
+				 , T01.RPRS_IMG_GROUP_ID AS EXBI_RPRS_IMG			/* 전시회대표이미지 */
+				 /*, T01.EXBI_EXPLN_CN AS EXBI_EXPLN				/* 전시회설명 */*/
+				 , T01.RLS_YN					/* 공개여부 */
+				 , T01.INQ_CNT					/* 조회수 */
+				 , (
+				 	SELECT SUM(T10.RCMDTN_CNT)
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 WHERE T09.EXBI_ID = T01.EXBI_ID
+				   ) AS RCMDTN_CNT				/* 추천수 */
+				 , (
+				 	SELECT SUM(T10.DWNLD_CNT)
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 WHERE T09.EXBI_ID = T01.EXBI_ID
+				   ) DWNLD_CNT				/* 다운로드수 */
+				 , FRST_RGTR_ID					/* 최초등록자아이디 */
+				 , FRST_REG_DT					/* 최초등록일시 */
+				 , LAST_MDFR_ID					/* 최종수정자아이디 */
+				 , LAST_MDFCN_DT				/* 최종수정일시 */
+			  FROM TX_EXBI_INFO T01
+			 WHERE 1 = 1
+			   AND T01.RLS_YN = 'Y' 
+			 <if test='exbiId != null and !exbiId.equals("")'>
+			   AND T01.EXBI_ID = #{exbiId} 
+			 </if> 
+			 <if test='srchInstId != null and !srchInstId.equals("")'>
+			   AND T01.INST_ID = #{srchInstId} 
+			 </if> 
+		       ) T001
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					T001.DWNLD_CNT DESC, T001.EXBI_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T001.FRST_REG_DT DESC, T001.EXBI_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					T001.INQ_CNT DESC, T001.EXBI_NM ASC
+				</when>
+				<otherwise>
+					T001.INQ_CNT DESC, T001.EXBI_NM ASC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<sql id="sqlDgtlCltClctCntInfo">
+		SELECT 
+			   T01.EXBI_ID				/* 전시회아이디 */
+		  FROM TX_EXBI_INFO T01
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y' 
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.EXBI_ID = #{exbiId} 
+		 </if> 
+		 <if test='srchInstId != null and !srchInstId.equals("")'>
+		   AND T01.INST_ID = #{srchInstId} 
+		 </if> 
+	</sql>
+
+	<select id="selectDgtlCltClctInfoCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo" resultType="java.lang.Integer" >
+		SELECT /* 디지털문화컬렉션정보 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctInfoCnt */
+			   COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlDgtlCltClctCntInfo" />
+		 	   ) A
+	</select>
+
+	<select id="selectDgtlCltClctInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		SELECT /* 디지털문화컬렉션정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctInfoList */
+		       A.* 
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+			<include refid="sqlDgtlCltClctInfo" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<select id="selectDgtlCltClctInfoDtl" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		SELECT /* 디지털문화컬렉션정보 상세 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctInfoDtl */
+		       A.* 
+		  FROM (
+			<include refid="sqlDgtlCltClctInfo" />
+			   ) A
+	</select>
+
+	<select id="selectDgtlCltClctRprsImgList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo" resultType="java.util.Map">
+		SELECT /* 디지털문화컬렉션 대표이미지 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctRprsImgList */
+			   T03.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T03.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T03.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+		  FROM (
+		  		SELECT T09.EXBI_ID
+		  			 , T09.CLRCS_ID
+		  		  FROM TX_EXBI_CLRCS_REL_INFO T09
+		  		 WHERE 1 = 1
+		  		   AND T09.RLS_YN = 'Y'
+				 <if test='exbiId != null and !exbiId.equals("")'>
+				   AND T09.EXBI_ID = #{exbiId} 
+				 </if> 
+		  	   ) T01
+		 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T02
+		    ON T02.CLRCS_ID = T01.CLRCS_ID
+  		   AND T02.RLS_YN = 'Y'
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T03
+		  	ON T03.ATCH_FILE_GROUP_ID = T02.RPRS_IMG_GROUP_ID
+		   AND T03.ATCH_FILE_SN = 1
+		 WHERE 1 = 1
+		 LIMIT 4
+	</select>
+	
+	<update id="saveDgtlCltClctInfoInqCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo">
+		UPDATE /* 디지털문화컬렉션정보 조회수 저장 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.saveDgtlCltClctInfoInqCnt */
+		       TX_EXBI_INFO
+		   SET INQ_CNT = INQ_CNT + 1
+		 WHERE EXBI_ID = #{exbiId}
+	</update>
+
+	<select id="selectRelatedClctCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer" >
+		SELECT /* 관련 컬렉션 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectRelatedClctCnt */
+			   COUNT(1) AS CNT
+		  FROM (
+				SELECT 
+					   T01.EXBI_ID				/* 전시회아이디 */
+				  FROM TX_EXBI_INFO T01
+				 WHERE 1 = 1
+				   AND T01.RLS_YN = 'Y' 
+				 <if test='clrcsId != null and !clrcsId.equals("")'>
+				   AND T01.EXBI_ID IN (
+				   		SELECT EXBI_ID
+				   		  FROM TX_EXBI_CLRCS_REL_INFO
+				   		 WHERE CLRCS_ID = #{clrcsId}
+				   	   )  
+				 </if> 
+		 	   ) A
+	</select>
+
+	<select id="selectRelatedClctList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		SELECT /* 관련 컬렉션 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectRelatedClctList */
+		       A.* 
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+				SELECT 
+					   T01.EXBI_ID				/* 전시회아이디 */
+					 , T01.INST_ID				/* 기관아이디 */
+					 , (
+					 	SELECT T08.INST_NM
+					 	  FROM TX_INST_INFO T08
+					 	 WHERE T08.INST_ID = T01.INST_ID
+					   ) AS INST_NM				/* 기관명 */
+					 , T01.EXBI_NM					/* 전시회명 */
+					 , T01.EXBI_TYPE_CD				/* 전시회유형코드 */
+-- 					 , T01.EXBI_BGNG_YMD			/* 전시회시작일자 */
+-- 					 , T01.EXBI_END_YMD				/* 전시회종료일자 */
+					 , T01.RPRS_IMG_GROUP_ID AS EXBI_RPRS_IMG			/* 전시회대표이미지 */
+					 /*, T01.EXBI_EXPLN_CN AS EXBI_EXPLN				/* 전시회설명 */*/
+					 , T01.RLS_YN					/* 공개여부 */
+					 , T01.INQ_CNT					/* 조회수 */
+					 , T01.FRST_RGTR_ID					/* 최초등록자아이디 */
+					 , T01.FRST_REG_DT					/* 최초등록일시 */
+					 , T01.LAST_MDFR_ID					/* 최종수정자아이디 */
+					 , T01.LAST_MDFCN_DT				/* 최종수정일시 */
+				  FROM TX_EXBI_INFO T01
+				 WHERE 1 = 1
+				   AND T01.RLS_YN = 'Y' 
+				 <if test='clrcsId != null and !clrcsId.equals("")'>
+				   AND T01.EXBI_ID IN (
+				   		SELECT EXBI_ID
+				   		  FROM TX_EXBI_CLRCS_REL_INFO
+				   		 WHERE CLRCS_ID = #{clrcsId}
+				   	   )  
+				 </if> 
+				ORDER BY T01.FRST_REG_DT DESC
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<select id="selectMbrDwnldRscList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 회원 다운로드 자원 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectMbrDwnldRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+				SELECT 
+					   T01.CLRCS_ID				/* 문화자원아이디 */
+					 , T01.INST_ID				/* 기관아이디 */
+					 , (
+					 	SELECT T08.INST_NM
+					 	  FROM TX_INST_INFO T08
+					 	 WHERE T08.INST_ID = T01.INST_ID
+					   ) AS INST_NM				/* 기관명 */
+					 , T01.CLRCS_NM				/* 문화자원명 */
+					 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+					 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+					 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+					 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+					 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+					 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+					 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+					 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+					 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+					 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+					 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+					 , T01.CLCN_CD				/* 소장품코드 */
+					 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+					 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+					 , T01.INQ_CNT				/* 조회수 */
+					 , T01.RLS_YN				/* 공개여부 */
+					 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+					 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+					 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+					 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+					 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+					 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+					 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+					 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+					 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+					 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+					 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+					 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+					 , T01.WRI_NM				/* 작가명 */
+					 , T01.FDSP_NM				/* 출토지명 */
+					 , T01.DSPY_NM				/* 전시명 */
+					 , T01.DSPY_PLC_NM			/* 전시장소명 */
+					 , T01.RCMDTN_CNT			/* 추천수 */
+					 , T01.DWNLD_CNT			/* 다운로드수 */
+					 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+				  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+				  LEFT JOIN (
+				  		SELECT ATCH_FILE_GROUP_ID
+				  		     , FILE_STRG_PATH_NM
+				  		     , STRG_FILE_NM
+				  		     , ORGNL_ATCH_FILE_NM
+				  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+				  		  FROM TX_ATCH_FILE_DTL_INFO
+				  	   ) T02
+				  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+				   AND T02.ATCH_FILE_SN = 1
+				 INNER JOIN (
+				 		SELECT CLRCS_ID
+				 		     , MAX(FRST_REG_DT) AS REG_DT
+				 		  FROM TX_MBR_DWNLD_HSTRY
+				 		 WHERE MBR_ID = #{mbrId}
+				 		 GROUP BY CLRCS_ID
+				       ) T03
+				    ON T03.CLRCS_ID = T01.CLRCS_ID
+				 WHERE 1 = 1
+				   AND T01.RLS_YN = 'Y'
+				   AND T01.CLRCS_ID != #{clrcsId} 
+				 ORDER BY T03.REG_DT DESC
+			   ) A
+		  OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
+	</select>
+
+	<select id="selectInstDiffRscList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 기관 다른 자원 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectInstDiffRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+				SELECT 
+					   T01.CLRCS_ID				/* 문화자원아이디 */
+					 , T01.INST_ID				/* 기관아이디 */
+					 , (
+					 	SELECT T08.INST_NM
+					 	  FROM TX_INST_INFO T08
+					 	 WHERE T08.INST_ID = T01.INST_ID
+					   ) AS INST_NM				/* 기관명 */
+					 , T01.CLRCS_NM				/* 문화자원명 */
+					 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+					 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+					 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+					 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+					 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+					 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+					 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+					 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+					 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+					 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+					 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+					 , T01.CLCN_CD				/* 소장품코드 */
+					 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+					 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+					 , T01.INQ_CNT				/* 조회수 */
+					 , T01.RLS_YN				/* 공개여부 */
+					 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+					 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+					 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+					 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+					 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+					 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+					 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+					 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+					 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+					 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+					 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+					 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+					 , T01.WRI_NM				/* 작가명 */
+					 , T01.FDSP_NM				/* 출토지명 */
+					 , T01.DSPY_NM				/* 전시명 */
+					 , T01.DSPY_PLC_NM			/* 전시장소명 */
+					 , T01.RCMDTN_CNT			/* 추천수 */
+					 , T01.DWNLD_CNT			/* 다운로드수 */
+					 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+				  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+				  LEFT JOIN (
+				  		SELECT ATCH_FILE_GROUP_ID
+				  		     , FILE_STRG_PATH_NM
+				  		     , STRG_FILE_NM
+				  		     , ORGNL_ATCH_FILE_NM
+				  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+				  		  FROM TX_ATCH_FILE_DTL_INFO
+				  	   ) T02
+				  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+				   AND T02.ATCH_FILE_SN = 1
+				 WHERE 1 = 1
+				   AND T01.RLS_YN = 'Y'
+				   AND T01.CLRCS_ID != #{clrcsId} 
+				   AND T01.INST_ID IN (
+				   		SELECT INST_ID
+				   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+				   		 WHERE CLRCS_ID = #{clrcsId}
+				       ) 
+				 ORDER BY T01.FRST_REG_DT DESC
+			   ) A
+		  OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY
+	</select>
+
+	<sql id="sqlSrchDgtlCltRscInfo">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y' 
+		 <if test='clrcsId != null and !clrcsId.equals("")'>
+		   AND T01.CLRCS_ID = #{clrcsId} 
+		 </if> 
+		 <if test='srchInstId != null and !srchInstId.equals("")'>
+		   AND T01.INST_ID = #{srchInstId} 
+		 </if> 
+		 <if test='srchDataTypeCtgryIdArr != null and !srchDataTypeCtgryIdArr.isEmpty()'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN CONTS_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+		   AND T01.INST_ID IN (
+		   		SELECT INST_ID
+			 	  FROM TX_INST_INFO
+			 	 WHERE RGN_CD = #{srchRgnCd}
+		       )
+		 </if>
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_EXBI_CLRCS_REL_INFO
+			 	 WHERE EXBI_ID = #{exbiId}
+		       )
+		 </if>
+		<choose>
+			<when test='srchTagVal != null and !srchTagVal.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_CLRCS_TAG_INFO
+			 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+		       )
+			</when>
+			<when test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 	</when>
+		</choose>
+		<choose>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+			</when>
+		</choose>
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					T01.DWNLD_CNT DESC, T01.CLRCS_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T01.FRST_REG_DT DESC, T01.CLRCS_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					T01.INQ_CNT DESC, T01.CLRCS_NM ASC
+				</when>
+				<otherwise>
+					T01.DWNLD_CNT DESC, T01.CLRCS_NM ASC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<sql id="sqlSrchDgtlCltRscCntInfo">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y'
+		 <if test='clrcsId != null and !clrcsId.equals("")'>
+		   AND T01.CLRCS_ID = #{clrcsId} 
+		 </if> 
+		 <if test='srchInstId != null and !srchInstId.equals("")'>
+		   AND T01.INST_ID = #{srchInstId} 
+		 </if> 
+		 <if test='srchDataTypeCtgryIdArr != null and !srchDataTypeCtgryIdArr.isEmpty()'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN CONTS_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+		   AND T01.INST_ID IN (
+		   		SELECT INST_ID
+			 	  FROM TX_INST_INFO
+			 	 WHERE RGN_CD = #{srchRgnCd}
+		       )
+		 </if>
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_EXBI_CLRCS_REL_INFO
+			 	 WHERE EXBI_ID = #{exbiId}
+		       )
+		 </if>
+		<choose>
+			<when test='srchTagVal != null and !srchTagVal.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_CLRCS_TAG_INFO
+			 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+		       )
+			</when>
+			<when test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 	</when>
+		</choose>
+		<choose>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+			</when>
+		</choose>
+	</sql>
+
+	<sql id="sqlSrchDgtlCltRscWithInfo">
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		 <if test='srchDataTypeCtgryIdArr != null and !srchDataTypeCtgryIdArr.isEmpty()'>
+			, DATA_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID IN 
+				 	    <foreach collection="srchDataTypeCtgryIdArr" item="srchDataTypeCtgryItem" open="(" close=")" separator=",">
+				 	    #{srchDataTypeCtgryItem}
+				 	    </foreach>
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN DATA_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+			, CONTS_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID IN 
+				 	    <foreach collection="srchContsTypeCtgryIdArr" item="srchContsTypeCtgryItem" open="(" close=")" separator=",">
+				 	    #{srchContsTypeCtgryItem}
+				 	    </foreach>
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN CONTS_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+			, NTN_TAGE_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID = #{srchNtnTageTypeCtgryId}
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN NTN_TAGE_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+	</sql>
+
+	<select id="selectSrchDgtlCltRscInfoCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer" >
+		/* 디지털문화자원정보조회 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectSrchDgtlCltRscInfoCnt */
+		<include refid="sqlSrchDgtlCltRscWithInfo" />
+		SELECT 
+			   COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlSrchDgtlCltRscCntInfo" />
+		 	   ) A
+	</select>
+
+	<select id="selectSrchDgtlCltRscInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 디지털문화자원정보조회 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectSrchDgtlCltRscInfoList */
+		<include refid="sqlSrchDgtlCltRscWithInfo" />
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+			<include refid="sqlSrchDgtlCltRscInfo" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+	
+	<sql id="sqlSrchDgtlCltClctInfo">
+		SELECT
+		       T001.*
+		  FROM (
+			SELECT 
+				   T01.EXBI_ID				/* 전시회아이디 */
+				 , T01.INST_ID				/* 기관아이디 */
+				 , (
+				 	SELECT T08.INST_NM
+				 	  FROM TX_INST_INFO T08
+				 	 WHERE T08.INST_ID = T01.INST_ID
+				   ) AS INST_NM				/* 기관명 */
+
+				 , T01.EXBI_NM					/* 전시회명 */
+				 , T01.EXBI_TYPE_CD				/* 전시회유형코드 */
+-- 				 , T01.EXBI_BGNG_YMD			/* 전시회시작일자 */
+-- 				 , T01.EXBI_END_YMD				/* 전시회종료일자 */
+				 , T01.RPRS_IMG_GROUP_ID AS EXBI_RPRS_IMG			/* 전시회대표이미지 */
+				 /*, T01.EXBI_EXPLN_CN AS EXBI_EXPLN				/* 전시회설명 */*/
+				 , T01.RLS_YN					/* 공개여부 */
+				 , T01.INQ_CNT					/* 조회수 */
+				 , (
+				 	SELECT SUM(T10.RCMDTN_CNT)
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 WHERE T09.EXBI_ID = T01.EXBI_ID
+				   ) AS RCMDTN_CNT				/* 추천수 */
+				 , (
+				 	SELECT SUM(T10.DWNLD_CNT)
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 WHERE T09.EXBI_ID = T01.EXBI_ID
+				   ) DWNLD_CNT				/* 다운로드수 */
+				 , FRST_RGTR_ID					/* 최초등록자아이디 */
+				 , FRST_REG_DT					/* 최초등록일시 */
+				 , LAST_MDFR_ID					/* 최종수정자아이디 */
+				 , LAST_MDFCN_DT				/* 최종수정일시 */
+			  FROM TX_EXBI_INFO T01
+			 WHERE 1 = 1
+			   AND T01.RLS_YN = 'Y' 
+			   AND T01.EXBI_ID IN (
+			   		SELECT EXBI_ID
+			   		  FROM TX_EXBI_CLRCS_REL_INFO
+			   		 WHERE RLS_YN = 'Y'
+			   		   AND CLRCS_ID IN (
+							SELECT CLRCS_ID				/* 문화자원아이디 */
+							  FROM TX_DGTL_CLRCS_MTDT_INFO
+							 WHERE 1 = 1
+							 <if test='clrcsId != null and !clrcsId.equals("")'>
+							   AND CLRCS_ID = #{clrcsId} 
+							 </if> 
+							 <if test='srchInstId != null and !srchInstId.equals("")'>
+							   AND INST_ID = #{srchInstId} 
+							 </if> 
+							 <if test='srchDataTypeCtgryIdArr != null and !srchDataTypeCtgryIdArr.isEmpty()'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN DATA_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN CONTS_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+							   AND INST_ID IN (
+							   		SELECT INST_ID
+								 	  FROM TX_INST_INFO
+								 	 WHERE RGN_CD = #{srchRgnCd}
+							       )
+							 </if>
+			   		       )
+			       )
+				<choose>
+					<when test='srchTagVal != null and !srchTagVal.equals("")'>
+				   AND T01.EXBI_ID IN (
+			   			SELECT EXBI_ID
+			   			  FROM TX_EXBI_CLRCS_REL_INFO
+			   			 WHERE RLS_YN = 'Y'
+			   			   AND CLRCS_ID IN (
+			   			   		SELECT CLRCS_ID
+			   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+			   			   		 WHERE RLS_YN = 'Y'
+			   			   		   AND CLRCS_ID IN (
+								   		SELECT CLRCS_ID
+									 	  FROM TX_CLRCS_TAG_INFO
+									 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+							   		   )
+			   			   	   )
+				       )
+					</when>
+				 	<when test='srchVal != null and !srchVal.equals("")'>
+				   AND (
+				   		   UPPER(T01.EXBI_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+				   		/*OR UPPER(T01.EXBI_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'*/
+				   		OR T01.EXBI_ID IN (
+				   			SELECT EXBI_ID
+				   			  FROM TX_EXBI_CLRCS_REL_INFO
+				   			 WHERE RLS_YN = 'Y'
+				   			   AND CLRCS_ID IN (
+				   			   		SELECT CLRCS_ID
+				   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+				   			   		 WHERE RLS_YN = 'Y'
+				   			   		   AND (
+				   			   		       UPPER(CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+								   		OR UPPER(CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+								   		OR UPPER(CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+								   		OR CLRCS_ID IN (
+									   		SELECT CLRCS_ID
+										 	  FROM TX_CLRCS_TAG_INFO
+										 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+								   		   )
+								   		   )
+				   			   	   )
+				   		   )
+				       )
+				 	</when>
+				</choose>
+				<choose>
+					<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+					</when>
+					<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+					</when>
+					<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+					</when>
+					<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+					</when>
+				</choose>
+		       ) T001
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					T001.DWNLD_CNT DESC, T001.EXBI_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T001.FRST_REG_DT DESC, T001.EXBI_NM ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					T001.INQ_CNT DESC, T001.EXBI_NM ASC
+				</when>
+				<otherwise>
+					T001.DWNLD_CNT DESC, T001.EXBI_NM ASC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<sql id="sqlSrchDgtlCltClctCntInfo">
+		SELECT 
+			   T01.EXBI_ID				/* 전시회아이디 */
+		  FROM TX_EXBI_INFO T01
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y' 
+		   AND T01.EXBI_ID IN (
+		   		SELECT EXBI_ID
+		   		  FROM TX_EXBI_CLRCS_REL_INFO
+		   		 WHERE RLS_YN = 'Y'
+		   		   AND CLRCS_ID IN (
+						SELECT CLRCS_ID				/* 문화자원아이디 */
+						  FROM TX_DGTL_CLRCS_MTDT_INFO
+						 WHERE 1 = 1
+						 <if test='clrcsId != null and !clrcsId.equals("")'>
+						   AND CLRCS_ID = #{clrcsId} 
+						 </if> 
+						 <if test='srchInstId != null and !srchInstId.equals("")'>
+						   AND INST_ID = #{srchInstId} 
+						 </if> 
+						 <if test='srchDataTypeCtgryIdArr != null and !srchDataTypeCtgryIdArr.isEmpty()'>
+						   AND CLRCS_ID IN (
+						   		SELECT T11.CLRCS_ID
+							 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+							 	 INNER JOIN DATA_TYPE_CTGRY T12
+							 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+						       )
+						 </if>
+						 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+						   AND CLRCS_ID IN (
+						   		SELECT T11.CLRCS_ID
+							 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+							 	 INNER JOIN CONTS_TYPE_CTGRY T12
+							 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+						       )
+						 </if>
+						 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+						   AND CLRCS_ID IN (
+						   		SELECT T11.CLRCS_ID
+							 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+							 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+							 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+						       )
+						 </if>
+						 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+						   AND INST_ID IN (
+						   		SELECT INST_ID
+							 	  FROM TX_INST_INFO
+							 	 WHERE RGN_CD = #{srchRgnCd}
+						       )
+						 </if>
+		   		       )
+		       )
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.EXBI_ID = #{exbiId} 
+		 </if> 
+		 <choose>
+			<when test='srchTagVal != null and !srchTagVal.equals("")'>
+		   AND T01.EXBI_ID IN (
+	   			SELECT EXBI_ID
+	   			  FROM TX_EXBI_CLRCS_REL_INFO
+	   			 WHERE RLS_YN = 'Y'
+	   			   AND CLRCS_ID IN (
+	   			   		SELECT CLRCS_ID
+	   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+	   			   		 WHERE RLS_YN = 'Y'
+	   			   		   AND CLRCS_ID IN (
+						   		SELECT CLRCS_ID
+							 	  FROM TX_CLRCS_TAG_INFO
+							 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+					   		   )
+	   			   	   )
+		       )
+			 </when>
+			 <when test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.EXBI_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		/*OR UPPER(T01.EXBI_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'*/
+		   		OR T01.EXBI_ID IN (
+		   			SELECT EXBI_ID
+		   			  FROM TX_EXBI_CLRCS_REL_INFO
+		   			 WHERE RLS_YN = 'Y'
+		   			   AND CLRCS_ID IN (
+		   			   		SELECT CLRCS_ID
+		   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		   			   		 WHERE RLS_YN = 'Y'
+		   			   		   AND (
+		   			   		       UPPER(CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+						   		OR UPPER(CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+						   		OR UPPER(CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+						   		OR CLRCS_ID IN (
+							   		SELECT CLRCS_ID
+								 	  FROM TX_CLRCS_TAG_INFO
+								 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+						   		   )
+						   		   )
+		   			   	   )
+		   		   )
+		       )
+		 	</when>
+		</choose>
+		<choose>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+			</when>
+		</choose>
+	</sql>
+
+	<select id="selectSrchDgtlCltClctInfoCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer" >
+		/* 디지털문화컬렉션정보조회 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectSrchDgtlCltClctInfoCnt */
+		<include refid="sqlSrchDgtlCltRscWithInfo" />
+		SELECT 
+			   COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlSrchDgtlCltClctCntInfo" />
+		 	   ) A
+	</select>
+
+	<select id="selectSrchDgtlCltClctInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		/* 디지털문화컬렉션정보조회 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectSrchDgtlCltClctInfoList */
+		<include refid="sqlSrchDgtlCltRscWithInfo" />
+		SELECT 
+		       A.* 
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+			<include refid="sqlSrchDgtlCltClctInfo" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+	
+	<select id="selectClrcsTagInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ClrcsTagInfoVo">
+		SELECT /* 문화자원태그정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectClrcsTagInfoList */
+		       A.* 
+		  FROM (
+				SELECT 
+					   T01.CLRCS_ID			/* 문화자원아이디 */
+					 , T01.TAG_SN			/* 태그일련번호 */
+					 , T01.TAG_NM			/* 태그명 */
+					 , T01.DEL_YN			/* 삭제여부 */
+					 , T01.FRST_RGTR_ID		/* 최초등록자아이디 */
+					 , T01.FRST_REG_DT		/* 최초등록일시 */
+					 , T01.LAST_MDFR_ID		/* 최종수정자아이디 */
+					 , T01.LAST_MDFCN_DT	/* 최종수정일시 */
+			 	  FROM TX_CLRCS_TAG_INFO T01
+				 WHERE 1 = 1
+				 <if test='clrcsId != null and !clrcsId.equals("")'>
+				   AND T01.CLRCS_ID = #{clrcsId} 
+				 </if> 
+				 ORDER BY T01.TAG_NM ASC
+			   ) A
+	</select>
+	
+	<select id="selectDgtlClrcsPrdctFileInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsPrdctFileInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsPrdctFileInfoVo">
+		/* 디지털문화자원산출물파일정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlClrcsPrdctFileInfoList */
+		WITH CLRCS_PRDCT_BASE_INFO (FILE_STRG_PATH_NM1, FILE_STRG_PATH_NM2, FILE_STRG_PATH_NM3, FILE_STRG_PATH_NM4,FILE_STRG_PATH_NM) AS
+		(
+			SELECT 
+				   CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',5) = FILE_NM THEN NULL 
+						WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',5) = '' THEN NULL
+						ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',5) 
+				   END AS FILE_STRG_PATH_NM1
+				 , CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',6) = FILE_NM THEN NULL 
+						WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',6) = '' THEN NULL
+						ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',6) 
+				   END AS FILE_STRG_PATH_NM2
+				 , CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',7) = FILE_NM THEN NULL 
+						WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',7) = '' THEN NULL
+						ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',7) 
+				   END AS FILE_STRG_PATH_NM3
+				 , CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',8) = FILE_NM THEN NULL 
+						WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',8) = '' THEN NULL
+						ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',8) 
+				   END AS FILE_STRG_PATH_NM4
+				 , FILE_STRG_PATH_NM
+			  FROM (
+				  	SELECT REPLACE(FILE_STRG_PATH_NM, #{fileSavePath}, '') AS FILE_STRG_PATH_NM
+				  		 , FILE_STRG_PATH_NM AS ORG_FILE_STRG_PATH_NM
+				  		 , FILE_NM
+					  FROM TX_DGTL_CLRCS_PRDCT_INFO
+					 WHERE CLRCS_ID = #{clrcsId}
+					   AND PRDCT_CLSF_CD = #{prdctClsfCd}
+					   AND FILE_STRG_PATH_NM LIKE #{fileSavePath}||'%'
+					   AND RLS_YN = 'Y'
+				   ) T01
+			 ORDER BY FILE_STRG_PATH_NM
+		)
+		, CLRCS_PRDCT_DIR_INFO (DIR_NM, UP_DIR_NM, UP_ORG_DIR_NM, ORG_DIR_NM, LVL) AS
+		(
+			SELECT FILE_STRG_PATH_NM1 AS DIR_NM
+				 , NULL AS UP_DIR_NM
+				 , NULL AS UP_ORG_DIR_NM
+				 , FILE_STRG_PATH_NM1 AS ORG_DIR_NM
+				 , 1 AS LVL
+			  FROM CLRCS_PRDCT_BASE_INFO
+			 WHERE FILE_STRG_PATH_NM1 IS NOT NULL
+			 GROUP BY FILE_STRG_PATH_NM1 
+			 UNION ALL
+			SELECT FILE_STRG_PATH_NM2 AS DIR_NM
+				 , FILE_STRG_PATH_NM1 AS UP_DIR_NM
+				 , FILE_STRG_PATH_NM1 AS UP_ORG_DIR_NM
+				 , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2 AS ORG_DIR_NM
+				 , 2 AS LVL
+			  FROM CLRCS_PRDCT_BASE_INFO
+			 WHERE FILE_STRG_PATH_NM2 IS NOT NULL
+			 GROUP BY FILE_STRG_PATH_NM1,FILE_STRG_PATH_NM2 
+			 UNION ALL
+			SELECT FILE_STRG_PATH_NM3 AS DIR_NM
+				 , FILE_STRG_PATH_NM2 AS UP_DIR_NM
+				 , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2 AS UP_ORG_DIR_NM
+				 , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2||'/'||FILE_STRG_PATH_NM3 AS ORG_DIR_NM
+				 , 3 AS LVL
+			  FROM CLRCS_PRDCT_BASE_INFO
+			 WHERE FILE_STRG_PATH_NM3 IS NOT NULL
+			 GROUP BY FILE_STRG_PATH_NM1,FILE_STRG_PATH_NM2,FILE_STRG_PATH_NM3 
+			 UNION ALL
+			SELECT FILE_STRG_PATH_NM4 AS DIR_NM
+				 , FILE_STRG_PATH_NM3 AS UP_DIR_NM
+				 , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2||'/'||FILE_STRG_PATH_NM3 AS UP_ORG_DIR_NM
+				 , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2||'/'||FILE_STRG_PATH_NM3||'/'||FILE_STRG_PATH_NM4 AS ORG_DIR_NM
+				 , 4 AS LVL
+			  FROM CLRCS_PRDCT_BASE_INFO
+			 WHERE FILE_STRG_PATH_NM4 IS NOT NULL
+			 GROUP BY FILE_STRG_PATH_NM1,FILE_STRG_PATH_NM2,FILE_STRG_PATH_NM3,FILE_STRG_PATH_NM4
+		)
+		SELECT 
+			   T01.CLRCS_ID AS CLRCS_ID
+			 , T01.PRDCT_SN AS PRDCT_SN
+			 , 'FL' AS FILE_TYPE
+			 , T01.ORG_DIR_NM
+			 , T01.FILE_NM AS PRDCT_NM 
+			 , T01.FILE_SZ
+		     , T01.SN	AS SQ
+		     , T02.SN	AS UP_SQ
+			 , COALESCE(T02.LVL,0)+1 AS LVL
+		  FROM (
+				SELECT 
+					   CLRCS_ID				/* 문화자원아이디 */
+					 , PRDCT_SN				/* 산출물일련번호 */
+					 , FILE_NM				/* 파일명 */
+					 , FILE_STRG_PATH_NM	/* 파일저장경로명 */
+					 , FILE_SZ				/* 파일크기 */
+					 , ORGNL_FILE_NM		/* 원본파일명 */
+				<choose>
+					<when test='prdctClsfCd != null and prdctClsfCd.equals("01")'>
+					 , REPLACE(SUBSTR(FILE_STRG_PATH_NM,POSITION('FINAL/' IN FILE_STRG_PATH_NM)+6),'/'||FILE_NM,'') AS ORG_DIR_NM
+					</when>
+					<when test='prdctClsfCd != null and prdctClsfCd.equals("02")'>
+					 , REPLACE(SUBSTR(FILE_STRG_PATH_NM,POSITION('STEP/' IN FILE_STRG_PATH_NM)+5),'/'||FILE_NM,'') AS ORG_DIR_NM
+					</when>
+					<otherwise>
+					 , REPLACE(SUBSTR(FILE_STRG_PATH_NM,POSITION('FINAL/' IN FILE_STRG_PATH_NM)+6),'/'||FILE_NM,'') AS ORG_DIR_NM
+					</otherwise>
+				</choose>
+					 , ROW_NUMBER() OVER (ORDER BY FILE_STRG_PATH_NM ASC)
+					   + (SELECT COUNT(1) 
+					        FROM CLRCS_PRDCT_DIR_INFO
+						  ) AS SN
+				  FROM TX_DGTL_CLRCS_PRDCT_INFO
+				 WHERE CLRCS_ID = #{clrcsId}
+				   AND PRDCT_CLSF_CD = #{prdctClsfCd}
+				   AND FILE_STRG_PATH_NM LIKE #{fileSavePath}||'%'
+				   AND RLS_YN = 'Y'
+		       ) T01
+		  LEFT JOIN (
+				SELECT DIR_NM
+				     , UP_DIR_NM
+					 , UP_ORG_DIR_NM
+					 , ORG_DIR_NM
+					 , LVL
+					 , ROW_NUMBER() OVER (ORDER BY ORG_DIR_NM ASC) AS SN
+				  FROM CLRCS_PRDCT_DIR_INFO T02
+		       ) T02
+		    ON T02.ORG_DIR_NM = T01.ORG_DIR_NM
+		 UNION ALL
+		SELECT 
+			   #{clrcsId} AS CLRCS_ID
+			 , NULL AS PRDCT_SN
+			 , 'DR' AS FILE_TYPE
+			 , T01.ORG_DIR_NM
+			 , T01.DIR_NM AS PRDCT_NM 
+			 , 0 AS FILE_SZ
+		     , T01.SN	AS SQ
+		     , T02.SN	AS UP_SQ
+			 , COALESCE(T01.LVL,1) AS LVL
+		  FROM (
+				SELECT DIR_NM
+				     , UP_DIR_NM
+					 , UP_ORG_DIR_NM
+					 , ORG_DIR_NM
+					 , LVL
+					 , ROW_NUMBER() OVER (ORDER BY ORG_DIR_NM ASC) AS SN
+				  FROM CLRCS_PRDCT_DIR_INFO T02
+		       ) T01
+		  LEFT JOIN (
+				SELECT DIR_NM
+				     , UP_DIR_NM
+					 , UP_ORG_DIR_NM
+					 , ORG_DIR_NM
+					 , LVL
+					 , ROW_NUMBER() OVER (ORDER BY ORG_DIR_NM ASC) AS SN
+				  FROM CLRCS_PRDCT_DIR_INFO T02
+		       ) T02
+		    ON T02.ORG_DIR_NM = T01.UP_ORG_DIR_NM
+		 ORDER BY 4,6
+	</select>
+	
+	<select id="selectDgtlClrcsPrdctInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsPrdctInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsPrdctInfoVo">
+		SELECT /* 디지털문화자원산출물정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlClrcsPrdctInfoList */
+		       A.* 
+		  FROM (
+				SELECT 
+					   CLRCS_ID				/* 문화자원아이디 */
+					 , PRDCT_SN				/* 산출물일련번호 */
+					 , PRDCT_TYPE_CD		/* 산출물유형코드 */
+					 , PRDCT_CLSF_CD		/* 산출물분류코드 */
+					 , PRDCT_USG_CD			/* 산출물용도코드 */
+					 , RPRS_YN				/* 대표여부 */
+					 , FILE_TYPE_CD			/* 파일유형코드 */
+					 , FILE_NM				/* 파일명 */
+					 , FILE_STRG_PATH_NM	/* 파일저장경로명 */
+					 , FILE_SZ				/* 파일크기 */
+					 , ORGNL_FILE_NM		/* 원본파일명 */
+					 , CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+					 , QLT_EVL_SCR			/* 품질평가점수 */
+					 , APRV_CLSF_CD			/* 승인분류코드 */
+					 , IGI_DT				/* 검수일시 */
+					 , DWNLD_CNT			/* 다운로드수 */
+					 , REG_FILE_CNT			/* 등록파일수 */
+					 , CLCT_TYPE_CD			/* 수집유형코드 */
+					 , GMTR_TRNGL_CNT AS GMTR_TRIANGLE		/* GEOMETRY삼각 */
+					 , GMTR_SQUR_CNT AS GMTR_QUAD			/* GEOMETRY사각 */
+					 , GMTR_POLYGON_CNT AS GMTR_POLYGON		/* GEOMETRY다각 */
+					 , PBR_CD_CN			/* PBR코드내용 */
+					 , TXTRS_CN AS TEXTURES_CN			/* TEXTURES내용 */
+					 , MTRL_CN AS MTRAS_CN				/* MATERIALS내용 */
+					 , UV_LYR_CNT AS UV_LAYRS_CNT			/* UVLAYERS수 */
+					 , PHOTO_SZ_CN AS PHOTO_SZ				/* 사진크기 */
+					 , RSL_CN				/* 해상도내용 */
+					 , BIT_LVL_CD			/* 비트수준코드 */
+					 , VDO_SCRG_HR			/* 동영상상영시간 */
+					 , RLS_YN				/* 공개여부 */
+					 , DEL_WTNG_YN			/* 삭제대기여부 */
+					 , DEL_RQSTR_ID			/* 삭제요청자아이디 */
+					 , DEL_DMND_DT			/* 삭제요청일시 */
+					 , FRST_RGTR_ID			/* 최초등록자아이디 */
+					 , FRST_REG_DT			/* 최초등록일시 */
+					 , LAST_MDFR_ID			/* 최종수정자아이디 */
+					 , LAST_MDFCN_DT		/* 최종수정일시 */
+			 	  FROM TX_DGTL_CLRCS_PRDCT_INFO
+				 WHERE 1 = 1
+				 <if test='clrcsId != null and !clrcsId.equals("")'>
+				   AND CLRCS_ID = #{clrcsId} 
+				 </if> 
+				 <if test='prdctSn != null and !prdctSn.equals("")'>
+				   AND PRDCT_SN = #{prdctSn}::NUMERIC  
+				 </if> 
+				 <if test='prdctClsfCd != null and !prdctClsfCd.equals("")'>
+				   AND PRDCT_CLSF_CD = #{prdctClsfCd}
+				 </if>  
+				 <if test='rprsYn != null and rprsYn.equals("Y")'>
+				   -- AND RPRS_YN = #{rprsYn}
+				   AND FILE_NM IS NOT NULL
+				 </if>  
+				 ORDER BY RPRS_YN DESC, PRDCT_SN ASC
+			   ) A
+	</select>
+	
+	<select id="selectPrdctFbxFileList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsPrdctFileInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsPrdctInfoVo">
+		SELECT /* 산출물 FBX 파일 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectPrdctFbxFileList */
+			   CLRCS_ID				/* 문화자원아이디 */
+			 , PRDCT_SN				/* 산출물일련번호 */
+			 , PRDCT_CLSF_CD		/* 산출물분류코드 */
+			 , CASE WHEN SUBSTR(FILE_NM,POSITION('.' IN FILE_NM)+1) = 'fbx' THEN 'FBX'
+			        ELSE SUBSTR(FILE_NM,POSITION('.' IN FILE_NM)-2,2)
+				END AS FILE_TYPE_CD			/* 파일유형코드 */
+			 , FILE_NM				/* 파일명 */
+			 , FILE_STRG_PATH_NM	/* 파일저장경로명 */
+			 , FILE_SZ				/* 파일크기 */
+		  FROM TX_DGTL_CLRCS_PRDCT_INFO
+		 WHERE 1 = 1
+		 <if test='clrcsId != null and !clrcsId.equals("")'>
+		   AND CLRCS_ID = #{clrcsId} 
+		 </if> 
+		   AND PRDCT_CLSF_CD = '01'
+		   AND FILE_STRG_PATH_NM LIKE #{fileSavePath}||'%'
+		   AND FILE_STRG_PATH_NM LIKE '%/Fbx/%'
+		 ORDER BY CLRCS_ID ASC, PRDCT_SN ASC
+	</select>
+	
+	<sql id="sqlDgtlCltClctGroupInfo">
+		SELECT
+		       T001.*
+			 , ROW_NUMBER() OVER(ORDER BY 
+		<choose>
+			<when test='orderByKey != null and orderByKey.equals("A")'>
+				T001.DWNLD_CNT DESC, T001.SORT_SN ASC
+			</when>
+			<when test='orderByKey != null and orderByKey.equals("B")'>
+				T001.FRST_REG_DT DESC, T001.SORT_SN ASC
+			</when>
+			<when test='orderByKey != null and orderByKey.equals("C")'>
+				T001.INQ_CNT DESC, T001.SORT_SN ASC
+			</when>
+			<otherwise>
+				T001.SORT_SN ASC
+			</otherwise>
+		</choose>
+			   ) AS ROW_SN
+		  FROM (
+			SELECT 
+				   T01.DSPY_ID AS EXBI_ID							/* 전시회아이디 */
+				 , MAX(T01.DSPY_NM) AS EXBI_NM						/* 전시회명 */
+				 /*, MAX(T01.EXBI_EXPLN_CN) AS EXBI_EXPLN			    /* 전시회설명 */*/
+-- 				 , MAX(T01.EXBI_BGNG_YMD) AS EXBI_BGNG_YMD			/* 전시회시작일자 */
+-- 				 , MAX(T01.EXBI_END_YMD) AS EXBI_END_YMD			/* 전시회종료일자 */
+-- 				 , MAX(T01.CONTS_CNJT_EFCT_EXPLN_CN) AS CONTS_CNJT_EFCT_EXPLN_CN	/* 콘텐츠활용효과설명내용 */
+				 , SUM(COALESCE(T03.INQ_CNT,0)) AS INQ_CNT			/* 조회수 */
+				 , SUM(COALESCE(T03.RCMDTN_CNT,0)) AS RCMDTN_CNT	/* 추천수 */
+				 , SUM(COALESCE(T03.DWNLD_CNT,0)) AS DWNLD_CNT		/* 다운로드수 */
+				 , MAX(COALESCE(T01.SORT_SN,9999)) AS SORT_SN
+				 , MAX(T01.FRST_REG_DT) AS FRST_REG_DT				/* 최초등록일시 */
+				 , MAX(T01.LAST_MDFCN_DT) AS LAST_MDFCN_DT			/* 최종수정일시 */
+			  FROM (
+					SELECT T01.DSPY_ID
+						 , T01.DSPY_NM
+						 , T02.DSPY_ITEM_ID AS EXBI_ID
+					     , T02.SORT_SN
+					     , T01.FRST_REG_DT
+					     , T01.LAST_MDFCN_DT
+					     /*, T01.EXBI_EXPLN_CN*/
+-- 					     , T01.EXBI_BGNG_YMD
+-- 					     , T01.EXBI_END_YMD
+-- 					     , T01.CONTS_CNJT_EFCT_EXPLN_CN
+					  FROM TX_PRTL_DSPY_INFO T01
+					 INNER JOIN TX_PRTL_DSPY_LIST_INFO T02
+					    ON T02.DSPY_ID = T01.DSPY_ID
+					   AND T02.RLS_YN = 'Y'
+					 WHERE T01.DEL_YN = 'N'
+					   AND T01.USE_YN = 'Y'
+					   AND T01.DSPY_TYPE_CD = 'PTDPTY0002'
+			       ) T01 
+			  LEFT JOIN TX_EXBI_INFO T02
+			 	ON T02.EXBI_ID = T01.EXBI_ID
+			  LEFT JOIN (
+				 	SELECT T09.EXBI_ID
+					     , MIN(T09.SORT_SN) AS SORT_SN
+					     , SUM(T10.INQ_CNT) AS INQ_CNT
+					     , SUM(T10.RCMDTN_CNT) AS RCMDTN_CNT
+					     , SUM(T10.DWNLD_CNT) AS DWNLD_CNT
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 GROUP BY T09.EXBI_ID
+			       ) T03 
+			 	ON T03.EXBI_ID = T02.EXBI_ID
+			 WHERE 1 = 1
+			 <if test='exbiId != null and !exbiId.equals("")'>
+			   AND T01.DSPY_ID = #{exbiId} 
+			 </if> 
+			 <if test='srchInstId != null and !srchInstId.equals("")'>
+			   -- AND T01.INST_ID = #{srchInstId} 
+			 </if>
+			<choose>
+				<when test='srchTagVal != null and !srchTagVal.equals("")'>
+			   AND T02.EXBI_ID IN (
+		   			SELECT EXBI_ID
+		   			  FROM TX_EXBI_CLRCS_REL_INFO
+		   			 WHERE RLS_YN = 'Y'
+		   			   AND CLRCS_ID IN (
+		   			   		SELECT CLRCS_ID
+		   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		   			   		 WHERE RLS_YN = 'Y'
+		   			   		   AND CLRCS_ID IN (
+							   		SELECT CLRCS_ID
+								 	  FROM TX_CLRCS_TAG_INFO
+								 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+						   		   )
+		   			   	   )
+			       )
+				</when>
+			 	<when test='srchVal != null and !srchVal.equals("")'>
+			   AND (
+			   		   UPPER(T02.EXBI_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		/*OR UPPER(T02.EXBI_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'*/
+			   		OR UPPER(T01.DSPY_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		OR T02.EXBI_ID IN (
+			   			SELECT EXBI_ID
+			   			  FROM TX_EXBI_CLRCS_REL_INFO
+			   			 WHERE RLS_YN = 'Y'
+			   			   AND CLRCS_ID IN (
+			   			   		SELECT CLRCS_ID
+			   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+			   			   		 WHERE RLS_YN = 'Y'
+			   			   		   AND (
+			   			   		       UPPER(CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR CLRCS_ID IN (
+								   		SELECT CLRCS_ID
+									 	  FROM TX_CLRCS_TAG_INFO
+									 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+							   		   )
+							   		   )
+			   			   	   )
+			   		   )
+			       )
+			 	</when>
+			 </choose>
+			 GROUP BY T01.DSPY_ID
+		       ) T001
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					T001.DWNLD_CNT DESC, T001.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T001.FRST_REG_DT DESC, T001.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					T001.INQ_CNT DESC, T001.SORT_SN ASC
+				</when>
+				<otherwise>
+					T001.SORT_SN ASC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<sql id="sqlDgtlCltClctGroupCntInfo">
+		SELECT
+		       T001.EXBI_ID AS EXBI_ID				                /* 전시회아이디 */
+		  FROM (
+			SELECT 
+				   T01.DSPY_ID AS EXBI_ID							/* 전시회아이디 */
+				 , MAX(T01.DSPY_NM) AS EXBI_NM						/* 전시회명 */
+				 /*, MAX(T02.EXBI_EXPLN_CN) AS EXBI_EXPLN			    /* 전시회설명 */*/
+				 , SUM(COALESCE(T03.INQ_CNT,0)) AS INQ_CNT			/* 조회수 */
+				 , SUM(COALESCE(T03.RCMDTN_CNT,0)) AS RCMDTN_CNT	/* 추천수 */
+				 , SUM(COALESCE(T03.DWNLD_CNT,0)) AS DWNLD_CNT		/* 다운로드수 */
+				 , MAX(COALESCE(T01.SORT_SN,9999)) AS SORT_SN
+				 , MAX(T01.FRST_REG_DT) AS FRST_REG_DT				/* 최초등록일시 */
+				 , MAX(T01.LAST_MDFCN_DT) AS LAST_MDFCN_DT			/* 최종수정일시 */
+			  FROM (
+					SELECT T01.DSPY_ID
+						 , T01.DSPY_NM
+						 , T02.DSPY_ITEM_ID AS EXBI_ID
+					     , T02.SORT_SN
+					     , T01.FRST_REG_DT
+					     , T01.LAST_MDFCN_DT
+					  FROM TX_PRTL_DSPY_INFO T01
+					 INNER JOIN TX_PRTL_DSPY_LIST_INFO T02
+					    ON T02.DSPY_ID = T01.DSPY_ID
+					   AND T02.RLS_YN = 'Y'
+					 WHERE T01.DEL_YN = 'N'
+					   AND T01.USE_YN = 'Y'
+					   AND T01.DSPY_TYPE_CD = 'PTDPTY0002'
+			       ) T01 
+			  LEFT JOIN TX_EXBI_INFO T02
+			 	ON T02.EXBI_ID = T01.EXBI_ID
+			  LEFT JOIN (
+				 	SELECT T09.EXBI_ID
+					     , MIN(T09.SORT_SN) AS SORT_SN
+					     , SUM(T10.INQ_CNT) AS INQ_CNT
+					     , SUM(T10.RCMDTN_CNT) AS RCMDTN_CNT
+					     , SUM(T10.DWNLD_CNT) AS DWNLD_CNT
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 GROUP BY T09.EXBI_ID
+			       ) T03 
+			 	ON T03.EXBI_ID = T02.EXBI_ID
+			 WHERE 1 = 1
+			 <if test='exbiId != null and !exbiId.equals("")'>
+			   AND T01.DSPY_ID = #{exbiId} 
+			 </if> 
+			 <if test='srchInstId != null and !srchInstId.equals("")'>
+			   -- AND T01.INST_ID = #{srchInstId} 
+			 </if>
+			<choose>
+				<when test='srchTagVal != null and !srchTagVal.equals("")'>
+			   AND T02.EXBI_ID IN (
+		   			SELECT EXBI_ID
+		   			  FROM TX_EXBI_CLRCS_REL_INFO
+		   			 WHERE RLS_YN = 'Y'
+		   			   AND CLRCS_ID IN (
+		   			   		SELECT CLRCS_ID
+		   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		   			   		 WHERE RLS_YN = 'Y'
+		   			   		   AND CLRCS_ID IN (
+							   		SELECT CLRCS_ID
+								 	  FROM TX_CLRCS_TAG_INFO
+								 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+						   		   )
+		   			   	   )
+			       )
+				</when>
+			 	<when test='srchVal != null and !srchVal.equals("")'>
+			   AND (
+			   		   UPPER(T02.EXBI_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		/*OR UPPER(T02.EXBI_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'*/
+			   		OR UPPER(T01.DSPY_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		OR T02.EXBI_ID IN (
+			   			SELECT EXBI_ID
+			   			  FROM TX_EXBI_CLRCS_REL_INFO
+			   			 WHERE RLS_YN = 'Y'
+			   			   AND CLRCS_ID IN (
+			   			   		SELECT CLRCS_ID
+			   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+			   			   		 WHERE RLS_YN = 'Y'
+			   			   		   AND (
+			   			   		       UPPER(CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR CLRCS_ID IN (
+								   		SELECT CLRCS_ID
+									 	  FROM TX_CLRCS_TAG_INFO
+									 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+							   		   )
+							   		   )
+			   			   	   )
+			   		   )
+			       )
+			 	</when>
+			 </choose>
+			 GROUP BY T01.DSPY_ID
+		       ) T001
+	</sql>
+	
+	<sql id="sqlDgtlCltClctGroupPrevNextInfo">
+		SELECT
+		       T001.*
+		  FROM (
+			SELECT 
+				   T01.DSPY_ID AS EXBI_ID							/* 전시회아이디 */
+				 , MAX(T01.DSPY_NM) AS EXBI_NM						/* 전시회명 */
+				 /*, MAX(T01.EXBI_EXPLN_CN) AS EXBI_EXPLN			    /* 전시회설명 */*/
+-- 				 , MAX(T01.EXBI_BGNG_YMD) AS EXBI_BGNG_YMD			/* 전시회시작일자 */
+-- 				 , MAX(T01.EXBI_END_YMD) AS EXBI_END_YMD			/* 전시회종료일자 */
+-- 				 , MAX(T01.CONTS_CNJT_EFCT_EXPLN_CN) AS CONTS_CNJT_EFCT_EXPLN_CN	/* 콘텐츠활용효과설명내용 */
+				 , SUM(COALESCE(T03.INQ_CNT,0)) AS INQ_CNT			/* 조회수 */
+				 , SUM(COALESCE(T03.RCMDTN_CNT,0)) AS RCMDTN_CNT	/* 추천수 */
+				 , SUM(COALESCE(T03.DWNLD_CNT,0)) AS DWNLD_CNT		/* 다운로드수 */
+				 , MAX(COALESCE(T01.SORT_SN,9999)) AS SORT_SN
+				 , MAX(T01.FRST_REG_DT) AS FRST_REG_DT				/* 최초등록일시 */
+				 , MAX(T01.LAST_MDFCN_DT) AS LAST_MDFCN_DT			/* 최종수정일시 */
+			  FROM (
+					SELECT T01.DSPY_ID
+						 , T01.DSPY_NM
+						 , T02.DSPY_ITEM_ID AS EXBI_ID
+					     , T02.SORT_SN
+					     , T01.FRST_REG_DT
+					     , T01.LAST_MDFCN_DT
+					     /*, T01.EXBI_EXPLN_CN*/
+-- 					     , T01.EXBI_BGNG_YMD
+-- 					     , T01.EXBI_END_YMD
+-- 					     , T01.CONTS_CNJT_EFCT_EXPLN_CN
+					  FROM TX_PRTL_DSPY_INFO T01
+					 INNER JOIN TX_PRTL_DSPY_LIST_INFO T02
+					    ON T02.DSPY_ID = T01.DSPY_ID
+					   AND T02.RLS_YN = 'Y'
+					 WHERE T01.DEL_YN = 'N'
+					   AND T01.USE_YN = 'Y'
+					   AND T01.DSPY_TYPE_CD = 'PTDPTY0002'
+			       ) T01 
+			  LEFT JOIN TX_EXBI_INFO T02
+			 	ON T02.EXBI_ID = T01.EXBI_ID
+			  LEFT JOIN (
+				 	SELECT T09.EXBI_ID
+					     , MIN(T09.SORT_SN) AS SORT_SN
+					     , SUM(T10.INQ_CNT) AS INQ_CNT
+					     , SUM(T10.RCMDTN_CNT) AS RCMDTN_CNT
+					     , SUM(T10.DWNLD_CNT) AS DWNLD_CNT
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 GROUP BY T09.EXBI_ID
+			       ) T03 
+			 	ON T03.EXBI_ID = T02.EXBI_ID
+			 WHERE 1 = 1
+			 <if test='srchInstId != null and !srchInstId.equals("")'>
+			   -- AND T01.INST_ID = #{srchInstId} 
+			 </if>
+			<choose>
+				<when test='srchTagVal != null and !srchTagVal.equals("")'>
+			   AND T02.EXBI_ID IN (
+		   			SELECT EXBI_ID
+		   			  FROM TX_EXBI_CLRCS_REL_INFO
+		   			 WHERE RLS_YN = 'Y'
+		   			   AND CLRCS_ID IN (
+		   			   		SELECT CLRCS_ID
+		   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		   			   		 WHERE RLS_YN = 'Y'
+		   			   		   AND CLRCS_ID IN (
+							   		SELECT CLRCS_ID
+								 	  FROM TX_CLRCS_TAG_INFO
+								 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+						   		   )
+		   			   	   )
+			       )
+				</when>
+			 	<when test='srchVal != null and !srchVal.equals("")'>
+			   AND (
+			   		   UPPER(T02.EXBI_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		/*OR UPPER(T02.EXBI_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'*/
+			   		OR UPPER(T01.DSPY_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		OR T02.EXBI_ID IN (
+			   			SELECT EXBI_ID
+			   			  FROM TX_EXBI_CLRCS_REL_INFO
+			   			 WHERE RLS_YN = 'Y'
+			   			   AND CLRCS_ID IN (
+			   			   		SELECT CLRCS_ID
+			   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+			   			   		 WHERE RLS_YN = 'Y'
+			   			   		   AND (
+			   			   		       UPPER(CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR CLRCS_ID IN (
+								   		SELECT CLRCS_ID
+									 	  FROM TX_CLRCS_TAG_INFO
+									 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+							   		   )
+							   		   )
+			   			   	   )
+			   		   )
+			       )
+			 	</when>
+			 </choose>
+			 GROUP BY T01.DSPY_ID
+		       ) T001
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					T001.DWNLD_CNT DESC, T001.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T001.FRST_REG_DT DESC, T001.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					T001.INQ_CNT DESC, T001.SORT_SN ASC
+				</when>
+				<otherwise>
+					T001.SORT_SN ASC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<select id="selectDgtlCltClctGroupPrevNextInfo" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo">
+		SELECT /* 디지털문화컬렉션그룹이전다음글정보 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctGroupPrevNextInfo */
+		       A.*
+		  FROM (
+			SELECT 
+			       A.EXBI_ID
+				 , LAG(A.EXBI_ID, 1) OVER(ORDER BY 
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					A.DWNLD_CNT DESC, A.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					A.FRST_REG_DT DESC, A.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					A.INQ_CNT DESC, A.SORT_SN ASC
+				</when>
+				<otherwise>
+					A.SORT_SN ASC
+				</otherwise>
+			</choose>
+				   ) AS PREV_EXBI_ID
+				 , LEAD(A.EXBI_ID, 1) OVER(ORDER BY 
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					A.DWNLD_CNT DESC, A.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					A.FRST_REG_DT DESC, A.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					A.INQ_CNT DESC, A.SORT_SN ASC
+				</when>
+				<otherwise>
+					A.SORT_SN ASC
+				</otherwise>
+			</choose>
+				   ) AS NEXT_EXBI_ID
+			  FROM (
+				<include refid="sqlDgtlCltClctGroupPrevNextInfo" />
+				   ) A
+			   ) A
+		 WHERE A.EXBI_ID = #{exbiId}	   
+	</select>
+
+	<select id="selectDgtlCltClctGroupInfoCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo" resultType="java.lang.Integer" >
+		SELECT /* 디지털문화컬렉션그룹정보 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctGroupInfoCnt */
+			   COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlDgtlCltClctGroupCntInfo" />
+		 	   ) A
+	</select>
+
+	<select id="selectDgtlCltClctGroupInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		SELECT /* 디지털문화컬렉션그룹정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctGroupInfoList */
+		       A.* 
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+			<include refid="sqlDgtlCltClctGroupInfo" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<select id="selectDgtlCltClctGroupInfoDtl" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchExbiInfoVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		SELECT /* 디지털문화컬렉션그룹정보 상세 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctGroupInfoDtl */
+		       A.* 
+		  FROM (
+			<include refid="sqlDgtlCltClctGroupInfo" />
+			   ) A
+	</select>
+
+	<select id="selectDgtlCltClctGroupRprsImgList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo" resultType="java.util.Map">
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT /* 디지털문화컬렉션그룹 대표이미지 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltClctGroupRprsImgList */
+			   T03.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T03.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T03.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+	       	 , T02.CLRCS_ID            /*문화자원아이디*/ 
+		     , T02.INST_ID               /*기관아이디  */
+		     , (
+		        SELECT T08.INST_NM
+		          FROM TX_INST_INFO T08
+		         WHERE T08.INST_ID = T02.INST_ID
+		        ) AS INST_NM       /* 기관명 */
+		     , T02.CLRCS_NM            /*문화자원명 */
+		     , T02.CLRCS_ENG_NM        /*문화자원영문명*/ 
+		     , T02.CLRCS_CHN_NM AS CLRCS_CHNSN_NM        /*문화자원중문명*/ 
+		     , T02.CLRCS_AUT_NM        /*문화자원저자명*/ 
+		     , T02.CLRCS_SBTTL_NM AS CLRCS_SBTTL           /*문화자원부제목*/ 
+		     , T02.CLRCS_EXPLN_CN AS CLRCS_EXPLN           /*문화자원설명*/
+		     , T02.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN    /*문화자원부가설*/ 
+		     , T02.CLRCS_SZ_CN AS CLRCS_SZ            /*문화자원크기*/
+		     , T02.CLTPTY_TYPE_CD        /*문화재유형코드*/ 
+		     , T02.CLCN_CD               /*소장품코드 */
+		     , T02.CLRCS_URL_ADDR AS CLRCS_URL           /*문화자원URL*/ 
+		     , T02.CLCT_TYPE_CD        /*수집유형코드*/
+		     , T02.INQ_CNT               /*조회수*/
+		     , T02.INST_ITSL_MNG_NO    /*기관자체관리번*/ 
+		     , T02.WRI_NM                /*작가명*/
+		     , T02.FDSP_NM               /*출토지명*/
+		     , T02.DSPY_NM               /*전시명*/
+		     , T02.DSPY_PLC_NM           /*전시장소명*/
+		     , T02.RCMDTN_CNT            /*추천수*/
+		     , T02.DWNLD_CNT           /*다운로드수*/
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+		 	   	SELECT EXBI_ID
+		 	   	     , CLRCS_ID
+		 	   	     , SORT_SN1
+		 	   	     , SORT_SN2
+		 	   	  FROM (
+				 	   	SELECT T01.EXBI_ID
+				 	   	     , T01.CLRCS_ID
+				 	   	     , T02.SORT_SN AS SORT_SN1
+				 	   	     , T01.SORT_SN AS SORT_SN2
+				  		     , ROW_NUMBER() OVER (PARTITION BY T01.CLRCS_ID ORDER BY T01.EXBI_ID DESC,T02.SORT_SN ASC,T01.SORT_SN ASC) AS EXBI_SN
+				 	   	  FROM TX_EXBI_CLRCS_REL_INFO T01
+						 INNER JOIN (
+								SELECT DSPY_ITEM_ID AS EXBI_ID
+								     , SORT_SN
+								  FROM TX_PRTL_DSPY_LIST_INFO 
+								 WHERE 1 =1
+								 <if test='exbiId != null and !exbiId.equals("")'>
+								   AND DSPY_ID = #{exbiId} 
+								 </if> 
+						  	   ) T02
+						  	ON T02.EXBI_ID = T01.EXBI_ID
+				 	   	 WHERE T01.RLS_YN = 'Y'
+		 	   	       ) T01
+				 WHERE EXBI_SN = 1				 	   
+		  	   ) T01
+		 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T02
+		    ON T02.CLRCS_ID = T01.CLRCS_ID
+  		   AND T02.RLS_YN = 'Y'
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T03
+		  	ON T03.ATCH_FILE_GROUP_ID = T02.RPRS_IMG_GROUP_ID
+		   AND T03.ATCH_FILE_SN = 1
+		 WHERE 1 = 1
+		 ORDER BY T01.SORT_SN2 ASC, T01.SORT_SN1 ASC
+		 LIMIT #{rprsImgCnt}
+	</select>
+	
+	<sql id="sqlSrchDgtlCltClctGroupInfo">
+		SELECT
+		       T001.*
+		  FROM (
+			SELECT 
+				   T01.DSPY_ID AS EXBI_ID							/* 전시회아이디 */
+				 , MAX(T01.DSPY_NM) AS EXBI_NM						/* 전시회명 */
+				 , SUM(COALESCE(T03.INQ_CNT,0)) AS INQ_CNT			/* 조회수 */
+				 , SUM(COALESCE(T03.RCMDTN_CNT,0)) AS RCMDTN_CNT	/* 추천수 */
+				 , SUM(COALESCE(T03.DWNLD_CNT,0)) AS DWNLD_CNT		/* 다운로드수 */
+				 , MAX(COALESCE(T01.SORT_SN,9999)) AS SORT_SN
+				 , MAX(T01.FRST_REG_DT) AS FRST_REG_DT				/* 최초등록일시 */
+				 , MAX(T01.LAST_MDFCN_DT) AS LAST_MDFCN_DT			/* 최종수정일시 */
+			  FROM (
+					SELECT T01.DSPY_ID
+						 , T01.DSPY_NM
+						 , T02.DSPY_ITEM_ID AS EXBI_ID
+					     , T02.SORT_SN
+					     , T01.FRST_REG_DT
+					     , T01.LAST_MDFCN_DT
+					  FROM TX_PRTL_DSPY_INFO T01
+					 INNER JOIN TX_PRTL_DSPY_LIST_INFO T02
+					    ON T02.DSPY_ID = T01.DSPY_ID
+					   AND T02.RLS_YN = 'Y'
+					 WHERE T01.DEL_YN = 'N'
+					   AND T01.USE_YN = 'Y'
+					   AND T01.DSPY_TYPE_CD = 'PTDPTY0002'
+			       ) T01 
+			  LEFT JOIN TX_EXBI_INFO T02
+			 	ON T02.EXBI_ID = T01.EXBI_ID
+			  LEFT JOIN (
+				 	SELECT T09.EXBI_ID
+					     , MIN(T09.SORT_SN) AS SORT_SN
+					     , SUM(T10.INQ_CNT) AS INQ_CNT
+					     , SUM(T10.RCMDTN_CNT) AS RCMDTN_CNT
+					     , SUM(T10.DWNLD_CNT) AS DWNLD_CNT
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 GROUP BY T09.EXBI_ID
+			       ) T03 
+			 	ON T03.EXBI_ID = T02.EXBI_ID
+			 WHERE 1 = 1
+			   AND T02.EXBI_ID IN (
+			   		SELECT EXBI_ID
+			   		  FROM TX_EXBI_CLRCS_REL_INFO
+			   		 WHERE RLS_YN = 'Y'
+			   		   AND CLRCS_ID IN (
+							SELECT CLRCS_ID				/* 문화자원아이디 */
+							  FROM TX_DGTL_CLRCS_MTDT_INFO
+							 WHERE 1 = 1
+							 <if test='clrcsId != null and !clrcsId.equals("")'>
+							   AND CLRCS_ID = #{clrcsId} 
+							 </if> 
+							 <if test='srchInstId != null and !srchInstId.equals("")'>
+							   AND INST_ID = #{srchInstId} 
+							 </if> 
+							 <if test='srchDataTypeCtgryIdArr != null and !srchDataTypeCtgryIdArr.isEmpty()'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN DATA_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN CONTS_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+							   AND INST_ID IN (
+							   		SELECT INST_ID
+								 	  FROM TX_INST_INFO
+								 	 WHERE RGN_CD = #{srchRgnCd}
+							       )
+							 </if>
+			   		       )
+			       )
+				<choose>
+					<when test='srchTagVal != null and !srchTagVal.equals("")'>
+				   AND T02.EXBI_ID IN (
+			   			SELECT EXBI_ID
+			   			  FROM TX_EXBI_CLRCS_REL_INFO
+			   			 WHERE RLS_YN = 'Y'
+			   			   AND CLRCS_ID IN (
+			   			   		SELECT CLRCS_ID
+			   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+			   			   		 WHERE RLS_YN = 'Y'
+			   			   		   AND CLRCS_ID IN (
+								   		SELECT CLRCS_ID
+									 	  FROM TX_CLRCS_TAG_INFO
+									 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+							   		   )
+			   			   	   )
+				       )
+					</when>
+				 	<when test='srchVal != null and !srchVal.equals("")'>
+				   AND (
+				   		   UPPER(T02.EXBI_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+				   		/*OR UPPER(T02.EXBI_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'*/
+				   		OR UPPER(T01.DSPY_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+				   		OR T02.EXBI_ID IN (
+				   			SELECT EXBI_ID
+				   			  FROM TX_EXBI_CLRCS_REL_INFO
+				   			 WHERE RLS_YN = 'Y'
+				   			   AND CLRCS_ID IN (
+				   			   		SELECT CLRCS_ID
+				   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+				   			   		 WHERE RLS_YN = 'Y'
+				   			   		   AND (
+				   			   		       UPPER(CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+								   		OR UPPER(CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+								   		OR UPPER(CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+								   		OR CLRCS_ID IN (
+									   		SELECT CLRCS_ID
+										 	  FROM TX_CLRCS_TAG_INFO
+										 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+								   		   )
+								   		   )
+				   			   	   )
+				   		   )
+				       )
+				 	</when>
+				</choose>
+				<choose>
+					<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+					</when>
+					<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+					</when>
+					<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+					</when>
+					<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+				   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+					</when>
+				</choose>
+				 GROUP BY T01.DSPY_ID
+		       ) T001
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("A")'>
+					T001.DWNLD_CNT DESC, T001.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T001.FRST_REG_DT DESC, T001.SORT_SN ASC
+				</when>
+				<when test='orderByKey != null and orderByKey.equals("C")'>
+					T001.INQ_CNT DESC, T001.SORT_SN ASC
+				</when>
+				<otherwise>
+					T001.SORT_SN ASC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<sql id="sqlSrchDgtlCltClctGroupCntInfo">
+		SELECT 
+			   T01.EXBI_ID				/* 전시회아이디 */
+		  FROM (
+			SELECT 
+				   T01.DSPY_ID AS EXBI_ID							/* 전시회아이디 */
+				 , MAX(T01.DSPY_NM) AS EXBI_NM						/* 전시회명 */
+				 , SUM(COALESCE(T03.INQ_CNT,0)) AS INQ_CNT			/* 조회수 */
+				 , SUM(COALESCE(T03.RCMDTN_CNT,0)) AS RCMDTN_CNT	/* 추천수 */
+				 , SUM(COALESCE(T03.DWNLD_CNT,0)) AS DWNLD_CNT		/* 다운로드수 */
+				 , MAX(COALESCE(T01.SORT_SN,9999)) AS SORT_SN
+				 , MAX(T01.FRST_REG_DT) AS FRST_REG_DT				/* 최초등록일시 */
+				 , MAX(T01.LAST_MDFCN_DT) AS LAST_MDFCN_DT			/* 최종수정일시 */
+			  FROM (
+					SELECT T01.DSPY_ID
+						 , T01.DSPY_NM
+						 , T02.DSPY_ITEM_ID AS EXBI_ID
+					     , T02.SORT_SN
+					     , T01.FRST_REG_DT
+					     , T01.LAST_MDFCN_DT
+					  FROM TX_PRTL_DSPY_INFO T01
+					 INNER JOIN TX_PRTL_DSPY_LIST_INFO T02
+					    ON T02.DSPY_ID = T01.DSPY_ID
+					   AND T02.RLS_YN = 'Y'
+					 WHERE T01.DEL_YN = 'N'
+					   AND T01.USE_YN = 'Y'
+					   AND T01.DSPY_TYPE_CD = 'PTDPTY0002'
+			       ) T01 
+			  LEFT JOIN TX_EXBI_INFO T02
+			 	ON T02.EXBI_ID = T01.EXBI_ID
+			  LEFT JOIN (
+				 	SELECT T09.EXBI_ID
+					     , MIN(T09.SORT_SN) AS SORT_SN
+					     , SUM(T10.INQ_CNT) AS INQ_CNT
+					     , SUM(T10.RCMDTN_CNT) AS RCMDTN_CNT
+					     , SUM(T10.DWNLD_CNT) AS DWNLD_CNT
+				 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+				 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+				 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+				 	 GROUP BY T09.EXBI_ID
+			       ) T03 
+			 	ON T03.EXBI_ID = T02.EXBI_ID
+			 WHERE 1 = 1
+		       AND T02.EXBI_ID IN (
+			   		SELECT EXBI_ID
+			   		  FROM TX_EXBI_CLRCS_REL_INFO
+			   		 WHERE RLS_YN = 'Y'
+			   		   AND CLRCS_ID IN (
+							SELECT CLRCS_ID				/* 문화자원아이디 */
+							  FROM TX_DGTL_CLRCS_MTDT_INFO
+							 WHERE 1 = 1
+							 <if test='clrcsId != null and !clrcsId.equals("")'>
+							   AND CLRCS_ID = #{clrcsId} 
+							 </if> 
+							 <if test='srchInstId != null and !srchInstId.equals("")'>
+							   AND INST_ID = #{srchInstId} 
+							 </if> 
+							 <if test='srchDataTypeCtgryIdArr != null and !srchDataTypeCtgryIdArr.isEmpty()'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN DATA_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN CONTS_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+							   AND CLRCS_ID IN (
+							   		SELECT T11.CLRCS_ID
+								 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+								 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+								 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+							       )
+							 </if>
+							 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+							   AND INST_ID IN (
+							   		SELECT INST_ID
+								 	  FROM TX_INST_INFO
+								 	 WHERE RGN_CD = #{srchRgnCd}
+							       )
+							 </if>
+			   		       )
+				       )
+			 <if test='exbiId != null and !exbiId.equals("")'>
+			   AND T01.DSPY_ID = #{exbiId} 
+			 </if> 
+			<choose>
+				<when test='srchTagVal != null and !srchTagVal.equals("")'>
+			   AND T01.EXBI_ID IN (
+		   			SELECT EXBI_ID
+		   			  FROM TX_EXBI_CLRCS_REL_INFO
+		   			 WHERE RLS_YN = 'Y'
+		   			   AND CLRCS_ID IN (
+		   			   		SELECT CLRCS_ID
+		   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		   			   		 WHERE RLS_YN = 'Y'
+		   			   		   AND CLRCS_ID IN (
+							   		SELECT CLRCS_ID
+								 	  FROM TX_CLRCS_TAG_INFO
+								 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+						   		   )
+		   			   	   )
+			       )
+				</when>
+			 	<when test='srchVal != null and !srchVal.equals("")'>
+			   AND (
+			   		   UPPER(T02.EXBI_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		/*OR UPPER(T02.EXBI_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'*/
+			   		OR UPPER(T01.DSPY_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+			   		OR T01.EXBI_ID IN (
+			   			SELECT EXBI_ID
+			   			  FROM TX_EXBI_CLRCS_REL_INFO
+			   			 WHERE RLS_YN = 'Y'
+			   			   AND CLRCS_ID IN (
+			   			   		SELECT CLRCS_ID
+			   			   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+			   			   		 WHERE RLS_YN = 'Y'
+			   			   		   AND (
+			   			   		       UPPER(CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR UPPER(CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+							   		OR CLRCS_ID IN (
+								   		SELECT CLRCS_ID
+									 	  FROM TX_CLRCS_TAG_INFO
+									 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+							   		   )
+							   		   )
+			   			   	   )
+			   		   )
+			       )
+				 </when>
+			</choose>
+			<choose>
+				<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+			   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+				</when>
+				<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+			   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+				</when>
+				<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+			   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+				</when>
+				<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+			   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+				</when>
+			</choose>
+			 GROUP BY T01.DSPY_ID
+			) T01
+	</sql>
+
+	<select id="selectSrchDgtlCltClctGroupInfoCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer" >
+		/* 디지털문화컬렉션그룹정보조회 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectSrchDgtlCltClctGroupInfoCnt */
+		<include refid="sqlSrchDgtlCltRscWithInfo" />
+		SELECT 
+			   COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlSrchDgtlCltClctGroupCntInfo" />
+		 	   ) A
+	</select>
+
+	<select id="selectSrchDgtlCltClctGroupInfoList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		/* 디지털문화컬렉션그룹정보조회 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectSrchDgtlCltClcGrouptInfoList */
+		<include refid="sqlSrchDgtlCltRscWithInfo" />
+		SELECT 
+		       A.* 
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+			<include refid="sqlSrchDgtlCltClctGroupInfo" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<select id="selectRelatedClctGroupCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer" >
+		SELECT /* 관련 컬렉션그룹 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectRelatedClctGroupCnt */
+			   COUNT(1) AS CNT
+		  FROM (
+				SELECT 
+					   T01.DSPY_ID AS EXBI_ID							/* 전시회아이디 */
+				  FROM (
+						SELECT T01.DSPY_ID
+							 , T01.DSPY_NM
+							 , T02.DSPY_ITEM_ID AS EXBI_ID
+						     , T02.SORT_SN
+						     , T01.FRST_REG_DT
+						     , T01.LAST_MDFCN_DT
+						  FROM TX_PRTL_DSPY_INFO T01
+						 INNER JOIN TX_PRTL_DSPY_LIST_INFO T02
+						    ON T02.DSPY_ID = T01.DSPY_ID
+						   AND T02.RLS_YN = 'Y'
+						 WHERE T01.DEL_YN = 'N'
+						   AND T01.USE_YN = 'Y'
+						   AND T01.DSPY_TYPE_CD = 'PTDPTY0002'
+				       ) T01 
+				  LEFT JOIN TX_EXBI_INFO T02
+				 	ON T02.EXBI_ID = T01.EXBI_ID
+				  LEFT JOIN (
+					 	SELECT T09.EXBI_ID
+						     , MIN(T09.SORT_SN) AS SORT_SN
+						     , SUM(T10.INQ_CNT) AS INQ_CNT
+						     , SUM(T10.RCMDTN_CNT) AS RCMDTN_CNT
+						     , SUM(T10.DWNLD_CNT) AS DWNLD_CNT
+					 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+					 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+					 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+					 	 GROUP BY T09.EXBI_ID
+				       ) T03 
+				 	ON T03.EXBI_ID = T02.EXBI_ID
+				 WHERE 1 = 1
+				 <if test='clrcsId != null and !clrcsId.equals("")'>
+				   AND T01.EXBI_ID IN (
+				   		SELECT EXBI_ID
+				   		  FROM TX_EXBI_CLRCS_REL_INFO
+				   		 WHERE CLRCS_ID = #{clrcsId}
+				   	   )  
+				 </if> 
+				 GROUP BY T01.DSPY_ID
+		 	   ) A
+	</select>
+
+	<select id="selectRelatedClctGroupList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.ExbiInfoVo">
+		SELECT /* 관련 컬렉션그룹 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectRelatedClctGroupList */
+		       A.* 
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+				SELECT 
+					   T01.DSPY_ID AS EXBI_ID							/* 전시회아이디 */
+					 , MAX(T01.DSPY_NM) AS EXBI_NM						/* 전시회명 */
+					 , SUM(COALESCE(T03.INQ_CNT,0)) AS INQ_CNT			/* 조회수 */
+					 , SUM(COALESCE(T03.RCMDTN_CNT,0)) AS RCMDTN_CNT	/* 추천수 */
+					 , SUM(COALESCE(T03.DWNLD_CNT,0)) AS DWNLD_CNT		/* 다운로드수 */
+					 , MAX(COALESCE(T01.SORT_SN,9999)) AS SORT_SN
+					 , MAX(T01.FRST_REG_DT) AS FRST_REG_DT				/* 최초등록일시 */
+					 , MAX(T01.LAST_MDFCN_DT) AS LAST_MDFCN_DT			/* 최종수정일시 */
+				  FROM (
+						SELECT T01.DSPY_ID
+							 , T01.DSPY_NM
+							 , T02.DSPY_ITEM_ID AS EXBI_ID
+						     , T02.SORT_SN
+						     , T01.FRST_REG_DT
+						     , T01.LAST_MDFCN_DT
+						  FROM TX_PRTL_DSPY_INFO T01
+						 INNER JOIN TX_PRTL_DSPY_LIST_INFO T02
+						    ON T02.DSPY_ID = T01.DSPY_ID
+						   AND T02.RLS_YN = 'Y'
+						 WHERE T01.DEL_YN = 'N'
+						   AND T01.USE_YN = 'Y'
+						   AND T01.DSPY_TYPE_CD = 'PTDPTY0002'
+				       ) T01 
+				  LEFT JOIN TX_EXBI_INFO T02
+				 	ON T02.EXBI_ID = T01.EXBI_ID
+				  LEFT JOIN (
+					 	SELECT T09.EXBI_ID
+						     , MIN(T09.SORT_SN) AS SORT_SN
+						     , SUM(T10.INQ_CNT) AS INQ_CNT
+						     , SUM(T10.RCMDTN_CNT) AS RCMDTN_CNT
+						     , SUM(T10.DWNLD_CNT) AS DWNLD_CNT
+					 	  FROM TX_EXBI_CLRCS_REL_INFO T09
+					 	 INNER JOIN TX_DGTL_CLRCS_MTDT_INFO T10
+					 	    ON T10.CLRCS_ID = T09.CLRCS_ID
+					 	 GROUP BY T09.EXBI_ID
+				       ) T03 
+				 	ON T03.EXBI_ID = T02.EXBI_ID
+				 WHERE 1 = 1
+				 <if test='clrcsId != null and !clrcsId.equals("")'>
+				   AND T01.EXBI_ID IN (
+				   		SELECT EXBI_ID
+				   		  FROM TX_EXBI_CLRCS_REL_INFO
+				   		 WHERE CLRCS_ID = #{clrcsId}
+				   	   )  
+				 </if> 
+				 GROUP BY T01.DSPY_ID
+			   ) A
+		   ORDER BY A.SORT_SN ASC
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<sql id="sqlDataTypeRscInfo">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y' 
+		 <if test='clrcsId != null and !clrcsId.equals("")'>
+		   AND T01.CLRCS_ID = #{clrcsId} 
+		 </if> 
+		 <if test='srchInstId != null and !srchInstId.equals("")'>
+		   AND T01.INST_ID = #{srchInstId} 
+		 </if> 
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN CONTS_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+		   AND T01.INST_ID IN (
+		   		SELECT INST_ID
+			 	  FROM TX_INST_INFO
+			 	 WHERE RGN_CD = #{srchRgnCd}
+		       )
+		 </if>
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		 	   	SELECT T01.CLRCS_ID
+		 	   	  FROM TX_EXBI_CLRCS_REL_INFO T01
+				 INNER JOIN (
+						SELECT DSPY_ITEM_ID AS EXBI_ID
+						     , SORT_SN
+						  FROM TX_PRTL_DSPY_LIST_INFO 
+						  WHERE DSPY_ID = #{exbiId}
+							AND RLS_YN = 'Y'
+				  	   ) T02
+				  	ON T02.EXBI_ID = T01.EXBI_ID
+		 	   	 WHERE 1 = 1
+		 	   	   AND T01.RLS_YN = 'Y'
+		       )
+		 </if>
+		<choose>
+			<when test='srchTagVal != null and !srchTagVal.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_CLRCS_TAG_INFO
+			 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+		       )
+			</when>
+			<when test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 	</when>
+		</choose>
+		<choose>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+			</when>
+		</choose>
+	</sql>
+
+	<sql id="sqlCntsTypeRscInfo">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y' 
+		 <if test='clrcsId != null and !clrcsId.equals("")'>
+		   AND T01.CLRCS_ID = #{clrcsId} 
+		 </if> 
+		 <if test='srchInstId != null and !srchInstId.equals("")'>
+		   AND T01.INST_ID = #{srchInstId} 
+		 </if> 
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+		       )
+		 </if>
+		 <if test='srchRgnCd != null and !srchRgnCd.equals("")'>
+		   AND T01.INST_ID IN (
+		   		SELECT INST_ID
+			 	  FROM TX_INST_INFO
+			 	 WHERE RGN_CD = #{srchRgnCd}
+		       )
+		 </if>
+		 <if test='exbiId != null and !exbiId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		 	   	SELECT T01.CLRCS_ID
+		 	   	  FROM TX_EXBI_CLRCS_REL_INFO T01
+				 INNER JOIN (
+						SELECT DSPY_ITEM_ID AS EXBI_ID
+						     , SORT_SN
+						  FROM TX_PRTL_DSPY_LIST_INFO 
+						  WHERE DSPY_ID = #{exbiId}
+							AND RLS_YN = 'Y'
+				  	   ) T02
+				  	ON T02.EXBI_ID = T01.EXBI_ID
+		 	   	 WHERE 1 = 1
+		 	   	   AND T01.RLS_YN = 'Y'
+		       )
+		 </if>
+		<choose>
+			<when test='srchTagVal != null and !srchTagVal.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT CLRCS_ID
+			 	  FROM TX_CLRCS_TAG_INFO
+			 	 WHERE TAG_NM = UPPER(#{srchTagVal})
+		       )
+			</when>
+			<when test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 	</when>
+		</choose>
+		<choose>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+			</when>
+			<when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+		   AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+			</when>
+		</choose>
+	</sql>
+
+	<select id="selectDataTypeSrchStat" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.cltrscprss.vo.CltRscPrssStatVo">
+		/* 데이터유형별 조회현황 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDataTypeSrchStat */
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		 <if test='srchContsTypeCtgryIdArr != null and !srchContsTypeCtgryIdArr.isEmpty()'>
+			, CONTS_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID IN 
+				 	    <foreach collection="srchContsTypeCtgryIdArr" item="srchContsTypeCtgryItem" open="(" close=")" separator=",">
+				 	    #{srchContsTypeCtgryItem}
+				 	    </foreach>
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN CONTS_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+			, NTN_TAGE_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID = #{srchNtnTageTypeCtgryId}
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN NTN_TAGE_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		SELECT T01.CTGRY_ID
+		     , T01.CTGRY_NM
+		     , COALESCE(T02.CTGRY_CNT,0) AS RSC_CNT
+		  FROM TX_CLRCS_CLSF_CTGRY_INFO T01
+		  LEFT JOIN (
+				SELECT T03.ORG_CTGRY_ID
+					 , T03.ORG_CTGRY_NM
+					 , COUNT(1) AS CTGRY_CNT
+				  FROM (
+			<include refid="sqlDataTypeRscInfo" />
+				  	   ) T01
+				 INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+					ON T02.CLRCS_ID = T01.CLRCS_ID
+				 INNER JOIN DATA_TYPE_CTGRY T03
+					ON T03.CTGRY_ID = T02.CTGRY_ID
+				 WHERE 1 = 1
+				 GROUP BY T03.ORG_CTGRY_ID,T03.ORG_CTGRY_NM
+			   ) T02
+			ON T02.ORG_CTGRY_ID = T01.CTGRY_ID
+		 WHERE 1 = 1
+		   AND T01.CTGRY_TYPE_CD = 'CLRCSCT002'
+           AND T01.CTGRY_STEP_NO = 1
+		   AND T01.CTGRY_NM != 'XR'
+		 ORDER BY T01.SORT_SN ASC
+	</select>
+
+	<select id="selectCntsTypeSrchStat" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.cltrscprss.vo.CltRscPrssStatVo">
+		/* 콘텐츠유형별 조회현황 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectCntsTypeSrchStat */
+		WITH RECURSIVE CNTS_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT003'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN CNTS_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+			, DATA_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID = #{srchDataTypeCtgryId}
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN DATA_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		 <if test='srchNtnTageTypeCtgryId != null and !srchNtnTageTypeCtgryId.equals("")'>
+			, NTN_TAGE_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+			(
+				/* 계층구조의 시작조건 쿼리 */
+				 SELECT A.CTGRY_ID
+					  , A.CTGRY_ID
+					  ,	A.CTGRY_NM   
+					  ,	A.UP_CTGRY_ID
+					  ,	A.CTGRY_STEP_NO
+					  ,	1
+					  ,	ARRAY[A.CTGRY_ID::TEXT]
+					  ,	FALSE
+				   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				  WHERE A.CTGRY_ID = #{srchNtnTageTypeCtgryId}
+				  UNION ALL
+				 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+				 SELECT B.ORG_CTGRY_ID
+					  ,	A.CTGRY_ID
+					  , A.CTGRY_NM   
+					  , A.UP_CTGRY_ID
+					  , A.CTGRY_STEP_NO
+					  , B.DEPTH + 1
+					  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+					  , A.CTGRY_ID = ANY(B.PATH)
+				  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+				 INNER JOIN NTN_TAGE_TYPE_CTGRY B
+				    ON B.CTGRY_ID = A.UP_CTGRY_ID
+				 WHERE 1 = 1
+				   AND NOT CYCLE	
+			) 
+		 </if> 
+		SELECT T01.CTGRY_ID
+		     , T01.CTGRY_NM
+		     , COALESCE(T02.CTGRY_CNT,0) AS RSC_CNT
+		  FROM TX_CLRCS_CLSF_CTGRY_INFO T01
+		  LEFT JOIN (
+				SELECT T03.ORG_CTGRY_ID
+					 , T03.ORG_CTGRY_NM
+					 , COUNT(1) AS CTGRY_CNT
+				  FROM (
+			<include refid="sqlCntsTypeRscInfo" />
+				  	   ) T01
+				 INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+					ON T02.CLRCS_ID = T01.CLRCS_ID
+				 INNER JOIN CNTS_TYPE_CTGRY T03
+					ON T03.CTGRY_ID = T02.CTGRY_ID
+				 WHERE 1 = 1
+				 GROUP BY T03.ORG_CTGRY_ID,T03.ORG_CTGRY_NM
+			   ) T02
+			ON T02.ORG_CTGRY_ID = T01.CTGRY_ID
+		 WHERE 1 = 1
+		   AND T01.CTGRY_TYPE_CD = 'CLRCSCT003'
+           AND T01.CTGRY_STEP_NO = 1
+		 ORDER BY T01.SORT_SN ASC
+	</select>
+
+</mapper>

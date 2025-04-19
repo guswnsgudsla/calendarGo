@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.cmmnMgt.mapper.CmmnMgtMapper">
+	
+	<!-- 공통분류코드 목록 가져오기 -->
+	<select id="selectCmmnClsfCdList" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO" resultType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO">
+		SELECT /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.selectCmmnClsfCdList */
+			   XCCC.CLSF_CD AS CLSF_CD
+			 , XCCC.CLSF_NM AS CLSF_NM
+			 , XCCC.CLSF_CD_EXPLN_CN AS CLSF_CD_EXPLN
+			 , XCCC.USE_YN AS USE_YN
+			 , CASE WHEN XCCC.USE_YN = 'Y'
+						 THEN '사용'
+					WHEN XCCC.USE_YN = 'N'
+						 THEN '사용 안함'
+					ELSE ''
+			   END AS USE_YN_NM
+			 , XCCC.APRV_YN AS APRV_YN
+			 , CASE WHEN XCCC.APRV_YN = 'Y'
+						 THEN '승인'
+					WHEN XCCC.APRV_YN = 'N'
+						 THEN '미승인'
+					ELSE ''
+			   END AS APRV_YN_NM
+			 , XCCC.AUTZR_ID AS AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XCCC.APRV_DT AS APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCC.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XCCC.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XCCC.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCC.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XCCC.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XCCC.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCC.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19 
+		  FROM TX_CMMN_CLSF_CD XCCC
+		 WHERE 1 = 1
+		<if test="srchType != '' and srchType != null and srchString != '' and srchString != null">
+			<choose>
+				<when test="srchType == 'srchCd'">
+		   AND XCCC.CLSF_CD LIKE CONCAT('%', #{srchString}, '%')
+				</when>
+				<when test="srchType == 'srchNm'">
+		   AND XCCC.CLSF_NM LIKE CONCAT('%', #{srchString}, '%')
+				</when>
+				<otherwise>
+		   AND 1 = 2
+				</otherwise>
+			</choose>
+		</if>
+		<if test="srchUseChk != '' and srchUseChk != null">
+		   AND XCCC.USE_YN = #{srchUseChk}
+		</if>
+		<if test="srchAprvChk != '' and srchAprvChk != null">
+		   AND XCCC.APRV_YN = #{srchAprvChk}
+		</if>
+		<if test="srchBgngYmd != '' and srchBgngYmd != null">
+		   AND #{srchBgngYmd} <![CDATA[ >= ]]> (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+											 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 										<property name="paramDate" value="XCCC.FRST_REG_DT"/>
+												</include>)
+		</if>
+		<if test="srchEndYmd != '' and srchEndYmd != null">
+		   AND #{srchEndYmd} <![CDATA[ <= ]]>  (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+											 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 										<property name="paramDate" value="XCCC.FRST_REG_DT"/>
+												</include>)
+		</if>
+		 ORDER BY XCCC.CLSF_CD ASC
+	</select>
+	
+	
+	<!-- 공통분류코드 상세정보 가져오기 -->
+	<select id="selectCmmnClsfCdInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.selectCmmnClsfCdInfo */
+			   XCCC.CLSF_CD AS CLSF_CD
+			 , XCCC.CLSF_NM AS CLSF_NM
+			 , XCCC.CLSF_CD_EXPLN_CN AS CLSF_CD_EXPLN
+			 , XCCC.USE_YN AS USE_YN
+			 , CASE WHEN XCCC.USE_YN = 'Y'
+						 THEN '사용'
+					WHEN XCCC.USE_YN = 'N'
+						 THEN '사용 안함'
+					ELSE ''
+			   END AS USE_YN_NM
+			 , XCCC.APRV_YN AS APRV_YN
+			 , CASE WHEN XCCC.APRV_YN = 'Y'
+						 THEN '승인'
+					WHEN XCCC.APRV_YN = 'N'
+						 THEN '미승인'
+					ELSE ''
+			   END AS APRV_YN_NM
+			 , XCCC.AUTZR_ID AS AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XCCC.APRV_DT AS APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCC.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XCCC.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XCCC.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCC.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XCCC.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XCCC.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCC.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_CMMN_CLSF_CD XCCC
+		 WHERE XCCC.CLSF_CD = #{paramClsfCd}
+	</select>
+	
+	
+	<!-- 공통분류코드 등록 -->
+	<insert id="insertCmmnClsfCdInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.selectCmmnClsfCdInfo */
+					TX_CMMN_CLSF_CD
+			   (
+			   CLSF_CD
+			 , CLSF_NM
+			 , CLSF_CD_EXPLN_CN
+			 , USE_YN
+			 , APRV_YN
+			 , AUTZR_ID
+			 , APRV_DT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramClsfCd" value="'CLSF'"/>
+					<property name="paramSequenceNm" value="'TX_CLSC_CD_SEQ'"/>
+					<property name="paramSequenceLength" value="6"/>
+				</include>)
+			 , #{clsfNm}
+			 , #{clsfCdExpln}
+			 , #{useYn}
+			 , #{aprvYn}
+			 , #{autzrId}
+			 , #{aprvDt}
+			 , #{frstRgtrID}
+			 , NOW()
+			 , #{lastMdfrID}
+			 , NOW()
+			   ) 
+	</insert>
+	
+	
+	<!-- 공통분류코드 수정 -->
+	<update id="updateCmmnClsfCdInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO">
+		UPDATE /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.updateCmmnClsfCdInfo */
+			   TX_CMMN_CLSF_CD
+		   SET CLSF_NM = #{clsfNm}
+			 , CLSF_CD_EXPLN_CN = #{clsfCdExpln}
+			 , USE_YN = #{useYn}
+			 , APRV_YN = #{aprvYn}
+			 , AUTZR_ID = #{autzrId}
+			 , APRV_DT = #{aprvDt}
+			 , LAST_MDFR_ID = #{lastMdfrID}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE CLSF_CD = #{paramClsfCd}
+	</update>
+	
+	
+	<!-- 공통분류코드 변경 이력 가져오기 -->
+	<select id="selectCmmnClsfCdChgHstryList" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO" resultType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO">
+		SELECT /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.selectCmmnClsfCdChgHstryList */
+			   XCCCCH.CLSF_CD AS CLSF_CD
+			 , XCCCCH.CHG_HSTRY_SN AS CHG_HSTRY_SN
+			 , XCCCCH.CHG_HSTRY_TYPE_CD AS CHG_HSTRY_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+			 		<property name="paramClsfCd" value="'CLSF000001'"/>
+			 		<property name="paramCdId" value="XCCCCH.CHG_HSTRY_TYPE_CD"/>
+				</include>) AS CHG_HSTRY_TYPE_NM
+			 , XCCCCH.CLSF_NM AS CLSF_NM
+			 , XCCCCH.CLSF_CD_EXPLN_CN AS CLSF_CD_EXPLN
+			 , XCCCCH.USE_YN AS USE_YN
+			 , CASE WHEN XCCCCH.USE_YN = 'Y'
+						 THEN '사용'
+					WHEN XCCCCH.USE_YN = 'N'
+						 THEN '사용 안함'
+					ELSE ''
+			   END AS USE_YN_NM
+			 , XCCCCH.APRV_YN AS APRV_YN
+			 , CASE WHEN XCCCCH.APRV_YN = 'Y'
+						 THEN '승인'
+					WHEN XCCCCH.APRV_YN = 'N'
+						 THEN '미승인'
+					ELSE ''
+			   END AS APRV_YN_NM
+			 , XCCCCH.AUTZR_ID AS AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCCCH.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCCCH.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XCCCCH.APRV_DT AS APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCCCH.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XCCCCH.RGTR_ID AS RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCCCH.RGTR_ID"/>
+				</include>) AS RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCCCH.RGTR_ID"/>
+				</include>) AS RGTR_NCM
+			 , XCCCCH.REG_DT AS REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCCCH.REG_DT"/>
+				</include>) AS REG_DT_V19
+		  FROM TX_CMMN_CLSF_CD_CHG_HSTRY XCCCCH
+		 WHERE XCCCCH.CLSF_CD = #{paramClsfCd}
+		 ORDER BY XCCCCH.CHG_HSTRY_SN ASC 
+	</select>
+	
+	
+	<!-- 공통분류코드 이력 일련번호 가져오기 -->
+	<select id="selectCmmnClsfCdChgHstrySn" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO" resultType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO">
+		SELECT
+			   COALESCE((SELECT XCCCCH.CHG_HSTRY_SN
+						   FROM TX_CMMN_CLSF_CD_CHG_HSTRY XCCCCH
+						  WHERE XCCCCH.CLSF_CD = #{paramClsfCd}), 0) + 1 AS NEW_CHG_HSTRY_SN
+	</select> 
+	
+	<!-- 공통분류코드 변경 이력 등록 -->
+	<insert id="insertCmmnClsfCdChgHstryInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnClsfCdVO">
+		INSERT INTO  /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.insertCmmnClsfCdChgHstryInfo */
+					TX_CMMN_CLSF_CD_CHG_HSTRY
+			   (
+			   CLSF_CD
+			 , CHG_HSTRY_SN
+			 , CHG_HSTRY_TYPE_CD
+			 , CLSF_NM
+			 , CLSF_CD_EXPLN_CN
+			 , USE_YN
+			 , APRV_YN
+			 , AUTZR_ID
+			 , APRV_DT
+			 , RGTR_ID
+			 , REG_DT
+			   )
+		VALUES (
+			   #{clsfCd}
+			 , #{chgHstrySn}
+			 , #{chgHstryTypeCd}
+			 , #{clsfNm}
+			 , #{clsfCdExpln}
+			 , #{useYn}
+			 , #{aprvYn}
+			 , #{autzrId}
+			 , #{aprvDt}
+			 , #{rgtrId}
+			 , #{regDt}
+			   )
+	</insert>
+	
+	
+	<!-- 공통코드 목록 가져오기 -->
+	<select id="selectCmmnCdList" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO" resultType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO">
+		SELECT /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.selectCmmnCdList */
+			   XCC.CLSF_CD AS CLSF_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnClsfCdNm">
+			 		<property name="paramClsfCd" value="XCC.CLSF_CD"/>
+				</include>) AS CLSF_CD_NM
+			 , XCC.CD_ID AS CD_ID
+			 , XCC.CD_NM AS CD_NM
+			 , XCC.SORT_SN AS SORT_SN
+			 , XCC.CD_EXPLN_CN AS CD_EXPLN
+			 , XCC.USE_YN AS USE_YN
+			 , CASE WHEN XCC.USE_YN = 'Y'
+			 			 THEN '사용'
+			 		WHEN XCC.USE_YN = 'N'
+			 			 THEN '사용 안함'
+			 		ELSE '-'
+			   END AS USE_YN_NM
+			 , XCC.APRV_YN AS APRV_YN
+			 , CASE WHEN XCC.APRV_YN = 'Y'
+			 			 THEN '승인'
+			 		WHEN XCC.APRV_YN = 'N'
+			 			 THEN '미승인'
+			 		ELSE '-'
+			   END AS APRV_YN_NM
+			 , XCC.AUTZR_ID AS AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XCC.APRV_DT AS APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XCC.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XCC.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCC.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XCC.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XCC.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCC.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_CMMN_CD XCC
+		 WHERE XCC.CLSF_CD = #{paramClsfCd}
+		<if test='paramUseYn != "" and paramUseYn != null  '>
+		   AND XCC.USE_YN = #{paramUseYn}
+		</if>
+		<if test='paramAprvYn != "" and paramAprvYn != null  '>
+		   AND XCC.APRV_YN = #{paramAprvYn}
+		</if>
+		 ORDER BY XCC.SORT_SN ASC
+	</select>
+	
+	
+	<!-- 공통코드 상세정보 가져오기 -->
+	<select id="selectCmmnCdInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO" resultType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO">
+		SELECT  /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.selectCmmnCdInfo */
+			   XCC.CLSF_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnClsfCdNm">
+			 		<property name="paramClsfCd" value="XCC.CLSF_CD"/>
+				</include>) AS CLSF_CD_NM
+			 , XCC.CD_ID AS CD_ID
+			 , XCC.CD_NM AS CD_NM
+			 , XCC.SORT_SN AS SORT_SN
+			 , XCC.CD_EXPLN_CN AS CD_EXPLN
+			 , XCC.USE_YN AS USE_YN
+			 , CASE WHEN XCC.USE_YN = 'Y'
+			 			 THEN '사용'
+			 		WHEN XCC.USE_YN = 'N'
+			 			 THEN '사용 안함'
+			 		ELSE '-'
+			   END AS USE_YN_NM
+			 , XCC.APRV_YN AS APRV_YN
+			 , CASE WHEN XCC.APRV_YN = 'Y'
+			 			 THEN '승인'
+			 		WHEN XCC.APRV_YN = 'N'
+			 			 THEN '미승인'
+			 		ELSE '-'
+			   END AS APRV_YN_NM
+			 , XCC.AUTZR_ID AS AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCC.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XCC.APRV_DT AS APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCC.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XCC.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XCC.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCC.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XCC.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XCC.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCC.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_CMMN_CD XCC
+		 WHERE XCC.CLSF_CD = #{paramClsfCd}
+		   AND XCC.CD_ID = #{paramCdId}
+	</select>
+	
+	
+	<!-- 공통코드 등록 -->
+	<insert id="insertCmmnCdInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.insertCmmnCdInfo */
+					TX_CMMN_CD
+			   (
+			   CD_ID
+			 , CLSF_CD
+			 , CD_NM
+			 , CD_EXPLN_CN
+			 , SORT_SN
+			 , USE_YN
+			 , APRV_YN
+			 , AUTZR_ID
+			 , APRV_DT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{cdId}
+			 , #{clsfCd}
+			 , #{cdNm}
+			 , #{cdExpln}
+			 , #{sortSn}
+			 , #{useYn}
+			 , #{aprvYn}
+			 , #{autzrId}
+			 , #{aprvDt}
+			 , #{frstRgtrID}
+			 , NOW()
+			 , #{lastMdfrID}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 공통코드 수정 -->
+	<update id="updateCmmnCdInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO">
+		UPDATE /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.updateCmmnCdInfo */
+			   TX_CMMN_CD
+		   SET CD_NM = #{cdNm}
+			 , CD_EXPLN_CN = #{cdExpln}
+			 , SORT_SN = #{sortSn}
+			 , USE_YN = #{useYn}
+			 , APRV_YN = #{aprvYn}
+			 , AUTZR_ID = #{autzrId}
+			 , APRV_DT = #{aprvDt}
+			 , LAST_MDFR_ID = #{lastMdfrID}
+			 , LAST_MDFCN_DT = NOW();
+		 WHERE CD_ID = #{paramCdId}
+		   AND CLSF_CD = #{paramClsfCd}
+	</update>
+	
+	<!-- 공통코드 변경 이력 가져오기 -->
+	<select id="selectCmmnCdChgHstryList" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO" resultType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO">
+		SELECT /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.selectCmmnCdChgHstryList */
+			   XCCCH.CLSF_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnClsfCdNm">
+			 		<property name="paramClsfCd" value="XCCCH.CLSF_CD"/>
+				</include>) AS CLSF_CD_NM
+			 , XCCCH.CD_ID AS CD_ID
+			 , XCCCH.CD_NM AS CD_NM
+			 , XCCCH.CD_EXPLN_CN AS CD_EXPLN
+			 , XCCCH.SORT_SN AS SORT_SN
+			 , XCCCH.USE_YN AS USE_YN
+			 , CASE WHEN XCCCH.USE_YN = 'Y'
+			 			 THEN '사용'
+			 		WHEN XCCCH.USE_YN = 'N'
+			 			 THEN '사용 안함'
+			 		ELSE '-'
+			   END AS USE_YN_NM
+			 , XCCCH.APRV_YN AS APRV_YN
+			 , CASE WHEN XCCCH.APRV_YN = 'Y'
+			 			 THEN '승인'
+			 		WHEN XCCCH.APRV_YN = 'N'
+			 			 THEN '미승인'
+			 		ELSE '-'
+			   END AS USE_YN_NM
+			 , XCCCH.AUTZR_ID AS AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCCH.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCCH.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XCCCH.APRV_DT AS APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCCH.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XCCCH.RGTR_ID AS RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XCCCH.RGTR_ID"/>
+				</include>) AS RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XCCCH.RGTR_ID"/>
+				</include>) AS RGTR_NCM
+			 , XCCCH.REG_DT AS REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XCCCH.REG_DT"/>
+				</include>) AS REG_DT_V19
+		  FROM TX_CMMN_CD_CHG_HSTRY XCCCH
+		 WHERE XCCCH.CD_ID = #{paramCdId}
+		   AND XCCCH.CLSF_CD = #{paramClsfCd}
+		 ORDER BY XCCCH.CHG_HSTRY_SN DESC
+	</select>
+	
+	<!-- 공통분류코드 이력 일련번호 가져오기 -->
+	<select id="selectCmmnCdChgHstrySn" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO" resultType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO">
+		SELECT
+			   COALESCE((SELECT XCCCH.CHG_HSTRY_SN
+						   FROM TX_CMMN_CD_CHG_HSTRY XCCCH
+						  WHERE XCCCH.CD_ID = #{paramCdId}
+							AND XCCCH.CLSF_CD = #{paramClsfCd}), 0) + 1 AS NEW_CHG_HSTRY_SN
+	</select>
+	
+	<!-- 공통코드 변경 이력 등록 -->
+	<insert id="insertCmmnCdChgHstryInfo" parameterType="kr.go.culture.xr.admin.cmmnMgt.vo.CmmnCdVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cmmnMgt.mapper.cmmnMgtMapper.insertCmmnCdChgHstryInfo */
+					TX_CMMN_CD_CHG_HSTRY
+			   (
+			   CD_ID
+			 , CLSF_CD
+			 , CHG_HSTRY_SN
+			 , CHG_HSTRY_TYPE_CD
+			 , CD_NM
+			 , CD_EXPLN_CN
+			 , SORT_SN
+			 , USE_YN
+			 , APRV_YN
+			 , AUTZR_ID
+			 , APRV_DT
+			 , RGTR_ID
+			 , REG_DT
+			   )
+		VALUES (
+			   #{cdId}
+			 , #{clsfCd}
+			 , #{chgHstrySn}
+			 , #{chgHstryTypeCd}
+			 , #{cdNm}
+			 , #{cdExpln}
+			 , #{sortSn}
+			 , #{useYn}
+			 , #{aprvYn}
+			 , #{autzrId}
+			 , #{aprvDt}
+			 , #{rgtrId}
+			 , #{regDt}
+			   )
+	</insert>
+	
+</mapper>

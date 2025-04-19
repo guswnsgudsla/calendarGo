@@ -1,0 +1,13 @@
+package com.proj.calendar.mapper;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.proj.calendar.vo.CalendarGoVO;
+
+@Mapper
+public interface CalendarGoMapper {
+
+	public List<CalendarGoVO> selectCalendarGoList(CalendarGoVO calendarGoVO);
+}

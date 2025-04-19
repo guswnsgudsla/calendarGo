@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper
+	namespace="kr.go.culture.xr.admin.dgtlClcMgt.mapper.DgtlClcMgtMapper">
+
+	<!-- 컬렉션 리스트 조회 -->
+	<select id="selectDgtlClcList" resultType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO" >
+		SELECT /* kr.go.culture.xr.admin.dgtlClcMgt.mapper.DgtlClcMapper.selectDgtlClcList */
+			ROW_NUMBER()OVER(ORDER BY XTEI.EXBI_ID ASC) AS DGTLCLC_LIST_NO
+			, XTEI.EXBI_ID AS EXBI_ID
+			, XTEI.EXBI_NM AS EXBI_NM
+			, XTEI.EXBI_TYPE_CD AS EXBI_TYPE_CD
+			, XTEI.EXBI_BGNG_YMD AS EXBI_BGNG_YMD
+			, XTEI.EXBI_END_YMD AS EXBI_END_YMD
+			, XTEI.EXBI_EXPLN AS EXBI_EXPLN
+			, XTEI.INST_ID AS INST_ID
+			, XTEI.INST_NM AS INST_NM
+			, (
+			<include
+				refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+				<property name="paramColNm" value="'userNcm'" />
+				<property name="paramUserId" value="XTEI.FRST_RGTR_ID" />
+			</include>
+			) AS MBR_NCM
+			, XTEI.RLS_YN AS RLS_YN
+			, XTEI.INQ_CNT AS INQ_CNT
+			, XTEI.FRST_RGTR_ID AS FRST_RGTR_ID
+			, XTEI.FRST_REG_DT AS FRST_REG_DT
+			, XTEI.FRST_REG_DT_V19
+			, XTEI.LAST_MDFR_ID AS LAST_MDFR_ID
+			, XTEI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			, (SELECT count(clrcs_id) FROM tx_exbi_clrcs_rel_info where exbi_id = XTEI.EXBI_ID) AS REL_CNT
+		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />	
+		FROM 
+		(
+		SELECT
+			TEI.EXBI_ID
+			, TEI.EXBI_NM
+			, TEI.EXBI_TYPE_CD
+			, TEI.EXBI_BGNG_YMD
+			, TEI.EXBI_END_YMD
+			, TEI.EXBI_EXPLN_CN AS EXBI_EXPLN
+			, TEI.INST_ID
+			, TII.INST_NM
+			, TEI.RLS_YN
+			, TEI.INQ_CNT
+			, TEI.FRST_RGTR_ID
+			, TEI.FRST_REG_DT
+			, TO_CHAR(TEI.FRST_REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS FRST_REG_DT_V19
+			, TEI.LAST_MDFR_ID
+			, TEI.LAST_MDFCN_DT
+		FROM TX_EXBI_INFO TEI 
+		LEFT JOIN TX_INST_INFO TII
+		ON TEI.INST_ID = TII.INST_ID) XTEI
+		WHERE 1=1
+		<if test="instNm != '' and instNm != null">
+			AND INST_NM LIKE CONCAT('%', TRIM(#{instNm}), '%')
+		</if>
+		<if test="exbiNm != '' and exbiNm != null">
+			AND REPLACE(TRIM(EXBI_NM), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{exbiNm}),' ',''), '%')
+		</if>
+		<if test="srchExbiTypeCd != '' and srchExbiTypeCd != null and srchExbiTypeCd != 'all' ">
+			AND EXBI_TYPE_CD = #{srchExbiTypeCd}
+		</if>
+		<if test="srchOpenYn != '' and srchOpenYn != null and srchOpenYn != 'all'">
+			AND RLS_YN = #{srchOpenYn}
+		</if>
+		<if test="userInstId != '' and userInstId != null and userAuthId != 'AUTH000001' and userAuthId != 'AUTH000002'">
+			AND INST_ID = #{userInstId}
+		</if>
+		ORDER BY DGTLCLC_LIST_NO DESC
+		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+
+	<!-- 리스트 수 집계 -->
+	<select id="selectDgtlClcListCnt" resultType="Integer">
+		SELECT /*kr.go.culture.xr.admin.dgtlClcMgt.mapper.DgtlClcMapper.selectDgtlClcListCnt*/
+			COUNT(EXBI_ID) AS TOT_LIST_CNT
+		FROM TX_EXBI_INFO TEI
+		WHERE 1 = 1
+		<if test="exbiNm != '' and exbiNm != null">																
+			AND TEI.EXBI_NM LIKE CONCAT('%', TRIM(#{exbiNm}), '%')
+		</if>
+		<if test="instNm != '' and instNm != null">
+			AND TEI.INST_ID IN (        
+			SELECT TII.INST_ID              
+			FROM TX_INST_INFO TII           
+	    	WHERE TII.INST_NM LIKE CONCAT('%', TRIM(#{instNm}), '%'))
+		</if>
+		<if test="srchExbiTypeCd != '' and srchExbiTypeCd != null and srchExbiTypeCd != 'all' ">
+			AND TEI.EXBI_TYPE_CD = #{srchExbiTypeCd}
+		</if>
+		<if test="srchOpenYn != '' and srchOpenYn != null and srchOpenYn != 'all'">
+			AND TEI.RLS_YN = #{srchOpenYn}
+		</if>
+		<if test="userInstId != '' and userInstId != null and userAuthId != 'AUTH000001' and userAuthId != 'AUTH000002'">
+			AND TEI.INST_ID = #{userInstId}
+		</if>
+	</select>
+	
+	<!-- 컬렉션 정보 상세조회 -->
+	<select id="selectDgtlClcDtl" resultType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		SELECT /*kr.go.culture.xr.admin.dgtlClcMgt.mapper.DgtlClcMapper.selectDgtlClcDtl*/
+			TEI.EXBI_ID AS EXBI_ID
+			, TEI.EXBI_NM AS EXBI_NM
+			, TEI.EXBI_TYPE_CD AS EXBI_TYPE_CD
+			, TEI.EXBI_BGNG_YMD AS EXBI_BGNG_YMD
+			, TEI.EXBI_END_YMD AS EXBI_END_YMD
+ 			, TEI.RPRS_IMG_GROUP_ID AS RPRS_IMG_GROUP_ID
+ 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+ 				 		<property name="paramInfoCd" value="'OPATH'"/>
+ 				 		<property name="paramAtchFileGroupId" value="TEI.RPRS_IMG_GROUP_ID"/>
+ 					</include>) AS FILE_PATH
+ 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+ 			 		<property name="paramInfoCd" value="'ORGNM'"/>
+ 			 		<property name="paramAtchFileGroupId" value="TEI.RPRS_IMG_GROUP_ID"/>
+ 				</include>) AS ORGNL_ATCH_FILE_NM
+ 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+ 					<property name="paramInfoCd" value="'STRGNM'"/> 
+ 			 		<property name="paramAtchFileGroupId" value="TEI.RPRS_IMG_GROUP_ID"/>
+ 				</include>) AS STRG_FILE_NM
+			, TEI.EXBI_EXPLN_CN AS EXBI_EXPLN
+			, TEI.INST_ID AS INST_ID 
+			, (SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = TEI.INST_ID) AS INST_NM
+			, (SELECT COUNT(CLRCS_ID) FROM TX_EXBI_CLRCS_REL_INFO WHERE EXBI_ID = TEI.EXBI_ID) AS REL_CNT
+			, TEI.RLS_YN AS RLS_YN
+			, TEI.INQ_CNT AS INQ_CNT
+			, TEI.FRST_RGTR_ID AS FRST_RGTR_ID
+			, TEI.FRST_REG_DT AS FRST_REG_DT
+			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TEI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			, TEI.LAST_MDFR_ID AS LAST_MDFR_ID
+			, TEI.LAST_MDFCN_DT AS LAST_MDFCN_DT 
+			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TEI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		FROM TX_EXBI_INFO TEI
+		WHERE 1 = 1
+		AND EXBI_ID = #{srchExbiId}
+	</select>
+	
+	<!-- 기관명 체크 -->
+	<select id="checkInstNm" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO" resultType="Integer">
+		SELECT
+			COUNT(INST_ID)
+		FROM TX_INST_INFO
+		WHERE INST_NM = #{instNm}
+	</select>
+	
+	<!-- 컬렉션 아이디 채번을 위한 시퀀스 조회 쿼리 -->
+	<select id="selectExbiId" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO" resultType="String">
+		SELECT CONCAT('EI',LPAD(CAST( NEXTVAL('SQ_tx_exbi_info_01') AS TEXT),8,'0'))
+	</select>
+	
+	<!-- 기관아이디와 매칭되는 기관명 조회 쿼리 -->
+	<select id="selectInstNm" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO" resultType="String">
+		SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = #{instId}
+	</select>
+	
+	<!-- 컬렉션 등록 -->
+	<insert id="insertDgtlClc" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		INSERT INTO TX_EXBI_INFO
+		(
+			EXBI_ID
+			, EXBI_NM
+			, EXBI_TYPE_CD
+			, EXBI_BGNG_YMD
+			, EXBI_END_YMD
+			, EXBI_EXPLN_CN
+			, RPRS_IMG_GROUP_ID
+			, INST_ID
+			, RLS_YN
+			, INQ_CNT
+			, FRST_RGTR_ID
+			, FRST_REG_DT
+			, LAST_MDFR_ID
+			, LAST_MDFCN_DT
+		)
+		VALUES(
+			  #{exbiId}
+			, #{exbiNm}
+			, #{exbiTypeCd}
+			, #{exbiBgngYmd}
+			, #{exbiEndYmd}
+			, #{exbiExpln}
+			, #{rprsImgGroupId}
+			, (select INST_ID from TX_INST_INFO where INST_NM = #{instNm})
+			, #{rlsYn}
+			, 0
+			, #{userId}
+			, NOW()
+			, #{userId}
+			, NOW()
+		)
+	</insert>
+	
+	<!-- 컬렉션 변경이력 등록 쿼리 -->
+	<insert id="insertDgtlClcHstry" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		INSERT INTO TX_EXBI_CHG_HSTRY /*  */
+		(
+			  EXBI_ID
+			, CHG_HSTRY_SN
+			, CHG_HSTRY_TYPE_CD
+			, EXBI_NM
+			, EXBI_TYPE_CD
+			, EXBI_BGNG_YMD
+			, EXBI_END_YMD
+			, RPRS_IMG_GROUP_ID
+			, EXBI_EXPLN_CN
+			, INST_ID
+			, RLS_YN
+			, INQ_CNT
+			, RGTR_ID
+			, REG_DT
+		)
+		VALUES(
+		<if test="srchWrtMode eq 'entry'">
+			 #{exbiId}
+			, nextval('SQ_tx_exbi_chg_hstry_01')
+			, 'B01'
+		</if>
+		<if test="srchWrtMode eq 'edit'">
+			 #{srchExbiId}
+			, nextval('SQ_tx_exbi_chg_hstry_01')
+			, 'B02'
+		</if>
+			, #{exbiNm}
+			, #{exbiTypeCd}
+			, #{exbiBgngYmd}
+			, #{exbiEndYmd}
+			, #{rprsImgGroupId}
+			, #{exbiExpln}
+			, (SELECT INST_ID FROM TX_INST_INFO WHERE INST_NM = #{instNm})
+			, #{rlsYn}
+			, 0
+			, #{userId}
+			, NOW()
+		)
+	</insert>
+	<!-- 컬렉션 항목 수정 쿼리 -->
+	<update id="updateDgtlClc" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		UPDATE TX_EXBI_INFO /*  */
+		SET 
+			EXBI_NM = #{exbiNm}
+			, EXBI_TYPE_CD = #{exbiTypeCd}
+			, EXBI_BGNG_YMD = #{exbiBgngYmd}
+			, EXBI_END_YMD = #{exbiEndYmd}
+			, RPRS_IMG_GROUP_ID = #{rprsImgGroupId}
+			, EXBI_EXPLN_CN= #{exbiExpln}
+			, INST_ID = (SELECT INST_ID FROM TX_INST_INFO WHERE INST_NM = #{instNm})
+			, RLS_YN = #{rlsYn}
+			, LAST_MDFR_ID = #{userId}
+			, LAST_MDFCN_DT = NOW()
+		WHERE EXBI_ID= #{srchExbiId}
+	</update>
+	
+	<!-- 관련 문화자원 리스트 조회 -->
+	<select id="selectDgtlClcRel" resultType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		SELECT /*kr.go.culture.xr.admin.dgtlClcMgt.mapper.DgtlClcMapper.selectDgtlClcRel*/
+			ROW_NUMBER()OVER(ORDER BY SORT_SN) AS DGTL_CLC_LIST_NO
+			,TDCMI.CLRCS_ID AS CLRCS_ID
+			,TDCMI.CLRCS_NM AS CLRCS_NM
+			,TDCMI.INST_ID AS INST_ID
+			,(SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = TDCMI.INST_ID) AS INST_NM
+			,TECRI.SORT_SN AS SORT_SN
+			,TECRI.RLS_YN AS RLS_YN
+			,TECRI.FRST_RGTR_ID AS FRST_RGTR_ID
+			,(<include
+					refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'" />
+					<property name="paramUserId" value="TECRI.FRST_RGTR_ID" />
+				</include>
+				) AS MBR_NCM
+			,TECRI.FRST_REG_DT AS FRST_REG_DT
+			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TECRI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+		FROM TX_EXBI_CLRCS_REL_INFO TECRI
+		INNER JOIN TX_DGTL_CLRCS_MTDT_INFO TDCMI
+		ON TECRI.CLRCS_ID = TDCMI.CLRCS_ID
+		WHERE TECRI.EXBI_ID = #{srchExbiId}
+		ORDER BY SORT_SN
+	</select>
+	
+	<!-- 컬렉션 관련자원 정보 수정 쿼리 -->
+	<update id="updateRelInfo" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		UPDATE TX_EXBI_CLRCS_REL_INFO
+		SET 
+			RLS_YN = #{rlsYn}
+			, SORT_SN=  CAST (#{sortSn} AS INTEGER)
+			, LAST_MDFR_ID = #{userId}
+			, LAST_MDFCN_DT = NOW()
+		WHERE EXBI_ID = #{popExbiId} 
+		AND CLRCS_ID = #{clrcsId}
+	</update>
+	
+	<!-- 컬렉션 관련자원 삭제 쿼리 -->
+	<delete id="deleteRelInfo" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		DELETE 
+		FROM TX_EXBI_CLRCS_REL_INFO
+		WHERE EXBI_ID = #{srchExbiId} 
+		AND CLRCS_ID = #{clrcsId};
+	</delete>
+	
+	<!-- 컬렉션 관련자원 삭제시 하위 정렬순서 차감 쿼리 -->
+	<update id="minusSortInfo" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		UPDATE TX_EXBI_CLRCS_REL_INFO
+		SET 
+			SORT_SN = SORT_SN-1
+		WHERE EXBI_ID = #{srchExbiId} 
+		AND CLRCS_ID IN (
+			SELECT 
+				TECRI.CLRCS_ID 
+			FROM TX_EXBI_CLRCS_REL_INFO TECRI 
+			WHERE EXBI_ID = #{srchExbiId} AND SORT_SN > CAST (#{sortSn} AS INTEGER)
+		)
+	</update>
+
+	<!-- 문화자원 목록 조회 -->
+	<select id="selectDgtlClrcsList" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO" resultType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		SELECT 
+			ROW_NUMBER()OVER(ORDER BY XTDCMI.CLRCS_ID ASC) AS DGTLCLC_LIST_NO
+			, XTDCMI.CLRCS_ID AS CLRCS_ID
+			, XTDCMI.CLRCS_NM AS CLRCS_NM
+			, XTDCMI.INST_ID AS INST_ID
+			, (SELECT INST_NM FROM TX_INST_INFO TII WHERE TII.INST_ID = XTDCMI.INST_ID) AS INST_NM
+			<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />		
+		FROM
+		(
+			SELECT 
+				TDCMI.CLRCS_ID AS CLRCS_ID
+				, CLRCS_NM
+				, TDCMI.INST_ID
+			FROM TX_DGTL_CLRCS_MTDT_INFO TDCMI
+		   WHERE TDCMI.DEL_WTNG_YN = 'N'
+		     AND TDCMI.CLRCS_ID NOT IN (SELECT CLRCS_ID FROM TX_EXBI_CLRCS_REL_INFO WHERE EXBI_ID = #{popExbiId} )	
+		   <if test="userInstId != '' and userInstId != null">
+				AND TDCMI.INST_ID = #{userInstId}
+		   </if>	
+		) XTDCMI
+		WHERE 1=1
+		<if test="instNm != '' and instNm != null">
+			AND INST_NM LIKE CONCAT('%', TRIM(#{instNm}), '%')
+		</if>
+		<if test="clrcsNm != '' and clrcsNm != null">
+			AND REPLACE(TRIM(CLRCS_NM), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{clrcsNm}),' ',''), '%')
+		</if>
+		ORDER BY DGTLCLC_LIST_NO DESC
+		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+	
+	<!-- 문화자원 카운트  -->
+	<select id="selectDgtlClrcsCnt" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO" resultType="Integer">
+		SELECT 
+			COUNT(CLRCS_ID)
+		FROM TX_DGTL_CLRCS_MTDT_INFO TDCMI
+		WHERE TDCMI.DEL_WTNG_YN = 'N'
+		     AND TDCMI.CLRCS_ID NOT IN (SELECT CLRCS_ID FROM TX_EXBI_CLRCS_REL_INFO WHERE EXBI_ID = #{popExbiId})
+		<if test="instNm != '' and instNm != null">
+			AND INST_NM LIKE CONCAT('%', TRIM(#{instNm}), '%')
+		</if>
+		<if test="clrcsNm != '' and clrcsNm != null">
+			AND REPLACE(TRIM(CLRCS_NM), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{clrcsNm}),' ',''), '%')
+		</if>
+		<if test="userInstId != '' and userInstId != null">
+			AND TDCMI.INST_ID = #{userInstId}
+	    </if>
+	</select>
+	
+	<!-- 컬렉션 관련자원 등록 쿼리 -->
+	<insert id="insertRel" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		INSERT INTO TX_EXBI_CLRCS_REL_INFO
+		(
+			EXBI_ID
+			, CLRCS_ID
+			, SORT_SN
+			, RLS_YN
+			, FRST_RGTR_ID
+			, FRST_REG_DT
+			, LAST_MDFR_ID
+			, LAST_MDFCN_DT
+		)
+		VALUES(
+			 #{popExbiId}
+			, #{clrcsId}
+			, (SELECT COALESCE((SELECT MAX(SORT_SN) FROM TX_EXBI_CLRCS_REL_INFO WHERE EXBI_ID = #{popExbiId}), 0) + 1)
+			, 'Y'
+			, #{userId}
+			, NOW()
+			, #{userId}
+			, NOW()
+		);
+	</insert>
+	
+	<!-- 컬렉션 변경이력 목록 조회 -->
+	<select id="selectHstryList" parameterType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO" resultType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		SELECT
+			XTECH.DGTLCLC_LIST_NO AS DGTLCLC_LIST_NO
+			, XTECH.EXBI_ID  AS EXBI_ID
+			, XTECH.CHG_HSTRY_TYPE_CD AS CHG_HSTRY_TYPE_CD
+			, XTECH.EXBI_NM AS EXBI_NM
+			, XTECH.EXBI_TYPE_CD AS EXBI_TYPE_CD
+			, XTECH.EXBI_BGNG_YMD AS EXBI_BGNG_YMD
+			, XTECH.EXBI_END_YMD AS EXBI_END_YMD
+			, XTECH.RLS_YN AS RLS_YN
+			, XTECH.RGTR_ID AS FRST_RGTR_ID
+			, XTECH.MBR_NCM AS MBR_NCM
+			, XTECH.REG_DT AS FRST_REG_DT
+			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTECH.REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+		FROM
+		(
+			SELECT 
+				EXBI_ID 
+				, ROW_NUMBER()OVER(ORDER BY TECH.CHG_HSTRY_SN ASC) AS DGTLCLC_LIST_NO
+				, CHG_HSTRY_SN
+				, CHG_HSTRY_TYPE_CD
+				, EXBI_NM
+				, EXBI_TYPE_CD
+				,(CASE WHEN EXBI_TYPE_CD = 'A01'
+					  THEN ''
+					  ELSE TO_CHAR(CAST(EXBI_BGNG_YMD AS DATE), 'YYYY-MM-DD')
+				  END) AS EXBI_BGNG_YMD
+				,(CASE WHEN EXBI_TYPE_CD = 'A01'
+					   THEN ''
+					 ELSE TO_CHAR(CAST(EXBI_END_YMD AS DATE), 'YYYY-MM-DD')
+				  END) AS EXBI_END_YMD
+				, INST_ID
+				, RLS_YN
+				, RGTR_ID
+				, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+				 		<property name="paramColNm" value="'userNcm'"/>
+				 		<property name="paramUserId" value="TECH.RGTR_ID"/>
+					</include>) AS MBR_NCM
+				, REG_DT
+			FROM TX_EXBI_CHG_HSTRY TECH
+			WHERE EXBI_ID = #{srchExbiId}
+		) XTECH
+		ORDER BY DGTLCLC_LIST_NO DESC
+	</select>
+	
+	
+	<!-- 기관 컬렉션 목록 조회 -->
+	<select id="selectInstDgtlClcList" parameterType="kr.go.culture.xr.admin.instMgt.vo.InstInfoVO" resultType="kr.go.culture.xr.admin.dgtlClcMgt.vo.DgtlClcVO">
+		SELECT /* kr.go.culture.xr.admin.dgtlClcMgt.mapper.DgtlClcMapper.selectInstDgtlClcList */
+			   XTEI.DGTLCLC_LIST_NO AS DGTLCLC_LIST_NO
+			 , XTEI.EXBI_ID AS EXBI_ID
+			 , XTEI.EXBI_NM AS EXBI_NM
+			 , XTEI.EXBI_TYPE_CD AS EXBI_TYPE_CD
+			 , XTEI.EXBI_BGNG_YMD AS EXBI_BGNG_YMD
+			 , XTEI.EXBI_END_YMD AS EXBI_END_YMD
+			 , XTEI.EXBI_EXPLN AS EXBI_EXPLN
+			 , XTEI.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'" />
+					<property name="paramUserId" value="XTEI.FRST_RGTR_ID" />
+				</include>) AS MBR_NCM
+			 , XTEI.RLS_YN AS RLS_YN
+			 , (CASE WHEN XTEI.RLS_YN = 'Y'
+						  THEN '공개'
+					 ELSE '비공개'
+				END) AS RLS_YN_NM
+			 , XTEI.INQ_CNT AS INQ_CNT
+			 , XTEI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , XTEI.FRST_REG_DT AS FRST_REG_DT
+			 , XTEI.FRST_REG_DT_V19
+			 , XTEI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , XTEI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (SELECT COUNT(CLRCS_ID) 
+				  FROM TX_EXBI_CLRCS_REL_INFO 
+				 WHERE EXBI_ID = XTEI.EXBI_ID) AS REL_CNT
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TEI.EXBI_ID ASC) AS DGTLCLC_LIST_NO
+					 , TEI.EXBI_ID
+					 , TEI.EXBI_NM
+					 , TEI.EXBI_TYPE_CD
+					 , TEI.EXBI_BGNG_YMD
+					 , TEI.EXBI_END_YMD
+					 , TEI.EXBI_EXPLN_CN AS EXBI_EXPLN
+					 , TEI.INST_ID
+					 , TEI.RLS_YN
+					 , TEI.INQ_CNT
+					 , TEI.FRST_RGTR_ID
+					 , TEI.FRST_REG_DT
+					 , TO_CHAR(TEI.FRST_REG_DT, 'YYYY-MM-DD HH24:MI:SS') AS FRST_REG_DT_V19
+					 , TEI.LAST_MDFR_ID
+					 , TEI.LAST_MDFCN_DT
+				  FROM TX_EXBI_INFO TEI
+				 WHERE TEI.INST_ID = #{paramInstId}
+			   ) XTEI
+		ORDER BY DGTLCLC_LIST_NO DESC
+		LIMIT #{paramTabDgtlClcRecordCnt}
+		OFFSET (#{paramTabDgtlClcListPageNo} - 1) * #{paramTabDgtlClcRecordCnt}
+	</select>
+	
+	<!-- 기관 컬렉션 조회  -->
+	<select id="selectInstDgtlClcTotListCnt" parameterType="kr.go.culture.xr.admin.instMgt.vo.InstInfoVO" resultType="Integer">
+		SELECT /*kr.go.culture.xr.admin.dgtlClcMgt.mapper.DgtlClcMapper.selectInstDgtlClcTotListCnt*/
+			COUNT(EXBI_ID) AS TOT_LIST_CNT
+		FROM TX_EXBI_INFO TEI
+		WHERE TEI.INST_ID = #{paramInstId}
+	</select>
+	
+</mapper>

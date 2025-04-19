@@ -1,0 +1,19 @@
+@charset "UTF-8";
+
+/* disable 표시 */
+.disableGo {pointer-events: none !important; cursor: default !important; background: #e1e1e1 !important; }
+
+
+/* 캘린더 기본설정 */
+#calendar_wrap {width: 900px; margin: 10px; }
+.fc-daygrid-body:hover, .fc-event-main:hover {cursor:pointer; }
+.fc-daygrid-body .fc-daygrid-day {height: 118px; }
+.fc-event-title-container {font-size: 12px; }
+.fc-view-harness {height: 760px !important;}
+.fc-event-title {padding: 0 1px !important; }
+
+/* 모달 기본설정 */
+#calendarModal {display: none; }
+
+/* 팝업 기본설정 */
+.fc-popover {z-index: 10 !important; }

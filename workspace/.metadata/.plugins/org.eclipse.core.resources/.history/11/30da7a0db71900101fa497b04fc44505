@@ -1,0 +1,9 @@
+spring.application.name=calProj
+
+spring.mvc.view.prefix=/WEB-INF/jsp/views/
+spring.mvc.view.suffix=.jsp
+
+spring.datasource.url=jdbc:mariadb://127.0.0.1:3306/callproj
+spring.datasource.username=root
+spring.datasource.password=phj1!
+spring.datasource.driver-class-name=org.mariadb.jdbc.Driver

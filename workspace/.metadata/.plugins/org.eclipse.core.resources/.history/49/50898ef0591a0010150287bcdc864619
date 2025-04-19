@@ -1,0 +1,102 @@
+package com.proj.calendar.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.proj.calendar.service.CalendarGoService;
+import com.proj.calendar.vo.CalendarGoVO;
+
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+
+@Controller
+public class CalendarGoController {
+
+	@Resource(name = "CalendarGoService")
+	private CalendarGoService calendarGoService;
+	
+	
+	@GetMapping("/calendarGo.do")
+	public String calendarList(
+			
+	)throws Exception {
+		System.out.println("=======");
+		System.out.println("Hi");
+		System.out.println("=======");
+		
+		return "jsp/calendarGo";
+	}
+
+	@PostMapping("/calendarAdd.do")
+	@ResponseBody
+//	@RequestMapping(value = "/calendarAdd.do" ,produces="application/json")
+	public String calendarAdd(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			HttpServletRequest request
+//			ModelAndView mav
+//			,ModelMap model
+	)throws Exception {
+//		ModelAndView modelAndView = new ModelAndView();
+//		modelAndView.setViewName("jsonView");
+		
+		System.out.println("=======");
+		System.out.println(calendarGoVO.getVStrDt());
+		System.out.println(calendarGoVO.getVEndDt());
+		System.out.println(calendarGoVO.getVCont());
+		System.out.println("=======");
+		
+		String succYn = "";
+		succYn = "success";
+		
+//		model.addAttribute("result", "success");
+		
+//		modelAndView.addObject("result", "success");
+//		mav.addObject("result", "success");
+//		mav.setViewName("jsp/calendarGo");
+//		return modelAndView;
+//		return "jsp/calendarGo";
+		return succYn;
+	}
+	
+	
+	
+	
+	@PostMapping("/calendarAdd11.do")
+	@ResponseBody
+	public String selectTypeSrchStat(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO,
+			HttpServletRequest request 
+//			,SrchDgtlClrcsRscVo paramVo
+		) {
+		
+		System.out.println("=======");
+		System.out.println(calendarGoVO.getVStrDt());
+		System.out.println(calendarGoVO.getVEndDt());
+		System.out.println(calendarGoVO.getVCont());
+		System.out.println("=======");
+		
+		String a = "success";
+		
+//		ResultVO resultVO = new ResultVO();
+//		resultVO.setResultCode(ResponseCode.SELECT_ERROR.getCode());
+//		resultVO.setResultMessage(ResponseCode.SELECT_ERROR.getMessage());
+//		
+//		if (!EgovStringUtil.isEmptyTrimmed(paramVo.getSrchVal()) && paramVo.getSrchVal().startsWith("#")) {
+//			paramVo.setSrchTagVal(paramVo.getSrchVal().replace("#", "").trim());
+//		}
+//
+//		resultVO.putResult("dataTypeSrchStat",dgtlCltRscService.selectDataTypeSrchStat(paramVo));
+//		resultVO.putResult("cntsTypeSrchStat",dgtlCltRscService.selectCntsTypeSrchStat(paramVo));
+//   		resultVO.setResultCode(ResponseCode.SUCCESS.getCode());
+//		resultVO.setResultMessage(ResponseCode.SUCCESS.getMessage());
+
+		return a;
+	}
+}

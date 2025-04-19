@@ -1,0 +1,744 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper">
+
+	<!-- 게시판 목록 보기 -->
+	<select id="selectBbsStngInfoList" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO" resultType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO">
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectBbsStngInfoList */
+			   XTBSI.LIST_BBS_NO AS LIST_BBS_NO
+			 , XTBSI.BBS_ID AS BBS_ID
+			 , XTBSI.BBS_NM AS BBS_NM
+			 , XTBSI.BBS_EXPLN_CN AS BBS_EXPLN
+			 , XTBSI.BBS_TYPE_CD AS BBS_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000016'"/>
+					<property name="paramCdId" value="XTBSI.BBS_TYPE_CD"/>
+				</include>) AS BBS_TYPE_NM
+			 , XTBSI.ANS_USE_YN AS ANS_USE_YN
+			 , (CASE WHEN XTBSI.ANS_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS ANS_USE_YN_NM
+			 , XTBSI.CMNT_USE_YN AS CMNT_USE_YN
+			 , (CASE WHEN XTBSI.CMNT_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS CMNT_USE_YN_NM
+			 , XTBSI.PRVT_USE_YN AS PRVT_USE_YN
+			 , (CASE WHEN XTBSI.PRVT_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS PRVT_USE_YN_NM
+			 , XTBSI.ATCH_FILE_USE_YN AS ATCH_FILE_USE_YN
+			 , (CASE WHEN XTBSI.ATCH_FILE_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS ATCH_FILE_USE_YN_NM
+			 , XTBSI.ATCH_FILE_LMT_CNT AS ATCH_FILE_LMT_CNT
+			 , XTBSI.ATCH_FILE_LMT_SZ AS ATCH_FILE_LMT_SZ
+			 , (CASE WHEN XTBSI.ATCH_FILE_LMT_SZ > 0
+						  THEN ROUND((XTBSI.ATCH_FILE_LMT_SZ::numeric/1024::numeric), 2)
+					 ELSE 0
+				END) AS ATCH_FILE_LMT_SZ_KB
+			 , (CASE WHEN XTBSI.ATCH_FILE_LMT_SZ > 0
+						  THEN ROUND(((XTBSI.ATCH_FILE_LMT_SZ::numeric/1024::numeric)/1024::numeric), 2)
+					 ELSE 0
+				END) AS ATCH_FILE_LMT_SZ_MB
+			 , XTBSI.NTC_PSTG_USE_YN AS NTC_PSTG_USE_YN
+			 , (CASE WHEN XTBSI.NTC_PSTG_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS NTC_PSTG_USE_YN_NM
+			 , XTBSI.NTC_PSTG_LMT_NOCS AS NTC_PSTG_LMT_CNT
+			 , XTBSI.NTC_END_TERM_DAY_CNT AS NTC_END_TERM_DAY_CNT
+			 , XTBSI.NEW_INDCT_YN AS NEW_INDCT_YN
+			 , (CASE WHEN XTBSI.NEW_INDCT_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS NEW_INDCT_YN_NM
+			 , XTBSI.NEW_INDCT_TERM_DAY_CNT AS NEW_INDCT_TERM_DAY_CNT
+			 , XTBSI.ITG_SRCH_YN AS ITG_SRCH_YN
+			 , (CASE WHEN XTBSI.ITG_SRCH_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS ITG_SRCH_YN_NM
+			 , XTBSI.LNKG_CONTS_USE_YN AS LNKG_CONTS_USE_YN
+			 , (CASE WHEN XTBSI.LNKG_CONTS_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS LNKG_CONTS_USE_YN_NM
+			 , XTBSI.NTFC_USE_YN AS NTFC_USE_YN
+			 , (CASE WHEN XTBSI.NTFC_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS NTFC_USE_YN_NM
+			 , XTBSI.IDNTY_USE_YN AS IDNTY_USE_YN
+			 , (CASE WHEN XTBSI.IDNTY_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS IDNTY_USE_YN_NM
+			 , XTBSI.PRGRS_STTS_USE_YN AS PRGRS_STTS_USE_YN
+			 , (CASE WHEN XTBSI.PRGRS_STTS_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS PRGRS_STTS_USE_YN_NM
+			 , XTBSI.RTNG_USE_YN AS RTNG_USE_YN
+			 , (CASE WHEN XTBSI.RTNG_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS RTNG_USE_YN_NM
+			 , XTBSI.RCMDTN_USE_YN AS RCMDTN_USE_YN
+			 , (CASE WHEN XTBSI.RCMDTN_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS RCMDTN_USE_YN_NM
+			 , XTBSI.OPSE_USE_YN AS OPSE_USE_YN
+			 , (CASE WHEN XTBSI.OPSE_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS OPSE_USE_YN_NM
+			 , XTBSI.ARTCL_OTPT_NOCS AS ARTCL_OTPT_NOCS
+			 , XTBSI.PAGE_OTPT_NOCS AS PAGE_OTPT_NOCS
+			 , XTBSI.USE_YN AS USE_YN
+			 , (CASE WHEN XTBSI.USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS USE_YN_NM
+			 , XTBSI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XTBSI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XTBSI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTBSI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XTBSI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTBSI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="XTBSI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="XTBSI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTBSI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="XTBSI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TBSI.FRST_REG_DT) AS LIST_BBS_NO
+					 , TBSI.BBS_ID AS BBS_ID
+					 , TBSI.BBS_NM AS BBS_NM
+					 , TBSI.BBS_EXPLN_CN AS BBS_EXPLN_CN
+					 , TBSI.BBS_TYPE_CD AS BBS_TYPE_CD
+					 , COALESCE(TBSI.ANS_USE_YN, 'N') AS ANS_USE_YN
+					 , COALESCE(TBSI.CMNT_USE_YN, 'N') AS CMNT_USE_YN
+					 , COALESCE(TBSI.PRVT_USE_YN, 'N') AS PRVT_USE_YN
+					 , COALESCE(TBSI.ATCH_FILE_USE_YN, 'N') AS ATCH_FILE_USE_YN
+					 , COALESCE(TBSI.ATCH_FILE_LMT_CNT, 0) AS ATCH_FILE_LMT_CNT
+					 , COALESCE(TBSI.ATCH_FILE_LMT_SZ, 0) AS ATCH_FILE_LMT_SZ
+					 , COALESCE(TBSI.NTC_PSTG_USE_YN, 'N') AS NTC_PSTG_USE_YN
+					 , COALESCE(TBSI.NTC_PSTG_LMT_NOCS, 0) AS NTC_PSTG_LMT_NOCS
+					 , COALESCE(TBSI.NTC_END_TERM_DAY_CNT, 0) AS NTC_END_TERM_DAY_CNT
+					 , COALESCE(TBSI.NEW_INDCT_YN, 'N') AS NEW_INDCT_YN
+					 , COALESCE(TBSI.NEW_INDCT_TERM_DAY_CNT, 0) AS NEW_INDCT_TERM_DAY_CNT
+					 , COALESCE(TBSI.ITG_SRCH_YN, 'N') AS ITG_SRCH_YN
+					 , COALESCE(TBSI.LNKG_CONTS_USE_YN, 'N') AS LNKG_CONTS_USE_YN
+					 , COALESCE(TBSI.NTFC_USE_YN, 'N') AS NTFC_USE_YN
+					 , COALESCE(TBSI.IDNTY_USE_YN, 'N') AS IDNTY_USE_YN
+					 , COALESCE(TBSI.PRGRS_STTS_USE_YN, 'N') AS PRGRS_STTS_USE_YN
+					 , COALESCE(TBSI.RTNG_USE_YN, 'N') AS RTNG_USE_YN
+					 , COALESCE(TBSI.RCMDTN_USE_YN, 'N') AS RCMDTN_USE_YN
+					 , COALESCE(TBSI.OPSE_USE_YN, 'N') AS OPSE_USE_YN
+					 , COALESCE(TBSI.ARTCL_OTPT_NOCS, 10) AS ARTCL_OTPT_NOCS
+					 , COALESCE(TBSI.PAGE_OTPT_NOCS, 10) AS PAGE_OTPT_NOCS
+					 , COALESCE(TBSI.USE_YN, 'N') AS USE_YN
+					 , TBSI.FRST_RGTR_ID AS FRST_RGTR_ID
+					 , TBSI.FRST_REG_DT AS FRST_REG_DT
+					 , TBSI.LAST_MDFR_ID AS LAST_MDFR_ID
+					 , TBSI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+				  FROM TX_BBS_STNG_INFO TBSI
+				 WHERE 1= 1
+		<if test="paramBbsTypeCd != null and paramBbsTypeCd != ''">
+				   AND TBSI.BBS_TYPE_CD = #{paramBbsTypeCd}
+		</if>
+		<if test='paramUseYn != null and paramUseYn != ""'>
+				   AND TBSI.USE_YN = #{paramUseYn}
+		</if>
+		<if test="paramBbsSrchString != null and paramBbsSrchString != ''">
+			<choose>
+				<when test="paramBbsSrchDiv == 'NM'">
+				   AND TBSI.BBS_NM LIKE CONCAT('%', TRIM(#{paramBbsSrchString}), '%')
+				</when>
+				<when test="paramBbsSrchDiv == 'ID'">
+				   AND TBSI.BBS_ID LIKE CONCAT('%', TRIM(#{paramBbsSrchString}), '%')
+				</when>
+				<otherwise>
+				   AND 1 = 2
+				</otherwise>
+			</choose>
+		</if>
+			   ) XTBSI
+		 ORDER BY XTBSI.LIST_BBS_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}
+	</select>
+
+
+	<!-- 게시판 수 보기 -->
+	<select	id="selectBbsStngTotListCnt" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectBbsStngTotListCnt */
+			   COUNT(BBS_ID) AS TOT_LIST_CNT
+		  FROM TX_BBS_STNG_INFO TBSI
+		 WHERE 1 = 1
+		<if test="paramBbsTypeCd != null and paramBbsTypeCd != ''">
+				   AND TBSI.BBS_TYPE_CD = #{paramBbsTypeCd}
+		</if>
+		<if test='paramUseYn != null and paramUseYn != ""'>
+				   AND TBSI.USE_YN = #{paramUseYn}
+		</if>
+		<if test="paramBbsSrchString != null and paramBbsSrchString != ''">
+			<choose>
+				<when test="paramBbsSrchDiv == 'NM'">
+				   AND TBSI.BBS_NM LIKE CONCAT('%', TRIM(#{paramBbsSrchString}), '%')
+				</when>
+				<when test="paramBbsSrchDiv == 'ID'">
+				   AND TBSI.BBS_ID LIKE CONCAT('%', TRIM(#{paramBbsSrchString}), '%')
+				</when>
+				<otherwise>
+				   AND 1 = 2
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+	
+	
+	<!-- 게시판 정보 보기 -->
+	<select id="selectBbsStngInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO" resultType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO">
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectBbsStngInfo */
+			   TBSI.BBS_ID AS BBS_ID
+			 , TBSI.BBS_NM AS BBS_NM
+			 , TBSI.BBS_EXPLN_CN AS BBS_EXPLN
+			 , TBSI.BBS_TYPE_CD AS BBS_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000016'"/>
+					<property name="paramCdId" value="TBSI.BBS_TYPE_CD"/>
+				</include>) AS BBS_TYPE_NM
+			 , COALESCE(TBSI.ANS_USE_YN, 'N') AS ANS_USE_YN
+			 , (CASE WHEN TBSI.ANS_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS ANS_USE_YN_NM
+			 , COALESCE(TBSI.CMNT_USE_YN, 'N') AS CMNT_USE_YN
+			 , (CASE WHEN TBSI.CMNT_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS CMNT_USE_YN_NM
+			 , COALESCE(TBSI.PRVT_USE_YN, 'N') AS PRVT_USE_YN
+			 , (CASE WHEN TBSI.PRVT_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS PRVT_USE_YN_NM
+			 , COALESCE(TBSI.ATCH_FILE_USE_YN, 'N') AS ATCH_FILE_USE_YN
+			 , (CASE WHEN TBSI.ATCH_FILE_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS ATCH_FILE_USE_YN_NM
+			 , COALESCE(TBSI.ATCH_FILE_LMT_CNT, 0) AS ATCH_FILE_LMT_CNT
+			 , COALESCE(TBSI.ATCH_FILE_LMT_SZ, 0) AS ATCH_FILE_LMT_SZ
+			 , (CASE WHEN COALESCE(TBSI.ATCH_FILE_LMT_SZ, 0) > 0
+			 			  THEN ROUND((TBSI.ATCH_FILE_LMT_SZ::numeric/1024::numeric), 2)
+			 		 ELSE 0
+			 	END) AS ATCH_FILE_LMT_SZ_KB
+			 , (CASE WHEN COALESCE(TBSI.ATCH_FILE_LMT_SZ, 0) > 0
+			 			  THEN ROUND(((TBSI.ATCH_FILE_LMT_SZ::numeric/1024::numeric)/1024::numeric), 2)
+			 		 ELSE 0
+			 	END) AS ATCH_FILE_LMT_SZ_MB
+			 , COALESCE(TBSI.NTC_PSTG_USE_YN, 'N') AS NTC_PSTG_USE_YN
+			 , (CASE WHEN TBSI.NTC_PSTG_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS NTC_PSTG_USE_YN_NM
+			 , COALESCE(TBSI.NTC_PSTG_LMT_NOCS, 0) AS NTC_PSTG_LMT_CNT
+			 , COALESCE(TBSI.NTC_END_TERM_DAY_CNT, 0) AS NTC_END_TERM_DAY_CNT
+			 , COALESCE(TBSI.NEW_INDCT_YN, 'N') AS NEW_INDCT_YN
+			 , (CASE WHEN TBSI.NEW_INDCT_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS NEW_INDCT_YN_NM
+			 , COALESCE(TBSI.NEW_INDCT_TERM_DAY_CNT, 0) AS NEW_INDCT_TERM_DAY_CNT
+			 , COALESCE(TBSI.ITG_SRCH_YN, 'N') AS ITG_SRCH_YN
+			 , (CASE WHEN TBSI.ITG_SRCH_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS ITG_SRCH_YN_NM
+			 , COALESCE(TBSI.LNKG_CONTS_USE_YN, 'N') AS LNKG_CONTS_USE_YN
+			 , (CASE WHEN TBSI.LNKG_CONTS_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS LNKG_CONTS_USE_YN_NM
+			 , COALESCE(TBSI.NTFC_USE_YN, 'N') AS NTFC_USE_YN
+			 , (CASE WHEN TBSI.NTFC_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS NTFC_USE_YN_NM
+			 , COALESCE(TBSI.IDNTY_USE_YN, 'N') AS IDNTY_USE_YN
+			 , (CASE WHEN TBSI.IDNTY_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS IDNTY_USE_YN_NM
+			 , COALESCE(TBSI.PRGRS_STTS_USE_YN, 'N') AS PRGRS_STTS_USE_YN
+			 , (CASE WHEN TBSI.PRGRS_STTS_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS PRGRS_STTS_USE_YN_NM
+			 , COALESCE(TBSI.RTNG_USE_YN, 'N') AS RTNG_USE_YN
+			 , (CASE WHEN TBSI.RTNG_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS RTNG_USE_YN_NM
+			 , COALESCE(TBSI.RCMDTN_USE_YN, 'N') AS RCMDTN_USE_YN
+			 , (CASE WHEN TBSI.RCMDTN_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS RCMDTN_USE_YN_NM
+			 , COALESCE(TBSI.OPSE_USE_YN, 'N') AS OPSE_USE_YN
+			 , (CASE WHEN TBSI.OPSE_USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS OPSE_USE_YN_NM
+			 , COALESCE(TBSI.ARTCL_OTPT_NOCS, 10) AS ARTCL_OTPT_NOCS
+			 , COALESCE(TBSI.PAGE_OTPT_NOCS, 10) AS PAGE_OTPT_NOCS
+			 , COALESCE(TBSI.USE_YN, 'N') AS USE_YN
+			 , (CASE WHEN TBSI.USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용 안함'
+				END) AS USE_YN_NM
+			 , TBSI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TBSI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TBSI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TBSI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TBSI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TBSI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TBSI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TBSI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , TBSI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TBSI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_BBS_STNG_INFO TBSI
+		 WHERE BBS_ID = #{paramBbsId}
+	</select>
+
+
+	<select id="selectNewBbsId" resultType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO">
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectNewBbsId */
+			   CONCAT('BBS', RIGHT(CONCAT('0000000', NEXTVAL('SQ_TX_BBS_STNG_INFO_01')), 7)) AS BBS_ID
+	</select>
+
+	<!-- 게시판 등록 -->
+	<insert id="insertBbsStngInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.insertBbsStngInfo */
+			   TX_BBS_STNG_INFO
+			   (
+			   BBS_ID
+			 , BBS_NM
+			 , BBS_EXPLN_CN
+			 , BBS_TYPE_CD
+			 , ANS_USE_YN
+			 , CMNT_USE_YN
+			 , PRVT_USE_YN
+			 , ATCH_FILE_USE_YN
+			 , ATCH_FILE_LMT_CNT
+			 , ATCH_FILE_LMT_SZ
+			 , NTC_PSTG_USE_YN
+			 , NTC_PSTG_LMT_NOCS
+			 , NTC_END_TERM_DAY_CNT
+			 , NEW_INDCT_YN
+			 , NEW_INDCT_TERM_DAY_CNT
+			 , ITG_SRCH_YN
+			 , LNKG_CONTS_USE_YN
+			 , NTFC_USE_YN
+			 , IDNTY_USE_YN
+			 , PRGRS_STTS_USE_YN
+			 , RTNG_USE_YN
+			 , RCMDTN_USE_YN
+			 , OPSE_USE_YN
+			 , ARTCL_OTPT_NOCS
+			 , PAGE_OTPT_NOCS
+			 , USE_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{bbsId}
+			 , #{bbsNm}
+			 , #{bbsExpln}
+			 , #{bbsTypeCd}
+			 , COALESCE(#{ansUseYn}, 'N')
+			 , COALESCE(#{cmntUseYn}, 'N')
+			 , COALESCE(#{prvtUseYn}, 'N')
+			 , COALESCE(#{atchFileUseYn}, 'N')
+			 , COALESCE(#{atchFileLmtCnt}, 0)
+			 , COALESCE(#{atchFileLmtSz}, 0)
+			 , COALESCE(#{ntcPstgUseYn}, 'N')
+			 , COALESCE(#{ntcPstgLmtCnt}, 0)
+			 , COALESCE(#{ntcEndTermDayCnt}, 0)
+			 , COALESCE(#{newIndctYn}, 'N')
+			 , COALESCE(#{newIndctTermDayCnt}, 0)
+			 , COALESCE(#{itgSrchYn}, 'N')
+			 , COALESCE(#{lnkgContsUseYn}, 'N')
+			 , COALESCE(#{ntfcUseYn}, 'N')
+			 , COALESCE(#{idntyUseYn}, 'N')
+			 , COALESCE(#{prgrsSttsUseYn}, 'N')
+			 , COALESCE(#{rtngUseYn}, 'N')
+			 , COALESCE(#{rcmdtnUseYn}, 'N')
+			 , COALESCE(#{opseUseYn}, 'N')
+			 , COALESCE(#{artclOtptNocs}, 10)
+			 , COALESCE(#{pageOtptNocs}, 10)
+			 , COALESCE(#{useYn}, 'N')
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert> 
+
+
+	<!-- 게시판 수정 -->
+	<update id="updateBbsStngInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO">
+		UPDATE TX_BBS_STNG_INFO /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.updateBbsStngInfo */
+		   SET BBS_ID = #{bbsId}
+		   	 , BBS_NM = #{bbsNm}
+			 , BBS_EXPLN_CN = #{bbsExpln}
+			 , BBS_TYPE_CD = #{bbsTypeCd}
+			 , ANS_USE_YN = COALESCE(#{ansUseYn}, 'N')
+			 , CMNT_USE_YN = COALESCE(#{cmntUseYn}, 'N')
+			 , PRVT_USE_YN = COALESCE(#{prvtUseYn}, 'N')
+			 , ATCH_FILE_USE_YN = COALESCE(#{atchFileUseYn}, 'N')
+			 , ATCH_FILE_LMT_CNT = COALESCE(#{atchFileLmtCnt}, 0)
+			 , ATCH_FILE_LMT_SZ = COALESCE(#{atchFileLmtSz}, 0)
+			 , NTC_PSTG_USE_YN = COALESCE(#{ntcPstgUseYn}, 'N')
+			 , NTC_PSTG_LMT_NOCS = COALESCE(#{ntcPstgLmtCnt}, 0)
+			 , NTC_END_TERM_DAY_CNT = COALESCE(#{ntcEndTermDayCnt}, 0)
+			 , NEW_INDCT_YN = COALESCE(#{newIndctYn}, 'N')
+			 , NEW_INDCT_TERM_DAY_CNT = COALESCE(#{newIndctTermDayCnt}, 0)
+			 , ITG_SRCH_YN = COALESCE(#{itgSrchYn}, 'N')
+			 , LNKG_CONTS_USE_YN = COALESCE(#{lnkgContsUseYn}, 'N')
+			 , NTFC_USE_YN = COALESCE(#{ntfcUseYn}, 'N')
+			 , IDNTY_USE_YN = COALESCE(#{idntyUseYn}, 'N')
+			 , PRGRS_STTS_USE_YN = COALESCE(#{prgrsSttsUseYn}, 'N')  
+			 , RTNG_USE_YN = COALESCE(#{rtngUseYn}, 'N')
+			 , RCMDTN_USE_YN = COALESCE(#{rcmdtnUseYn}, 'N')
+			 , OPSE_USE_YN = COALESCE(#{opseUseYn}, 'N')
+			 , ARTCL_OTPT_NOCS = COALESCE(#{artclOtptNocs}, 10)
+			 , PAGE_OTPT_NOCS = COALESCE(#{pageOtptNocs}, 10)
+			 , USE_YN = COALESCE(#{useYn}, 'N')
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE BBS_ID = #{paramBbsId}
+	</update>
+	
+	<!-- 게시물 게시판 ID 수정 -->
+	<update id="updateBbsInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO">
+		UPDATE TX_BBS_INFO /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.updateBbsInfo */
+		   SET BBS_ID = #{bbsId}
+		 WHERE BBS_ID = #{paramBbsId}
+	</update>
+	
+	
+	<!-- 게시판 수정 AJAX -->
+	<update id="updateBbsStngUseInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsStngInfoVO">
+		UPDATE TX_BBS_STNG_INFO TBSI /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.updateBbsStngUseInfo */
+		   SET BBS_ID = #{paramBbsId}
+		<if test="paramUseCd != null and paramUseCd != '' and paramUseValue != null and paramUseValue != ''">
+			<if test="paramUseCd=='ANSUSE'">
+			 , ANS_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='CMNTUSE'">
+			 , CMNT_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='PRVTUSE'">
+			 , PRVT_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='ATCHFILEUSE'">
+			 , ATCH_FILE_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='NTCPSTGUSE'">
+			 , NTC_PSTG_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='NEWINDCT'">
+			 , NEW_INDCT_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='ITGSRCH'">
+			 , ITG_SRCH_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='LNKGCONTSUSE'">
+			 , LNKG_CONTS_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='NTFCUSE'">
+			 , NTFC_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='IDNTYUSE'">
+			 , IDNTY_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='PRGRSSTTSUSE'">
+			 , PRGRS_STTS_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='RTNGUSE'">  
+			 , RTNG_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='RCMDTNUSE'">
+			 , RCMDTN_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='OPSEUSE'">
+			 , OPSE_USE_YN = #{paramUseValue}
+			</if>
+			<if test="paramUseCd=='USE'">
+			 , USE_YN = #{paramUseValue}
+			</if>
+		</if>
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE BBS_ID = #{paramBbsId}
+	</update>
+
+
+	<!-- 게시판 분류 목록 보기 -->
+	<select id="selectBbsClsfCdInfoList" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsClsfCdInfoVO" resultType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsClsfCdInfoVO">
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectBbsClsfCdInfoList */
+			   ROW_NUMBER()OVER(ORDER BY TBCC.SORT_SN ASC) AS LIST_CLSF_NO
+			 , TBCC.CLSF_CD AS CLSF_CD
+			 , TBCC.CLSF_NM AS CLSF_NM
+			 , TBCC.SORT_SN AS SORT_SN
+			 , TBCC.USE_YN AS USE_YN
+			 , (CASE WHEN TBCC.USE_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용안함'
+				END) AS USE_YN_NM
+			 , TBCC.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TBCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TBCC.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TBCC.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TBCC.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TBCC.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TBCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TBCC.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , TBCC.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TBCC.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_BBS_CLSF_CD TBCC
+		 WHERE TBCC.BBS_ID = #{paramBbsId}
+		<if test='paramUseYn != null and paramUseYn != ""'>
+		   AND TBCC.USE_YN = #{paramUseYn}
+		</if>
+	</select>
+
+
+	<!-- 게시판 분류 등록 -->
+	<insert id="insertBbsClsfCdInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsClsfCdInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.insertBbsClsfCdInfo */
+			   TX_BBS_CLSF_CD
+			   (
+			   BBS_ID
+			 , CLSF_CD
+			 , CLSF_NM
+			 , SORT_SN
+			 , USE_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{bbsId}
+			 , #{clsfCd}
+			 , #{clsfNm}
+			 , #{sortSn}
+			 , #{useYn}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+
+
+	<!-- 게시판 분류 수정 -->
+	<update id="updateBbsClsfCdInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsClsfCdInfoVO">
+		UPDATE TX_BBS_CLSF_CD /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.updateBbsClsfCdInfo */
+		   SET CLSF_NM = #{clsfNm}
+			 , SORT_SN = #{sortSn}
+			 , USE_YN = #{useYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE BBS_ID = #{paramBbsId}
+		   AND CLSF_CD = #{paramClsfCd}
+	</update>
+
+
+	<!-- 게시판 분류 삭제 -->
+	<delete id="deleteBbsClsfCdInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsClsfCdInfoVO">
+		DELETE FROM TX_BBS_CLSF_CD /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.deleteBbsClsfCdInfo */
+		 WHERE BBS_ID = #{paramBbsId}
+		   AND CLSF_CD = #{paramClsfCd}
+	</delete>
+
+
+	<!--  게시판 설정 첨부 파일 목록 보기  -->
+	<select id="selectBbsAtchFileInfoList"  parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO" resultType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO">
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectBbsAtchFileInfoList */
+			   TCC.CD_ID AS FILE_EXTN_CD
+			 , TCC.CD_NM AS FILE_EXTN_NM
+			 , TCC.SORT_SN AS FILE_SORT_SN
+			 , (CASE WHEN XTBAPFI.FILE_EXTN_CD IS NULL
+						  THEN 'N'
+					 ELSE 'Y'
+				END) AS FILE_EXTN_USE_YN
+		  FROM TX_CMMN_CD TCC
+		  LEFT OUTER JOIN (SELECT TBAPFI.FILE_EXTN_CD AS FILE_EXTN_CD
+							 FROM TX_BBS_ATCH_PSBLTY_FILE_INFO TBAPFI
+							WHERE TBAPFI.BBS_ID = #{paramBbsId} ) XTBAPFI
+		    ON (TCC.CD_ID = XTBAPFI.FILE_EXTN_CD)
+		 WHERE TCC.CLSF_CD = 'CLSF000015'
+		   AND TCC.USE_YN = 'Y'
+		   AND TCC.APRV_YN = 'Y'
+		 ORDER BY TCC.SORT_SN ASC
+	</select>
+
+	<!-- 게시판 첨부가능 파일 목록 보기 -->
+	<select id="selectBbsUseAtchFileInfoList" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO" resultType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO"> 
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectBbsUseAtchFileInfoList */
+			   TBAPFI.BBS_ID AS BBS_ID
+			 , TBAPFI.FILE_EXTN_CD AS FILE_EXTN_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000015'"/>
+					<property name="paramCdId" value="TBAPFI.FILE_EXTN_CD"/>
+				</include>) AS FILE_EXTN_NM
+			 , TBAPFI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TBAPFI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TBAPFI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TBAPFI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TBAPFI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TBAPFI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNm'"/>
+			 		<property name="paramUserId" value="TBAPFI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+			 		<property name="paramColNm" value="'userNcm'"/>
+			 		<property name="paramUserId" value="TBAPFI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , TBAPFI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+			 		<property name="paramDateFormat" value="'CHAR19'"/>
+			 		<property name="paramDate" value="TBAPFI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_BBS_ATCH_PSBLTY_FILE_INFO TBAPFI
+		 WHERE TBAPFI.BBS_ID = #{paramBbsId}
+	</select>
+
+
+	<select id="selectCheckBbsUseAtchFileInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO" resultType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO">
+		SELECT /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.selectCheckBbsUseAtchFileInfo */
+			   (CASE WHEN COUNT(FILE_EXTN_CD) > 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS FILE_EXTN_USE_YN
+		  FROM TX_BBS_ATCH_PSBLTY_FILE_INFO TBAPFI
+		 WHERE TBAPFI.BBS_ID = #{paramBbsId}
+		   AND TBAPFI.FILE_EXTN_CD = #{fileExtnCd}
+	</select> 
+
+	<!-- 게시판 첨부가능 파일 목록 등록 -->
+	<insert id="insertBbsAtchFileInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.insertBbsAtchFileInfo */
+			   TX_BBS_ATCH_PSBLTY_FILE_INFO
+			   (
+			   BBS_ID
+			 , FILE_EXTN_CD
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{bbsId}
+			 , #{fileExtnCd}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+
+
+	<!-- 게시판 첨부가능 파일 목록 삭제 -->
+	<delete id="deleteBbsAtchFileInfo" parameterType="kr.go.culture.xr.admin.bbsStngMgt.vo.BbsAtchFileInfoVO">
+		DELETE FROM TX_BBS_ATCH_PSBLTY_FILE_INFO /* kr.go.culture.xr.admin.bbsStngMgt.mapper.BbsStngMgtMapper.deleteBbsAtchFileInfo */
+		 WHERE BBS_ID = #{paramBbsId}
+		   AND FILE_EXTN_CD = #{paramFileExtnCd}
+	</delete>
+	
+	<!-- 게시판 아이디 체크 -->
+	<select id="checkDuplBbsId" parameterType="String" resultType="Integer">
+		SELECT
+			COUNT(BBS_ID)
+		FROM TX_BBS_STNG_INFO
+		WHERE BBS_ID = #{bbsId}
+	</select>
+	
+</mapper>

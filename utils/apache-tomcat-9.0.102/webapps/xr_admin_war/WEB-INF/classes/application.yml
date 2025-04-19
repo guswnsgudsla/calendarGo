@@ -1,0 +1,93 @@
+server:
+  port: 9090
+  servlet:
+    session:
+      timeout: 15m
+  context-path: "/xrAdmin"
+
+
+spring:
+  profiles:
+    active: local
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  cms:
+    datasource:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      jdbc-url: jdbc:log4jdbc:postgresql://14.63.58.82:3003/xr
+      username: xradmin
+      password: "!xr123#"
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 60000
+      connection-timeout: 60000
+      max-lifetime: 1800000
+  ci:
+    datasource:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      jdbc-url: jdbc:log4jdbc:postgresql://14.63.58.82:3003/xr_ci
+      username: xrciadmin
+      password: xrcipassword
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 60000
+      connection-timeout: 60000
+      max-lifetime: 1800000
+  mvc:
+    view:
+      prefix: /WEB-INF/view/
+      suffix: .jsp
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+  rabbitmq:
+    host: 14.63.58.81
+    port : 15006
+    username: admin
+    password: admin
+
+
+
+app:
+  rabbitmq:
+    request:
+      queue: wasRequestQueue
+      exchange: wasReq
+      routingKey: was.request
+    #    response:
+    #      queue: wasRequestQueue
+    #      exchange: wasReq
+    #      routingKey: was.request
+    response:
+      queue: wasResponseQueue
+      exchange: wasRes
+      routingKey: was.response
+  airflow:
+    url: "http://14.63.58.81:8181/api/v1/dags"
+  file:
+    url: "http://14.63.58.81:5005/api/tus/file"
+
+
+
+tus:
+  server:
+    data:
+      savePath: /home/tus/save/
+
+Globals:
+  fileUpload:
+    RootPath: "C:\\xr\\FileUpn"
+  #    RootPath: /opt/tomcat9/FileUpn
+  sso:
+    login:
+      url: "https://www.culture.go.kr/sso/login.do?agentId=11"
+    authorization:
+      url: "http://175.125.91.160:8080/"
+
+logging:
+  config: classpath:log4j2.xml
+  level:
+    org.springframework.boot.autoconfigure: error

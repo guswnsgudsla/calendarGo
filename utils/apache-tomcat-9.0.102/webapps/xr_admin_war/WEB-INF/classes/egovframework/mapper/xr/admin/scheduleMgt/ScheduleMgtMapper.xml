@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.scheduleMgt.mapper.ScheduleMgtMapper">
+    <select id="selectScheduleList" parameterType="kr.go.culture.xr.admin.scheduleMgt.vo.FrmScheduleSrchVO" resultType="kr.go.culture.xr.admin.scheduleMgt.vo.ScheduleJob">
+        SELECT A.*
+        <include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+        FROM (
+        <include refid="sqlScheduleInfo" />
+        ) A
+        <include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+    </select>
+
+    <select id="selectScheduleListCnt" parameterType="kr.go.culture.xr.admin.scheduleMgt.vo.FrmScheduleSrchVO" resultType="java.lang.Integer">
+        SELECT COUNT(1) AS totalRecord
+        FROM (
+        <include refid="sqlScheduleInfo" />
+        ) A
+
+    </select>
+
+    <sql id="sqlScheduleInfo">
+        SELECT
+          row_number() over (order by T01.FRST_REG_DT ASC , T01.BTJ_ID ASC ) AS ROW_NUMBER
+        , T01.BTJ_ID
+        , T01.INST_ID
+        , (SELECT T08.INST_NM FROM TX_INST_INFO T08 WHERE T08.INST_ID = T01.INST_ID) AS INST_NM
+        , T01.BTJ_TYPE_CD
+        , T01.BTJ_NM
+        , T01.BTJ_EXPLN_CN AS BTJ_EXPLN
+        , T01.BTJ_URL_ADDR
+        , T01.CYC_CD
+        , T01.EXCN_MM_CD_CN
+        , T01.WKBY_EXCN_CYC_CN
+        , T01.EXCN_DYWK_CD_CN
+        , T01.EXCN_DT
+        , T01.BGNG_DT
+        , T01.END_DT
+        , T01.EXCN_YN
+        , T01.USE_YN
+        , T01.FRST_RGTR_ID
+        , T01.FRST_REG_DT
+        , T01.LAST_MDFR_ID
+        , T01.LAST_MDFCN_DT
+        , T01.EXCN_APL_ID
+        , T01.BTJ_SCHDL_CN
+        FROM TX_BTJ_INFO T01
+        WHERE 1=1
+        <if test="srchUseYnVal != null and srchUseYnVal != ''">
+            AND T01.USE_YN = #{srchUseYnVal}
+        </if>
+        <if test="srchInstTypeCdVal != null and srchInstTypeCdVal != ''">
+            AND T01.INST_ID = #{srchInstTypeCdVal}
+        </if>
+        <if test="srchScheduleNmVal != null and srchScheduleNmVal != ''">
+            AND T01.BTJ_NM LIKE '%' || {srchScheduleNmVal} || '%'
+        </if>
+        <if test="srchExcnYnVal != null and srchExcnYnVal != ''">
+            AND T01.EXCN_YN = #{srchExcnYnVal}
+        </if>
+    </sql>
+
+    <select id="selectScheduleAllList" parameterType="kr.go.culture.xr.admin.scheduleMgt.vo.ScheduleJob" resultType="kr.go.culture.xr.admin.scheduleMgt.vo.ScheduleJob">
+        SELECT BTJ_ID
+        , INST_ID
+        , BTJ_TYPE_CD
+        , BTJ_NM
+        , BTJ_EXPLN_CN AS BTJ_EXPLN
+        , BTJ_URL_ADDR
+        , CYC_CD
+        , EXCN_MM_CD_CN
+        , WKBY_EXCN_CYC_CN
+        , EXCN_DYWK_CD_CN
+        , EXCN_DT
+        , BGNG_DT
+        , END_DT
+        , EXCN_YN
+        , USE_YN
+        , FRST_RGTR_ID
+        , FRST_REG_DT
+        , LAST_MDFR_ID
+        , LAST_MDFCN_DT
+        , EXCN_APL_ID
+        , BTJ_SCHDL_CN
+        FROM TX_BTJ_INFO
+        WHERE 1=1
+        <if test="useYn != null and useYn != ''">
+            AND use_yn = #{useYn}
+        </if>
+        <if test="instId != null and instId != ''">
+            AND inst_id = #{instId}
+        </if>
+    </select>
+
+    <select id="selectSchedule" parameterType="kr.go.culture.xr.admin.scheduleMgt.vo.ScheduleJob" resultType="kr.go.culture.xr.admin.scheduleMgt.vo.ScheduleJob">
+        SELECT
+          T01.BTJ_ID
+        , T01.INST_ID
+        , (SELECT T08.INST_NM FROM TX_INST_INFO T08 WHERE T08.INST_ID = T01.INST_ID) AS INST_NM
+        , T01.BTJ_TYPE_CD
+        , T01.BTJ_NM
+        , T01.BTJ_EXPLN_CN AS BTJ_EXPLN
+        , T01.BTJ_URL_ADDR
+        , T01.CYC_CD
+        , T01.EXCN_MM_CD_CN
+        , T01.WKBY_EXCN_CYC_CN
+        , T01.EXCN_DYWK_CD_CN
+        , T01.EXCN_DT
+        , T01.BGNG_DT
+        , T01.END_DT
+        , T01.EXCN_YN
+        , T01.USE_YN
+        , T01.FRST_RGTR_ID
+        , T01.FRST_REG_DT
+        , T01.LAST_MDFR_ID
+        , T01.LAST_MDFCN_DT
+        , T01.EXCN_APL_ID
+        , T01.BTJ_SCHDL_CN
+        FROM TX_BTJ_INFO T01
+        WHERE 1=1
+          AND T01.BTJ_ID = #{btjId}
+    </select>
+
+    <insert id="insertSchedule" parameterType="kr.go.culture.xr.admin.scheduleMgt.vo.ScheduleJob">
+        <selectKey keyProperty="btjId" resultType="String" order="BEFORE">
+            SELECT 'JOB' || LPAD(nextval('sq_tx_btj_info_01')::text, 7, '0') as BTJ_ID;
+        </selectKey>
+        INSERT INTO tx_btj_info(
+                                 btj_id
+                               , inst_id
+                               , btj_type_cd
+                               , btj_nm
+                               , btj_expln_cn
+                               , btj_url_addr
+                               , cyc_cd
+                               , excn_mm_cd_cn
+                               , wkby_excn_cyc_cn
+                               , excn_dywk_cd_cn
+                               , excn_dt
+                               , bgng_dt
+                               , end_dt
+                               , excn_yn
+                               , use_yn
+                               , frst_rgtr_id
+                               , frst_reg_dt
+                               , last_mdfr_id
+                               , last_mdfcn_dt)
+        VALUES (
+                      #{btjId}
+                    , #{instId}
+                    , #{btjTypeCd}
+                    , #{btjNm}
+                    , #{btjExpln}
+                    , #{btjUrlAddr}
+                    , #{cycCd}
+                    , #{excnMmCdCn}
+                    , #{wkbyExcnCycCn}
+                    , #{excnDywkCdCn}
+                    , LOCALTIMESTAMP
+                    , LOCALTIMESTAMP
+                    , #{endDt}
+                    , #{excnYn}
+                    , #{useYn}
+                    , #{frstRgtrId}
+                    , LOCALTIMESTAMP
+                    , #{lastMdfrId}
+                    , LOCALTIMESTAMP
+               )
+
+    </insert>
+
+    <update id="updateJobInfo" parameterType="kr.go.culture.xr.admin.scheduleMgt.vo.ScheduleJob">
+        UPDATE TX_BTJ_INFO
+           SET USE_YN = #{useYn}
+             , LAST_MDFR_ID = #{lastMdfrId}
+             , LAST_MDFCN_DT = LOCALTIMESTAMP
+         WHERE BTJ_ID = #{btjId}
+    </update>
+
+    <select id="selectInstInfo" resultType="kr.go.culture.xr.admin.scheduleMgt.entity.ScheduleInstInfo">
+        SELECT INST_ID
+             , INST_NM
+        FROM TX_INST_INFO
+        WHERE 1=1
+          AND DEL_YN = 'N'
+        ORDER BY INST_NM ASC
+    </select>
+
+
+</mapper>

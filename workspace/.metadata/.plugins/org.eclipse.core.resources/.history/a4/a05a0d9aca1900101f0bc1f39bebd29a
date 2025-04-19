@@ -1,0 +1,41 @@
+package controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+@Controller
+public class CalendarGoController {
+
+	@GetMapping("/calendarGo.do")
+	public String calendarList(
+			
+	)throws Exception {
+		System.out.println("=======");
+		System.out.println("Hi");
+		System.out.println("=======");
+		
+		
+		return "jsp/calendarGo";
+	}
+
+	@PostMapping("/calendarAdd.do")
+	public String calendarAddAjax(
+			@ModelAttribute("searchVO") RegEduManageVO regEduManageVO, 
+			RedirectAttributes redirectAttributes, 
+			HttpServletRequest request,
+			ModelMap model
+	)throws Exception {
+		System.out.println("=======");
+		System.out.println("add");
+		System.out.println("=======");
+		
+		
+		return "jsp/calendarGo";
+	}
+}

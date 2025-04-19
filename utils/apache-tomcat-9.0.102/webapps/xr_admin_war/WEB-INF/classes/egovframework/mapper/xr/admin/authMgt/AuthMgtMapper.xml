@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper">
+
+
+	<!-- 권한 등록 개수 -->
+	<select id="selectAuthrtTotListCnt" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.selectAuthrtTotListCnt */
+			   COUNT (TAI.AUTHRT_ID) AS TOT_LIST_CNT
+		  FROM TX_AUTHRT_INFO TAI
+		 WHERE 1=1
+		<if test= "paramAuthrtString != '' and paramAuthrtString != null">
+		   AND TAI.AUTHRT_NM LIKE CONCAT('%', TRIM(#{paramAuthrtString}), '%')
+		</if>
+		<if test= "paramAuthrtTypeDiv != '' and paramAuthrtTypeDiv != null">
+		   AND TAI.AUTHRT_TYPE_CD = #{paramAuthrtTypeDiv} 
+		</if>
+		<if test= 'paramAuthrtUseYn != "" and paramAuthrtUseYn != null'>
+		   AND TAI.USE_YN = #{paramAuthrtUseYn}
+		</if> 
+	</select>
+
+
+	<!-- 권한 리스트 -->
+	<select id="selectAuthrtList" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO"  resultType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		SELECT /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.selectAuthrtList */
+			   XTAI.AUTH_LIST_NO AS AUTH_LIST_NO
+			 , XTAI.AUTHRT_ID AS AUTHRT_ID
+			 , XTAI.AUTHRT_NM AS AUTHRT_NM
+			 , XTAI.AUTHRT_TYPE_CD AS AUTHRT_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000006'"/>
+					<property name="paramCdId" value="XTAI.AUTHRT_TYPE_CD"/>
+				</include>) AS AUTHRT_TYPE_NM
+			 , XTAI.AUTHRT_EXPLN_CN AS AUTHRT_EXPLN
+			 , XTAI.USE_YN AS USE_YN
+			 , (CASE WHEN XTAI.USE_YN = 'Y'
+						  THEN '사용'
+					 WHEN XTAI.USE_YN = 'N'
+						  THEN '미사용'
+					 ELSE ''
+				END) AS USE_YN_NM
+			 , XTAI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTAI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTAI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTAI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTAI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR10'"/>
+					<property name="paramDate" value="XTAI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V10
+			 , XTAI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTAI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTAI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTAI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTAI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR09'"/>
+					<property name="paramDate" value="XTAI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V10
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TAI.FRST_REG_DT ASC) AS AUTH_LIST_NO
+					 , TAI.AUTHRT_ID
+					 , TAI.AUTHRT_NM
+					 , TAI.AUTHRT_TYPE_CD
+					 , TAI.AUTHRT_EXPLN_CN
+					 , TAI.USE_YN
+					 , TAI.FRST_RGTR_ID
+					 , TAI.FRST_REG_DT
+					 , TAI.LAST_MDFR_ID
+					 , TAI.LAST_MDFCN_DT	
+				  FROM TX_AUTHRT_INFO TAI
+				 WHERE 1=1
+		<if test= "paramAuthrtString != '' and paramAuthrtString != null">
+				   AND TAI.AUTHRT_NM LIKE CONCAT('%', TRIM(#{paramAuthrtString}), '%')
+		</if>
+		<if test= "paramAuthrtTypeDiv != '' and paramAuthrtTypeDiv != null">
+		   AND TAI.AUTHRT_TYPE_CD = #{paramAuthrtTypeDiv} 
+		</if>
+		<if test= 'paramAuthrtUseYn != "" and paramAuthrtUseYn != null '>
+				   AND TAI.USE_YN = #{paramUseYn}
+		</if>
+			   ) XTAI
+		 ORDER BY XTAI.AUTH_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt} 
+	</select>
+
+
+	<!-- 권한 상세보기 -->
+	<select id="selectAuthrtInfo" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO"  resultType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		SELECT /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.selectAuthrtInfo */
+			   TAI.AUTHRT_ID
+			 , TAI.AUTHRT_NM
+			 , TAI.AUTHRT_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000006'"/>
+					<property name="paramCdId" value="TAI.AUTHRT_TYPE_CD"/>
+				</include>) AS AUTHRT_TYPE_NM
+			 , TAI.AUTHRT_EXPLN_CN AS AUTHRT_EXPLN
+			 , TAI.USE_YN
+			 , (CASE WHEN TAI.USE_YN = 'Y'
+						  THEN '사용'
+					 WHEN TAI.USE_YN = 'N'
+						  THEN '미사용'
+					 ELSE ''
+				END) AS USE_YN_NM
+			 , (CASE WHEN TAI.AUTHRT_TYPE_CD = 'USERTY0001'
+						  THEN 'MNCLSF0001'
+					 WHEN TAI.AUTHRT_TYPE_CD = 'USERTY0002'
+						  THEN 'MNCLSF0001'
+					 WHEN TAI.AUTHRT_TYPE_CD = 'USERTY0003'
+						  THEN 'MNCLSF0002'
+					 ELSE ''
+				END) AS AUTHRT_MENU_TYPE_CD
+		  FROM TX_AUTHRT_INFO TAI
+		 WHERE TAI.AUTHRT_ID = #{paramAuthrtId}
+	</select>
+
+
+	<!-- 신규 권한아이디 생성 -->
+	<select id="selectNewAuthrtId" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		SELECT  /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.selectNewAuthrtId */
+			   CONCAT('AUTH', RIGHT(CONCAT('000000', NEXTVAL('SQ_TX_AUTHRT_INFO_01')), 6)) AS AUTHRT_ID
+	</select>
+
+
+	<!-- 권한 등록 -->
+	<insert id="insertAuthrtInfo" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		INSERT INTO TX_AUTHRT_INFO /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.insertAuthInfo */
+			   (
+			   AUTHRT_ID
+			 , AUTHRT_NM
+			 , AUTHRT_TYPE_CD
+			 , AUTHRT_EXPLN_CN
+			 , USE_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{authrtId}
+			 , #{authrtNm}
+			 , #{authrtTypeCd}
+			 , #{authrtExpln}
+			 , #{useYn}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+
+	
+	<!-- 권한 수정 -->
+	<update id="updateAuthrtInfo" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		UPDATE TX_AUTHRT_INFO /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.updateAuthInfo */
+		   SET AUTHRT_NM = #{authrtNm}
+			 , AUTHRT_TYPE_CD = #{authrtTypeCd}
+			 , AUTHRT_EXPLN_CN = #{authrtExpln}
+			 , USE_YN = #{useYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE AUTHRT_ID = #{authrtId}
+	</update>
+
+
+	<!-- 권한 삭제 -->
+	<update id="deleteAuthrtInfo" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		UPDATE TX_AUTHRT_INFO /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.deleteAuthInfo */
+		   SET USE_YN = 'N'
+		 WHERE AUTHRT_ID = #{authrtId}
+	</update>
+
+
+	<!-- 권한 변경 이력 등록-->
+	<insert id="insertAuthrtChgHstry" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		<selectKey keyColumn="CHG_HSTRY_SN" keyProperty="chgHstrySn" resultType="Integer" order="BEFORE">
+			SELECT 
+				   COALESCE((SELECT
+									MAX(STACH.CHG_HSTRY_SN)
+							  FROM TX_AUTHRT_CHG_HSTRY STACH 
+							 WHERE STACH.AUTHRT_ID = #{authrtId}), 0) + 1
+		</selectKey>
+		INSERT INTO  /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.insertAuthrtChgHstry */
+					TX_AUTHRT_CHG_HSTRY
+			   (
+			   AUTHRT_ID
+			 , CHG_HSTRY_SN
+			 , CHG_HSTRY_TYPE_CD
+			 , AUTHRT_NM
+			 , AUTHRT_TYPE_CD
+			 , AUTHRT_EXPLN_CN
+			 , USE_YN
+			 , RGTR_ID
+			 , REG_DT
+			   )
+		SELECT
+			   TAI.AUTHRT_ID
+			 , #{chgHstrySn}
+			 , #{chgHstryTypeCd}
+			 , TAI.AUTHRT_NM
+			 , TAI.AUTHRT_TYPE_CD
+			 , TAI.AUTHRT_EXPLN_CN
+			 , USE_YN
+			 , #{rgtrId}
+			 , NOW()
+		  FROM TX_AUTHRT_INFO TAI 
+		 WHERE TAI.AUTHRT_ID = #{authrtId}
+	</insert>
+
+
+	<!--권한 변경 이력 조회  -->
+	<select id="selectAuthrtChgHstryList" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		SELECT /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.selectAuthrtChgHstryList */
+			   XTACH.LIST_CHG_HSTRY_NO AS LIST_CHG_HSTRY_NO
+			 , XTACH.CHG_HSTRY_SN AS CHG_HSTRY_SN
+			 , XTACH.CHG_HSTRY_TYPE_CD AS CHG_HSTRY_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000001'"/>
+					<property name="paramCdId" value="XTACH.CHG_HSTRY_TYPE_CD"/>
+				</include>) AS CHG_HSTRY_TYPE_NM
+			 , XTACH.AUTHRT_NM AS AUTHRT_NM
+			 , XTACH.AUTHRT_TYPE_CD AS AUTHRT_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000006'"/>
+					<property name="paramCdId" value="XTACH.AUTHRT_TYPE_CD"/>
+				</include>) AS AUTHRT_TYPE_NM
+			 , XTACH.AUTHRT_EXPLN_CN AS AUTHRT_EXPLN
+			 , XTACH.USE_YN AS USE_YN
+			 , XTACH.RGTR_ID AS RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTACH.RGTR_ID"/>
+				</include>) AS RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTACH.RGTR_ID"/>
+				</include>) AS RGTR_NCM
+			 , XTACH.REG_DT AS REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTACH.REG_DT"/>
+				</include>) AS REG_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TACH.CHG_HSTRY_SN ASC) AS LIST_CHG_HSTRY_NO
+					 , TACH.CHG_HSTRY_SN AS CHG_HSTRY_SN
+					 , TACH.CHG_HSTRY_TYPE_CD AS CHG_HSTRY_TYPE_CD
+					 , TACH.AUTHRT_NM AS AUTHRT_NM
+					 , TACH.AUTHRT_TYPE_CD AS AUTHRT_TYPE_CD
+					 , TACH.AUTHRT_EXPLN_CN AS AUTHRT_EXPLN_CN
+					 , TACH.USE_YN AS USE_YN
+					 , TACH.RGTR_ID AS RGTR_ID
+					 , TACH.REG_DT AS REG_DT
+				  FROM TX_AUTHRT_CHG_HSTRY TACH
+				 WHERE TACH.AUTHRT_ID = #{paramAuthrtId}
+			   ) XTACH
+		 ORDER BY XTACH.LIST_CHG_HSTRY_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt} 
+	</select>
+	
+	
+	<!-- 권한 변경 이력 총수 -->
+	<select id="selectAuthrtChgHstryTotCnt" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO" resultType="java.lang.Integer">
+		SELECT
+			   COUNT(CHG_HSTRY_SN) AS CHG_HSTRY_TOT_CNT
+		  FROM TX_AUTHRT_CHG_HSTRY TACH
+		 WHERE TACH.AUTHRT_ID = #{paramAuthrtId}
+	</select>
+
+
+	<!-- 메뉴/권한 상세 조회 -->
+	<select id="selectAuthrtRelInfoList" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO">
+		SELECT  /*  */
+			   ROW_NUMBER()OVER(ORDER BY TAMRI.MENU_ID ASC) AS AUTH_MENU_NO
+			 , TAMRI.AUTHRT_ID 
+			 , TAMRI.MENU_ID
+			 , TMI.MENU_NM AS MENU_NM
+			 , TAMRI.MENU_INQ_AUTHRT_YN
+			 , TAMRI.PRSL_AUTHRT_YN
+			 , TAMRI.WRT_AUTHRT_YN
+			 , TAMRI.MDFCN_AUTHRT_YN
+			 , TAMRI.DEL_AUTHRT_YN 
+		  FROM TX_AUTHRT_MENU_REL_INFO TAMRI
+		 INNER JOIN TX_MENU_INFO TMI
+			ON (    TAMRI.MENU_ID = TMI.MENU_ID
+				AND TMI.USE_YN = 'Y')
+		WHERE TAMRI.AUTHRT_ID = #{paramAuthrtId}
+	</select>
+	
+	
+	<select id="selectAuthrtRelInfoCnt" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO" resultType="java.lang.Integer">
+		SELECT
+			   COUNT(MENU_ID) AS EXIST_MENU_CNT
+		  FROM TX_AUTHRT_MENU_REL_INFO
+		 WHERE TAMRI.AUTHRT_ID = #{authrtId}
+		   AND TAMRI.MENU_ID = #{menuId}
+	</select>
+	
+	
+	<!-- 권한 메뉴 등록 -->
+	<insert id="insertAuthrtRelInfo" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO">
+		INSERT INTO  /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.insertAuthDtlInfo */
+				    TX_AUTHRT_MENU_REL_INFO
+			   (
+			   AUTHRT_ID
+			 , MENU_ID
+			 , MENU_INQ_AUTHRT_YN
+			 , PRSL_AUTHRT_YN
+			 , WRT_AUTHRT_YN
+			 , MDFCN_AUTHRT_YN
+			 , DEL_AUTHRT_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{authrtId}
+			 , #{menuId}
+			 , #{menuInqAuthrtYn}
+			 , #{prslAuthrtYn}
+			 , #{wrtAuthrtYn}
+			 , #{mdfcnAuthrtYn}
+			 , #{delAuthrtYn}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+
+
+	<!-- 권한 메뉴 수정 -->
+	<update id="updateAuthrtRelInfo" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.updateAuthrtRelInfo */
+			   TX_AUTHRT_MENU_REL_INFO
+		   SET MENU_INQ_AUTHRT_YN = #{menuInqAuthrtYn}
+			 , PRSL_AUTHRT_YN = #{prslAuthrtYn}
+			 , WRT_AUTHRT_YN = #{wrtAuthrtYn}
+			 , MDFCN_AUTHRT_YN = #{mdfcnAuthrtYn}
+			 , DEL_AUTHRT_YN = #{delAuthrtYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE AUTHRT_ID = #{authrtId}
+		   AND MENU_ID = #{menuId}
+	</update>
+	
+	
+	<!-- 권한 메뉴 삭제 -->
+	<update id="deleteAuthrtRelInfo" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		DELETE /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.deleteAuthInfo */
+		  FROM TX_AUTHRT_MENU_REL_INFO
+		 WHERE AUTHRT_ID = #{authrtId}
+		   AND MENU_ID = #{menuId}
+	</update>
+
+
+	<!-- 권한 메뉴 변경 이력 등록 -->
+	<insert id="insertAuthrtRelChgHstry" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO">
+		<selectKey keyColumn="CHG_HSTRY_SN" keyProperty="chgHstrySn" resultType="Integer" order="BEFORE">
+			SELECT 
+				   COALESCE((SELECT
+									MAX(STAMRCH.CHG_HSTRY_SN)
+							  FROM TX_AUTHRT_MENU_REL_CHG_HSTRY STAMRCH
+							 WHERE STAMRCH.AUTHRT_ID = #{authrtId}
+							   AND STAMRCH.MENU_ID = #{menuId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.insertAuthrtRelChgHstry */
+					TX_AUTHRT_MENU_REL_CHG_HSTRY
+			   (
+			   AUTHRT_ID
+			 , MENU_ID
+			 , CHG_HSTRY_SN
+			 , CHG_HSTRY_TYPE_CD
+			 , MENU_INQ_AUTHRT_YN
+			 , PRSL_AUTHRT_YN
+			 , WRT_AUTHRT_YN
+			 , MDFCN_AUTHRT_YN
+			 , DEL_AUTHRT_YN
+			 , RGTR_ID
+			 , REG_DT
+			   )
+		SELECT
+			   AUTHRT_ID
+			 , MENU_ID
+			 , #{chgHstrySn}
+			 , #{chgHstryTypeCd}
+			 , MENU_INQ_AUTHRT_YN
+			 , PRSL_AUTHRT_YN
+			 , WRT_AUTHRT_YN
+			 , MDFCN_AUTHRT_YN
+			 , DEL_AUTHRT_YN
+			 , #{rgtrId}
+			 , NOW()
+		  FROM TX_AUTHRT_MENU_REL_INFO TAMRI
+		 WHERE TAMRI.AUTHRT_ID = #{authrtId}
+		   AND TAMRI.MENU_ID = #{menuId}
+	</insert>
+
+
+	<!-- 권한 메뉴 변경이력 조회 -->
+	<select id="selectAuthrtRelChgHstryList" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO">
+		SELECT
+			   XTAMRCH.LIST_CHG_HSTRY_NO AS LIST_CHG_HSTRY_NO
+			 , XTAMRCH.MENU_ID AS MENU_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMenuInfo">
+					<property name="paramInfoCd" value="'MENUNM'"/>
+					<property name="paramMenuId" value="XTAMRCH.MENU_ID"/>
+				</include>) AS MENU_NM
+			 , XTAMRCH.CHG_HSTRY_TYPE_CD AS CHG_HSTRY_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000001'"/>
+					<property name="paramCdId" value="XTAMRCH.CHG_HSTRY_TYPE_CD"/>
+				</include>) AS CHG_HSTRY_TYPE_NM
+			 , XTAMRCH.MENU_INQ_AUTHRT_YN AS MENU_INQ_AUTHRT_YN
+			 , XTAMRCH.PRSL_AUTHRT_YN AS PRSL_AUTHRT_YN
+			 , XTAMRCH.WRT_AUTHRT_YN AS WRT_AUTHRT_YN
+			 , XTAMRCH.MDFCN_AUTHRT_YN AS MDFCN_AUTHRT_YN
+			 , XTAMRCH.DEL_AUTHRT_YN AS DEL_AUTHRT_YN
+			 , XTAMRCH.RGTR_ID AS RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTAMRCH.RGTR_ID"/>
+				</include>) AS RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTAMRCH.RGTR_ID"/>
+				</include>) AS RGTR_NCM
+			 , XTAMRCH.REG_DT AS REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTAMRCH.REG_DT"/>
+				</include>) AS REG_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TAMRCH.MENU_ID DESC, TAMRCH.CHG_HSTRY_SN ASC) AS LIST_CHG_HSTRY_NO
+					 , TAMRCH.MENU_ID
+					 , TAMRCH.CHG_HSTRY_SN
+					 , TAMRCH.CHG_HSTRY_TYPE_CD
+					 , TAMRCH.MENU_INQ_AUTHRT_YN
+					 , TAMRCH.PRSL_AUTHRT_YN
+					 , TAMRCH.WRT_AUTHRT_YN
+					 , TAMRCH.MDFCN_AUTHRT_YN
+					 , TAMRCH.DEL_AUTHRT_YN
+					 , TAMRCH.RGTR_ID
+					 , TAMRCH.REG_DT
+				  FROM TX_AUTHRT_MENU_REL_CHG_HSTRY TAMRCH
+				 WHERE TAMRCH.AUTHRT_ID = #{paramAuthrtId}
+		<if test="paramPopMenuString != null and paramPopMenuString != ''">
+				   AND TAMRCH.MENU_ID IN (SELECT
+												 TMI.MENU_ID
+											FROM TX_MENU_INFO TMI
+										   WHERE TMI.USE_YN = 'Y'
+											 AND TMI.MENU_CLSF_CD = #{paramPopMenuTypeCd}
+											 AND TMI.MENU_NM LIKE CONCAT('%', TRIM(#{paramPopMenuString}), '%')
+										  )
+		</if>
+			   ) XTAMRCH
+		 ORDER BY XTAMRCH.LIST_CHG_HSTRY_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt} 
+	</select>
+	
+	
+	<!-- 권한 메뉴 변경이력 총수 -->
+	<select id="selectAuthrtRelChgHstryTotCnt" parameterType="kr.go.culture.xr.admin.authMgt.vo.AuthVO" resultType="java.lang.Integer">
+		SELECT
+			   COUNT(TAMRCH.AUTHRT_ID)
+		  FROM  TX_AUTHRT_MENU_REL_CHG_HSTRY TAMRCH
+		 WHERE TAMRCH.AUTHRT_ID = #{paramAuthrtId}
+		<if test="paramPopMenuString != null and paramPopMenuString != ''">
+		   AND TAMRCH.MENU_ID IN (SELECT
+										 TMI.MENU_ID
+									FROM TX_MENU_INFO TMI
+								   WHERE TMI.USE_YN = 'Y'
+									 AND TMI.MENU_CLSF_CD = #{paramPopMenuTypeCd}
+									 AND TMI.MENU_NM LIKE CONCAT('%', TRIM(#{paramPopMenuString}), '%')
+								  )
+		</if>
+	</select>
+
+
+	<!-- 로그인 권한 조회 -->
+	<select id="selectloginAuthList" parameterType="kr.go.culture.xr.admin.authMgt.vo.SrchAuthVO" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		SELECT  
+			   TAI.AUTHRT_ID 
+			 , TAI.AUTHRT_NM 
+			 , TAI.AUTHRT_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000006'"/>
+					<property name="paramCdId" value="TAI.AUTHRT_TYPE_CD"/>
+				</include>) AS AUTHRT_TYPE_NM 
+			 , TAI.USE_YN 
+			 , TAI.LAST_MDFCN_DT
+			 , TAMRI.MENU_ID
+			 , (SELECT
+					   TMI.MENU_NM
+				  FROM TX_MENU_INFO TMI 
+				 WHERE TMI.MENU_ID = TAMRI.MENU_ID) AS MENU_NM
+			 , TAMRI.MENU_INQ_AUTHRT_YN 
+			 , TAMRI.PRSL_AUTHRT_YN 
+			 , TAMRI.WRT_AUTHRT_YN 
+			 , TAMRI.MDFCN_AUTHRT_YN 
+			 , TAMRI.DEL_AUTHRT_YN 
+		  FROM TX_AUTHRT_INFO TAI
+		 INNER JOIN TX_AUTHRT_MENU_REL_INFO TAMRI 
+			ON (TAI.AUTHRT_ID = TAMRI.AUTHRT_ID)
+		 WHERE TAI.AUTHRT_ID = (SELECT
+									   TUI.AUTHRT_ID 
+								  FROM TX_USER_INFO TUI 
+								 WHERE TUI.USER_ID = '#{paramUserId}' 
+								   ADN TUI.APRV_YN = 'Y' 
+								   AND TUI.DEL_YN = 'N') /*session user id */
+		   AND TAI.USE_YN = 'Y'
+	</select>
+
+
+	<!-- 메뉴 권한 조회 -->
+	<select id="selectMenuUserAuthrt" parameterType="kr.go.culture.xr.admin.authMgt.vo.SrchAuthVO" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO">
+		SELECT /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.selectMenuUserAuthrt */
+			   TAMRI.MENU_INQ_AUTHRT_YN AS MENU_INQ_AUTHRT_YN
+			 , TAMRI.PRSL_AUTHRT_YN AS PRSL_AUTHRT_YN
+			 , TAMRI.WRT_AUTHRT_YN AS WRT_AUTHRT_YN
+			 , TAMRI.MDFCN_AUTHRT_YN AS MDFCN_AUTHRT_YN
+			 , TAMRI.DEL_AUTHRT_YN AS DEL_AUTHRT_YN
+			 , (SELECT AUTHRT_TYPE_CD
+				  FROM TX_AUTHRT_INFO TAI
+				 WHERE TAI.AUTHRT_ID = TAMRI.AUTHRT_ID
+				   AND TAI.USE_YN = 'Y') AS AUTHRT_TYPE_CD
+		  FROM TX_AUTHRT_MENU_REL_INFO TAMRI
+		 WHERE TAMRI.AUTHRT_ID = #{paramAuthrtId}
+		   AND TAMRI.MENU_ID = #{paramMenuId}
+	</select>
+
+
+	<!-- 권한 유형 목록 -->
+	<select id="selectAuthrtTypeList" parameterType="kr.go.culture.xr.admin.authMgt.vo.SrchAuthVO" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthVO">
+		SELECT /* kr.go.culture.xr.admin.authMgt.mapper.AuthMgtMapper.selectAuthrtTypeList */
+			   TAI.AUTHRT_ID AS AUTHRT_ID
+			 , TAI.AUTHRT_NM AS AUTHRT_NM
+		  FROM TX_AUTHRT_INFO TAI
+		 WHERE TAI.USE_YN = #{paramUseYn}
+		   AND TAI.AUTHRT_TYPE_CD = #{paramAuthrtTypeCd}
+	</select>
+
+
+	<!-- 권한메뉴목록 -->
+	<select id="selectAuthrtMenuList" parameterType="kr.go.culture.xr.admin.authMgt.vo.PopAuthMenuInfoVO" resultType="kr.go.culture.xr.admin.authMgt.vo.AuthRelInfoVO">
+		SELECT
+			   XTMI.LIST_MENU_NO AS LIST_MENU_NO
+			 , XTMI.MENU_ID AS MENU_ID
+			 , XTMI.MENU_NM AS MENU_NM
+			 , XTMI.UP_MENU_ID AS UP_MENU_ID
+			 , XTMI.MENU_EXPLN_CN AS MENU_EXPLN_CN
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TMI.MENU_ID ASC) AS LIST_MENU_NO
+					 , TMI.MENU_ID AS MENU_ID
+					 , TMI.MENU_NM AS MENU_NM
+					 , TMI.UP_MENU_ID AS UP_MENU_ID
+					 , TMI.MENU_EXPLN_CN AS MENU_EXPLN_CN
+				  FROM TX_MENU_INFO TMI
+				 WHERE TMI.USE_YN = 'Y'
+				<if test="paramPopMenuClsfCd != null and paramPopMenuClsfCd != ''">
+				   AND MENU_CLSF_CD = #{paramPopMenuClsfCd}
+				</if>
+				<if test="paramPopMenuString != null and paramPopMenuString != ''">
+				   AND MENU_NM LIKE CONCAT('%', #{paramPopMenuString}, '%')
+				</if>) XTMI
+		 ORDER BY XTMI.LIST_MENU_NO DESC
+		 LIMIT #{paramPopPageRecordCnt}
+		OFFSET (#{paramPopPageNo} - 1) * #{paramPopPageRecordCnt} 
+	</select>
+	
+	
+	<select id="selectAuthrtMenuTotCnt" parameterType="kr.go.culture.xr.admin.authMgt.vo.PopAuthMenuInfoVO" resultType="java.lang.Integer">
+		SELECT 
+			   COUNT(MENU_ID) AS MENU_TOT_CNT
+		  FROM TX_MENU_INFO TMI
+		 WHERE TMI.USE_YN = 'Y'
+		<if test="paramPopMenuClsfCd != null and paramPopMenuClsfCd != ''">
+		   AND MENU_CLSF_CD = #{paramPopMenuClsfCd}
+		</if>
+		<if test="paramPopMenuString != null and paramPopMenuString != ''">
+		   AND MENU_NM LIKE CONCAT('%', #{paramPopMenuString}, '%')
+		</if>
+	</select>
+	
+	
+	<!-- 사이드메뉴 -->
+	<select id="selectSideMenuList" parameterType="String" resultType="kr.go.culture.xr.admin.authMgt.vo.SrchAuthVO">
+		SELECT 
+			   Y.MENU_ID
+			 , Y.MENU_NM
+			 , Y.UP_MENU_ID
+			 , Y.SORT_SN 
+			 , Y.SCRN_URI_ADDR
+			 , Y.MENU_SORT 
+			 , Y.SUB_MENU_YN
+			 , Y.UP_SORT_SN
+			 , Y.MENU_DEPTH
+		  FROM (
+				SELECT
+					   X.MENU_ID
+					 , X.MENU_NM
+					 , X.UP_MENU_ID
+					 , X.SORT_SN
+					 , X.SCRN_URI_ADDR
+					 , (CASE WHEN X.UP_SORT_SN IS NULL
+								  THEN CONCAT(CAST(X.SORT_SN AS TEXT),'0')
+							 ELSE CONCAT(CAST(X.UP_SORT_SN AS TEXT),CAST(X.SORT_SN AS TEXT))
+						END) AS MENU_SORT
+					 , X.SUB_MENU_YN
+					 , X.UP_SORT_SN
+					 , X.MENU_DEPTH
+				  FROM (
+						SELECT
+							   MI.MENU_ID
+							 , MI.MENU_NM
+							 , MI.UP_MENU_ID
+							 , MI.SORT_SN
+							 , MI.SCRN_URI_ADDR
+							 , (CASE WHEN (SELECT
+												  COUNT(1)
+											 FROM TX_MENU_INFO
+											WHERE UP_MENU_ID = MI.MENU_ID
+											  AND USE_YN = 'Y') > 0
+										  THEN 'Y'
+									 ELSE 'N'
+								END) AS SUB_MENU_YN
+							 , (SELECT SORT_SN FROM TX_MENU_INFO A WHERE A.MENU_ID = MI.UP_MENU_ID) AS UP_SORT_SN
+							 , CASE WHEN COALESCE(NULLIF(MI.UP_MENU_ID, ''), '')='' THEN 1 ELSE 2 END AS MENU_DEPTH
+						  FROM TX_AUTHRT_MENU_REL_INFO MR
+						 INNER JOIN  TX_MENU_INFO MI
+							ON (    MR.MENU_ID = MI.MENU_ID
+								AND MR.AUTHRT_ID = #{paramAuthrtId}
+								AND MI.USE_YN = 'Y'
+								AND MI.DEL_YN = 'N')
+					   ) X
+			   ) Y
+		 ORDER BY CAST(Y.MENU_SORT AS INT)
+	</select>
+	
+</mapper>

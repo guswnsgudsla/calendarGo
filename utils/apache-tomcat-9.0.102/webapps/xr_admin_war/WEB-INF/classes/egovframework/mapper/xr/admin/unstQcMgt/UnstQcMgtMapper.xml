@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.unstQcMgt.mapper.UnstQcMgtMapper">
+    <sql id="selectInfoList">
+        SELECT /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.selectInfoList */
+        ROW_NUMBER()OVER(ORDER BY TQICI.LAST_MDFCN_DT ASC) AS LIST_QC_NO
+        , TQICI.CRTR_ID
+        , TQICI.CRTR_CYCL
+        , TQICI.CRTR_NM
+        , TQICI.CRTR_EXPLN_CN AS CRTR_EXPLN
+        , TQICI.PRDCT_CLSF_CD
+        , (SELECT CD_NM
+            FROM TX_CMMN_CD TCC
+            WHERE 1=1
+            AND TCC.CLSF_CD = 'CLSF000021'
+            AND TCC.CD_ID = TQICI.CRTR_CLSF_CD
+        ) AS CRTR_CLSF_NM
+        , TQICI.PRDCT_USG_CD
+        , (SELECT CD_NM
+            FROM TX_CMMN_CD TCC
+            WHERE 1=1
+            AND TCC.CLSF_CD = 'CLSF000024'
+            AND TCC.CD_ID = TQICI.PRDCT_USG_CD
+        ) AS PRDCT_USG_NM
+        , TQICI.STBLT_CRTR_SCR
+        , TQICI.STBLT_MAX_CRTR_SCR
+        , TQICI.CRTR_CLSF_CD
+        , TQICI.SCR_CLSF_CD
+        , (SELECT CD_NM
+            FROM TX_CMMN_CD TCC
+            WHERE 1=1
+            AND TCC.CLSF_CD = 'CLSF000026'
+            AND TCC.CD_ID = TQICI.SCR_CLSF_CD
+        ) AS SCR_CLSF_NM
+        , TQICI.ESNTL_INSP_YN
+        , TQICI.APLCN_YMD
+        , TQICI.USE_YN
+        , TQICI.FRST_RGTR_ID
+        , TQICI.FRST_REG_DT
+        , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+            <property name="paramDateFormat" value="'CHAR19'"/>
+            <property name="paramDate" value="TQICI.FRST_REG_DT"/>
+            </include>) AS FRST_REG_DT_V19
+        , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+            <property name="paramDateFormat" value="'CHAR10'"/>
+            <property name="paramDate" value="TQICI.FRST_REG_DT"/>
+            </include>) AS FRST_REG_DT_V10
+        , TQICI.LAST_MDFR_ID
+        , TQICI.LAST_MDFCN_DT
+        , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+            <property name="paramDateFormat" value="'CHAR19'"/>
+            <property name="paramDate" value="TQICI.LAST_MDFCN_DT"/>
+            </include>) AS LAST_MDFCN_DT_V19
+        , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+            <property name="paramDateFormat" value="'CHAR10'"/>
+            <property name="paramDate" value="TQICI.LAST_MDFCN_DT"/>
+            </include>) AS LAST_MDFCN_DT_V10
+        , TQICI.CRTR_UNIT_CD
+        , (SELECT CD_NM
+            FROM TX_CMMN_CD TCC
+            WHERE 1=1
+            AND TCC.CLSF_CD = 'CLSF000025'
+            AND TCC.CD_ID = TQICI.CRTR_UNIT_CD
+        ) AS CRTR_UNIT_NM
+        , TQICI.PBR_APLCN_YN
+        FROM TX_QLI_INSP_CRTR_INFO TQICI
+        WHERE 1=1
+            AND TQICI.USE_YN =
+            <choose>
+                <when test="useYn != '' and useYn != null ">
+                    #{useYn}
+                </when>
+                <otherwise>
+                    'Y'
+                </otherwise>
+            </choose>
+        <if test="paramCrtrId != '' and paramCrtrId != null">
+            AND TQICI.CRTR_ID = #{paramCrtrId}
+        </if>
+        <if test="paramCrtrCycl != '' and paramCrtrCycl != null">
+            AND TQICI.CRTR_CYCL = #{paramCrtrCycl}
+        </if>
+        <if test="srchKeyword != '' and srchKeyword != null">
+            AND TQICI.CRTR_NM LIKE CONCAT('%', TRIM(#{srchKeyword}), '%')
+        </if>
+        <if test="crtrClsfCd != '' and crtrClsfCd != null">
+            AND TQICI.CRTR_CLSF_CD = #{crtrClsfCd}
+        </if>
+        <if test="prdctUsgCd != '' and prdctUsgCd != null">
+            AND TQICI.PRDCT_USG_CD = #{prdctUsgCd}
+        </if>
+        <if test="prdctUsgCd != '' and prdctUsgCd != null">
+            AND TQICI.PRDCT_USG_CD = #{prdctUsgCd}
+        </if>
+        ORDER BY LIST_QC_NO DESC
+    </sql>
+
+    <!--게시글 목록 조회-->
+    <select id="selectQcInfoList" resultType="kr.go.culture.xr.admin.unstQcMgt.vo.UnstQcInfoVo">
+        select /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.selectQcInfoList */
+            A.*
+        <include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+        FROM (
+         <include refid="selectInfoList"></include>
+         ) A
+        <include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+    </select>
+
+    <!--게시글 단건 조회-->
+    <select id="selectQcInfo" resultType="kr.go.culture.xr.admin.unstQcMgt.vo.UnstQcInfoVo">
+        /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.selectQcInfo */
+        <include refid="selectInfoList"></include>
+    </select>
+
+    <!--게시글 수 보기-->
+    <select id="selectTotListCnt"  resultType="int">
+        SELECT /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.selectTotListCnt */
+            COUNT(CRTR_ID) AS TOT_LIST_CNT
+        FROM TX_QLI_INSP_CRTR_INFO TQICI
+        WHERE 1=1
+            AND TQICI.USE_YN =
+            <choose>
+                <when test="useYn != '' and useYn != null ">
+                    #{useYn}
+                </when>
+                <otherwise>
+                    'Y'
+                </otherwise>
+            </choose>
+        <if test="srchKeyword != '' and srchKeyword != null">
+            AND TQICI.CRTR_NM LIKE CONCAT('%', TRIM(#{srchKeyword}), '%')
+        </if>
+        <if test="crtrClsfCd != '' and crtrClsfCd != null">
+            AND TQICI.CRTR_CLSF_CD = #{crtrClsfCd}
+        </if>
+        <if test="prdctUsgCd != '' and prdctUsgCd != null">
+            AND TQICI.PRDCT_USG_CD = #{prdctUsgCd}
+        </if>
+    </select>
+
+    <!--공통코드 조회-->
+    <select id="selectCodeList" resultType="kr.go.culture.xr.admin.unstQcMgt.vo.CodeResult">
+        SELECT /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.selectCodeList */
+            CD_ID AS CODE_ID
+            , CLSF_CD
+            , CD_NM AS CODE_NM
+            , CD_EXPLN_CN AS CD_EXPLN
+            , SORT_SN
+            , ANXT_CN1 AS ANXT_CN
+            , ANXT_CN2
+            , ANXT_CN3
+            , ANXT_CN4
+            , ANXT_CN5
+        FROM TX_CMMN_CD
+        WHERE 1=1
+        AND USE_YN = 'Y'
+            AND CLSF_CD = #{codeId}
+        <if test="upperCodeId != null and  upperCodeId != ''">
+            AND CD_ID LIKE #{upperCodeId} || '%'
+        </if>
+    </select>
+
+    <!--품질검사기준정보 등록-->
+    <insert id="unstQcSave">
+        <selectKey order="BEFORE" keyProperty="crtrId" resultType="String">
+            SELECT
+                CONCAT('QLI',LPAD(CAST(NEXTVAL('sq_tx_qli_insp_info_01') AS TEXT),7,'0')) AS CRTR_ID
+        </selectKey>
+        INSERT INTO /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.unstQcSave */
+            TX_QLI_INSP_CRTR_INFO
+            (
+                 CRTR_ID
+                , CRTR_CYCL
+                , CRTR_NM
+                , PRDCT_USG_CD
+                , STBLT_CRTR_SCR
+                , STBLT_MAX_CRTR_SCR
+                , CRTR_CLSF_CD
+                , SCR_CLSF_CD
+                , ESNTL_INSP_YN
+                , USE_YN
+                , FRST_RGTR_ID
+                , FRST_REG_DT
+                , LAST_MDFR_ID
+                , LAST_MDFCN_DT
+                , CRTR_UNIT_CD
+                , PBR_APLCN_YN
+            )
+        VALUES(
+                   #{crtrId}
+                  , 1
+                  , #{crtrNm}
+                  , #{prdctUsgCd}
+                  , #{stbltCrtrScr}
+                  , #{stbltMaxCrtrScr}
+                  , #{crtrClsfCd}
+                  , #{scrClsfCd}
+                  , #{esntlInspYn}
+                  , #{useYn}
+                  , #{frstRgtrId}
+                  , Now()
+                  , #{frstRgtrId}
+                  , Now()
+                  , #{crtrUnitCd}
+                  , #{pbrAplcnYn}
+              );
+    </insert>
+
+    <update id="unstQcUpdate">
+        UPDATE TX_QLI_INSP_CRTR_INFO /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.unstQcUpdate */
+        SET
+            USE_YN='N'
+            ,LAST_MDFR_ID = #{lastMdfrId}
+        WHERE CRTR_ID=#{paramCrtrId}
+          AND CRTR_CYCL=#{crtrCycl}
+    </update>
+
+    <insert id="unstQcIncrease">
+        <selectKey order="BEFORE" keyProperty="crtrCycl" resultType="int">
+            SELECT COALESCE(
+                (
+                    SELECT MAX(CRTR_CYCL)
+                    FROM TX_QLI_INSP_CRTR_INFO
+                    WHERE CRTR_ID = #{paramCrtrId}
+                ), 0
+            ) + 1 AS CRTR_CYCL
+        </selectKey>
+        INSERT INTO /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.unstQcIncrease */
+            TX_QLI_INSP_CRTR_INFO
+        (
+            CRTR_ID
+        , CRTR_CYCL
+        , CRTR_NM
+        , PRDCT_USG_CD
+        , STBLT_CRTR_SCR
+        , STBLT_MAX_CRTR_SCR
+        , CRTR_CLSF_CD
+        , SCR_CLSF_CD
+        , ESNTL_INSP_YN
+        , USE_YN
+        , FRST_RGTR_ID
+        , FRST_REG_DT
+        , LAST_MDFR_ID
+        , LAST_MDFCN_DT
+        , CRTR_UNIT_CD
+        , PBR_APLCN_YN
+        )
+        VALUES(
+            #{paramCrtrId}
+            , #{crtrCycl}
+            , #{crtrNm}
+            , #{prdctUsgCd}
+            , #{stbltCrtrScr}
+            , #{stbltMaxCrtrScr}
+            , #{crtrClsfCd}
+            , #{scrClsfCd}
+            , #{esntlInspYn}
+            , #{useYn}
+            , #{lastMdfrId}
+            , Now()
+            , #{lastMdfrId}
+            , Now()
+            , #{crtrUnitCd}
+            , #{pbrAplcnYn}
+              );
+    </insert>
+
+    <delete id="unstQcDelete">
+        DELETE /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.unstQcDelete */
+        FROM
+            TX_QLI_INSP_CRTR_INFO
+        WHERE 1=1
+          AND CRTR_ID = #{paramCrtrId}
+          AND CRTR_CYCL = #{crtrCycl}
+    </delete>
+
+    <!--품질검사기준변경이력 저장-->
+    <insert id="unstQcChgHstrySave" >
+        <selectKey order="BEFORE" keyProperty="crtrSn" resultType="int">
+            SELECT COALESCE(
+                (
+                    SELECT MAX(CRTR_SN)
+                    FROM TX_QLI_INSP_CRTR_CHG_HSTRY
+                    WHERE CRTR_ID = #{paramCrtrId}
+                    AND CRTR_CYCL = #{crtrCycl}
+                ), 0
+            ) + 1 AS CRTR_SN
+        </selectKey>
+        INSERT INTO /* kr.go.culture.xr.admin.bbsMgt.mapper.UnstQcMgtMapper.unstQcChgHstrySave */
+        TX_QLI_INSP_CRTR_CHG_HSTRY
+        (
+            CRTR_SN
+            , CRTR_ID
+            , CRTR_CYCL
+            , CHG_HSTRY_CLSF_CD
+            , CRTR_NM
+            , PRDCT_USG_CD
+            , STBLT_CRTR_SCR
+            , STBLT_MAX_CRTR_SCR
+            , CRTR_CLSF_CD
+            , SCR_CLSF_CD
+            , ESNTL_INSP_YN
+            , USE_YN
+            , CRTR_UNIT_CD
+            , RGTR_ID
+            , REG_DT
+            , PBR_APLCN_YN
+        )
+        SELECT
+        #{crtrSn}
+        , CRTR_ID
+        , CRTR_CYCL
+        , (
+            CASE
+            WHEN #{chgHstryClsfCd} = 'INSERT'
+                THEN 'CHTY000001'
+            WHEN #{chgHstryClsfCd} = 'UPDATE'
+                THEN 'CHTY000002'
+            WHEN #{chgHstryClsfCd} = 'DELETE'
+                THEN 'CHTY000003'
+            ELSE ''
+                END
+          ) AS CHG_HSTRY_CLSF_CD
+        , CRTR_NM
+        , PRDCT_USG_CD
+        , STBLT_CRTR_SCR
+        , STBLT_MAX_CRTR_SCR
+        , CRTR_CLSF_CD
+        , SCR_CLSF_CD
+        , ESNTL_INSP_YN
+        , USE_YN
+        , CRTR_UNIT_CD
+        , #{rgtrId}
+        , NOW()
+        , PBR_APLCN_YN
+        FROM TX_QLI_INSP_CRTR_INFO
+        WHERE CRTR_ID = #{paramCrtrId}
+        AND CRTR_CYCL = #{crtrCycl}
+    </insert>
+
+</mapper>

@@ -1,0 +1,2013 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.statsMgt.mapper.StatsMgtMapper">
+	
+	<!-- 사용자 등록 통계 (입력:년 from -to  리턴: 년단위 sum) -->
+	<select id="selectStatsUserYearList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      DATE_TRUNC('YEAR', #{fromDate}::DATE),
+											      DATE_TRUNC('YEAR', #{toDate}::DATE),
+											      INTERVAL '1 YEAR'
+							    )::DATE AS SEARCH_YEAR
+		)
+		, MEM AS(
+					SELECT 
+					       CAL_MONTH.SEARCH_YEAR
+						  ,Z.CNT
+						  ,Z.FRST_REG_DT
+					FROM 
+				   		 (
+							SELECT COUNT(MBR_ID) AS CNT
+							      ,TO_CHAR(FRST_REG_DT,'YYYY') AS FRST_REG_DT
+							  FROM TX_MBR_INFO TMI
+							 WHERE TO_CHAR(TMI.FRST_REG_DT,'YYYY') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY')
+							   AND TO_CHAR(TMI.FRST_REG_DT,'YYYY') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY')
+							 GROUP BY MBR_ID , TO_CHAR(FRST_REG_DT,'YYYY')
+				    	  ) Z
+			 	  RIGHT OUTER JOIN CAL_MONTH
+			               ON Z.FRST_REG_DT = TO_CHAR(CAL_MONTH.SEARCH_YEAR,'YYYY') 
+			         ORDER BY CAL_MONTH.SEARCH_YEAR         
+	    )
+		  SELECT
+				 <!-- ROW_NUMBER()OVER(ORDER BY TO_CHAR(SEARCH_YEAR,'YYYY') ASC) AS USER_NO , 일련 번호 삭제예정-->
+		         COALESCE(SUM(CNT),0) AS USER_CNT
+		       , TO_CHAR(SEARCH_YEAR,'YYYY') AS USER_SEARCH_DATE
+		    FROM MEM
+		GROUP BY TO_CHAR(SEARCH_YEAR,'YYYY')
+		ORDER BY USER_SEARCH_DATE
+	</select>
+	
+	<!-- 사용자 등록 통계 (입력:월 from -to  리턴: 월단위 sum) -->
+	<select id="selectStatsUserMonthList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      DATE_TRUNC('MONTH', #{fromDate}::DATE),
+											      DATE_TRUNC('MONTH', #{toDate}::DATE),
+											      INTERVAL '1 MONTH'
+							    )::DATE AS SEARCH_MONTH
+		)
+		, MEM AS(
+					SELECT 
+					       CAL_MONTH.SEARCH_MONTH
+						  ,Z.CNT
+						  ,Z.FRST_REG_DT
+					FROM 
+				   		 (
+							SELECT COUNT(MBR_ID) AS CNT
+							       ,TO_CHAR(FRST_REG_DT,'YYYY-MM') AS FRST_REG_DT
+							 FROM TX_MBR_INFO TMI
+							 WHERE TO_CHAR(TMI.FRST_REG_DT,'YYYY-MM') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM')
+							   AND TO_CHAR(TMI.FRST_REG_DT,'YYYY-MM') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM')
+							 GROUP BY MBR_ID , TO_CHAR(FRST_REG_DT,'YYYY-MM')
+				    	  ) Z
+		 RIGHT OUTER JOIN CAL_MONTH
+		               ON  Z.FRST_REG_DT = TO_CHAR(CAL_MONTH.SEARCH_MONTH,'YYYY-MM')
+		         ORDER BY CAL_MONTH.SEARCH_MONTH         
+	    )
+		  SELECT
+				 COALESCE(SUM(CNT),0) AS USER_CNT
+		       , TO_CHAR(SEARCH_MONTH,'YYYY-MM') AS USER_SEARCH_DATE
+		    FROM MEM
+		GROUP BY TO_CHAR(SEARCH_MONTH,'YYYY-MM')
+		ORDER BY USER_SEARCH_DATE
+	</select>
+	
+	<!-- 사용자 등록 통계 (입력:주 from -to: 년월일  리턴 : week 단위 sum) -->
+	<select id="selectStatsUserWeekList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+			WITH CAL_WEEK AS (
+							  SELECT
+							    GENERATE_SERIES(
+							    					(
+							    						SELECT 
+	  														   CAST(#{fromDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{fromDate} AS TIMESTAMP))),
+	  											     (
+							    						SELECT 
+	  														   CAST(#{toDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{toDate} AS TIMESTAMP))),
+	  											     INTERVAL '1 WEEK'
+	  											 )::DATE AS WEEK_START
+			)
+		   , MEM AS (
+						SELECT
+						   TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') AS WEEK_FIRST_DAY
+						  ,TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') AS WEEK_LAST_DAY
+						  ,CAL_WEEK.WEEK_START AS START_DAY
+						  ,(CAL_WEEK.WEEK_START + INTERVAL '6 DAYS') AS LAST_DAY
+						  ,Z.CNT
+						FROM 
+							(
+							 	SELECT COUNT(MBR_ID) AS CNT
+							       	  ,TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') AS FRST_REG_DT
+							 	  FROM TX_MBR_INFO TMI
+							 	 WHERE TO_CHAR(TMI.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+							 	   AND TO_CHAR(TMI.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+							  GROUP BY MBR_ID , TO_CHAR(FRST_REG_DT,'YYYY-MM-DD')
+							 )Z
+						RIGHT OUTER JOIN CAL_WEEK
+					      ON  Z.FRST_REG_DT<![CDATA[>=]]> TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD')
+					     AND  Z.FRST_REG_DT<![CDATA[<=]]> TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD')
+					ORDER BY CAL_WEEK.WEEK_START
+			 )
+			SELECT 
+					WEEK_FIRST_DAY AS USER_SEARCH_DATE
+			      , COALESCE(SUM(CNT),0) AS USER_CNT
+			 FROM MEM 
+			 GROUP BY WEEK_FIRST_DAY
+       		 ORDER BY USER_SEARCH_DATE			 
+	</select>
+	<!-- 주별 날자 가져 오기 AS-IS -->
+	<!-- 
+	<select id="selectStatsUserWeekList_OLD" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+			WITH CAL_WEEK AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      DATE_TRUNC('WEEK', CAST(#{fromDate} AS DATE)),
+											      DATE_TRUNC('WEEK', CAST(#{toDate} AS DATE) + INTERVAL '1 DAY' - INTERVAL '1 WEEK'),
+											      INTERVAL '1 WEEK'
+							    )::DATE AS WEEK_START
+			)
+		   , MEM AS (
+						SELECT
+						   TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') AS WEEK_FIRST_DAY
+						  ,TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') AS WEEK_LAST_DAY
+						  ,CAL_WEEK.WEEK_START AS START_DAY
+						  ,(CAL_WEEK.WEEK_START + INTERVAL '6 DAYS') AS LAST_DAY
+						  ,Z.CNT
+						FROM 
+							(
+								 SELECT COUNT(MBR_ID) AS CNT
+								       ,TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') AS FRST_REG_DT
+								 FROM TX_MBR_INFO TMI
+								 GROUP BY MBR_ID , TO_CHAR(FRST_REG_DT,'YYYY-MM-DD')
+							 )Z
+			RIGHT OUTER JOIN CAL_WEEK
+					      ON TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') <![CDATA[<=]]> Z.FRST_REG_DT
+					     AND TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') <![CDATA[>=]]> Z.FRST_REG_DT
+					ORDER BY CAL_WEEK.WEEK_START
+			 )
+			SELECT 
+					ROW_NUMBER()OVER(ORDER BY WEEK_FIRST_DAY ASC) AS USER_NO
+			      , WEEK_FIRST_DAY AS USER_SEARCH_DATE
+			      , WEEK_LAST_DAY
+			      , COALESCE(SUM(CNT),0) AS USER_CNT
+			 FROM MEM 
+			 GROUP BY WEEK_FIRST_DAY ,WEEK_LAST_DAY
+	</select>
+	 -->
+	<!-- 사용자 등록 통계 (입력 from -to: 년월일  리턴 : day 단위 sum) -->
+	<select id="selectStatsUserDayList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_DAY AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      #{fromDate}::DATE, 
+						           				    #{toDate}::DATE, 
+											      INTERVAL '1 DAY'
+							    				)::DATE AS DAY_START
+		)
+		, MEM AS (
+					SELECT
+					   TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') AS DAY_START
+					  ,Z.CNT
+					  ,Z.FRST_REG_DT
+					FROM 
+						(
+							 SELECT COUNT(MBR_ID) AS CNT
+							       ,TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') AS FRST_REG_DT
+							   FROM TX_MBR_INFO TMI
+							  WHERE TO_CHAR(TMI.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+							    AND TO_CHAR(TMI.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+						   GROUP BY MBR_ID , TO_CHAR(FRST_REG_DT,'YYYY-MM-DD')
+						 ) Z
+         		RIGHT OUTER JOIN CAL_DAY
+         				 ON  Z.FRST_REG_DT = TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD')
+			     ORDER BY CAL_DAY.DAY_START
+		 )
+		SELECT 
+			    DAY_START AS USER_SEARCH_DATE
+		      , COALESCE(SUM(CNT),0) AS USER_CNT
+		  FROM MEM 
+	  GROUP BY DAY_START
+	  ORDER BY USER_SEARCH_DATE
+	</select>
+	
+	<!-- 디지털 문화 자원 년별 다운로드 현황 -->
+	<select id="selectStatsDownYearList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      DATE_TRUNC('YEAR', #{fromDate}::DATE),
+											      DATE_TRUNC('YEAR', #{toDate}::DATE),
+											      INTERVAL '1 YEAR'
+							    )::DATE AS SEARCH_YEAR
+		)
+		, DGTL_DOWN AS(
+						SELECT 
+						       CAL_MONTH.SEARCH_YEAR
+							  ,Z.CNT
+							  ,Z.PRDCT_TYPE_CD
+						  FROM 
+						  	 (
+								SELECT TO_CHAR(A.FRST_REG_DT,'YYYY') AS FRST_REG_DT 
+								       ,COUNT(B.PRDCT_TYPE_CD) AS CNT
+								       ,B.PRDCT_TYPE_CD 
+								  FROM TX_PRDCT_USE_TRCK_INFO A
+							INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+								    ON A.CLRCS_ID = B.CLRCS_ID
+								   AND A.PRDCT_SN = B.PRDCT_SN
+						<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+							INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+							       	ON B.CLRCS_ID = C.CLRCS_ID
+							       AND C.INST_ID = #{instId}
+						</if>
+							   WHERE TO_CHAR(A.FRST_REG_DT,'YYYY') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY')
+							     AND TO_CHAR(A.FRST_REG_DT,'YYYY') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY')
+								 GROUP BY TO_CHAR(A.FRST_REG_DT,'YYYY'), PRDCT_TYPE_CD
+						       ) Z
+				RIGHT OUTER JOIN CAL_MONTH
+				              ON Z.FRST_REG_DT = TO_CHAR(CAL_MONTH.SEARCH_YEAR,'YYYY') 
+				        ORDER BY CAL_MONTH.SEARCH_YEAR
+		)
+		, DGTL_DOWN_TYPE AS (
+			SELECT
+					 TO_CHAR(SEARCH_YEAR,'YYYY') AS DOWN_SEARCH_DATE
+			       , COALESCE(SUM(CNT),0) AS DOWN_CNT
+			       , PRDCT_TYPE_CD
+			 FROM DGTL_DOWN
+			 GROUP BY SEARCH_YEAR ,PRDCT_TYPE_CD
+		) 
+		, DGTL_DOWN_SUM AS ( 
+						    SELECT 
+						  		  DOWN_SEARCH_DATE
+						  		, CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */
+						    FROM DGTL_DOWN_TYPE
+						  GROUP BY DOWN_SEARCH_DATE , PRDCT_TYPE_CD
+		)
+		  SELECT 
+		  		  DOWN_SEARCH_DATE
+		  		, SUM(DGTL_DOWN_TYPE_01_CNT) AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+		        , SUM(DGTL_DOWN_TYPE_02_CNT) AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+		        , SUM(DGTL_DOWN_TYPE_03_CNT) AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+		        , SUM(DGTL_DOWN_TYPE_04_CNT) AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+		        , SUM(DGTL_DOWN_TYPE_05_CNT) AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */ 	
+		    FROM DGTL_DOWN_SUM
+		  GROUP BY DOWN_SEARCH_DATE
+		  ORDER BY DOWN_SEARCH_DATE
+	</select>
+	<!-- 디지털 문화 자원 월별 다운로드 현황 -->
+	<select id="selectStatsDownMonthList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      DATE_TRUNC('MONTH', #{fromDate}::DATE),
+											      DATE_TRUNC('MONTH', #{toDate}::DATE),
+											      INTERVAL '1 MONTH'
+							    )::DATE AS SEARCH_MONTH
+		)
+		, DGTL_DOWN AS(
+						SELECT 
+						       CAL_MONTH.SEARCH_MONTH
+							  ,Z.CNT
+							  ,Z.PRDCT_TYPE_CD
+						  FROM 
+						  	 (
+								SELECT TO_CHAR(A.FRST_REG_DT,'YYYY-MM') AS FRST_REG_DT 
+								       ,COUNT(B.PRDCT_TYPE_CD) AS CNT
+								       ,B.PRDCT_TYPE_CD 
+								  FROM TX_PRDCT_USE_TRCK_INFO A
+							INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+								    ON A.CLRCS_ID = B.CLRCS_ID
+								   AND A.PRDCT_SN = B.PRDCT_SN
+						<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+							INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+							       	ON B.CLRCS_ID = C.CLRCS_ID
+							       AND C.INST_ID = #{instId}
+						</if>
+							   WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM')
+							     AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM')
+								 GROUP BY TO_CHAR(A.FRST_REG_DT,'YYYY-MM'), PRDCT_TYPE_CD
+						       ) Z
+				RIGHT OUTER JOIN CAL_MONTH
+				              ON TO_CHAR(CAL_MONTH.SEARCH_MONTH,'YYYY-MM') = Z.FRST_REG_DT
+				        ORDER BY CAL_MONTH.SEARCH_MONTH         
+		)
+		, DGTL_DOWN_TYPE AS (
+			SELECT
+					 TO_CHAR(SEARCH_MONTH,'YYYY-MM') AS DOWN_SEARCH_DATE
+			       , COALESCE(SUM(CNT),0) AS DOWN_CNT
+			       , PRDCT_TYPE_CD
+			 FROM DGTL_DOWN
+			 GROUP BY SEARCH_MONTH ,PRDCT_TYPE_CD
+		) 
+		, DGTL_DOWN_SUM AS ( 
+						    SELECT 
+						  		  DOWN_SEARCH_DATE
+						  		, CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+						        , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */
+						    FROM DGTL_DOWN_TYPE
+						  GROUP BY DOWN_SEARCH_DATE , PRDCT_TYPE_CD
+		)
+		  SELECT 
+		  		  DOWN_SEARCH_DATE
+		  		, SUM(DGTL_DOWN_TYPE_01_CNT) AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+		        , SUM(DGTL_DOWN_TYPE_02_CNT) AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+		        , SUM(DGTL_DOWN_TYPE_03_CNT) AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+		        , SUM(DGTL_DOWN_TYPE_04_CNT) AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+		        , SUM(DGTL_DOWN_TYPE_05_CNT) AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */ 	
+		    FROM DGTL_DOWN_SUM
+		  GROUP BY DOWN_SEARCH_DATE
+		  ORDER BY DOWN_SEARCH_DATE
+	</select>
+	
+	<!-- 디지털 문화 자원 주별 다운로드 현황 -->
+	<select id="selectStatsDownWeekList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_WEEK AS (
+						  SELECT
+							    GENERATE_SERIES(
+							    					(
+							    						SELECT 
+	  														   CAST(#{fromDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{fromDate} AS TIMESTAMP))),
+	  											     (
+							    						SELECT 
+	  														   CAST(#{toDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{toDate} AS TIMESTAMP))),
+	  											     INTERVAL '1 WEEK'
+	  											 )::DATE AS WEEK_START
+	     )
+		, DGTL_DOWN AS (
+						SELECT
+							   TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') AS WEEK_FIRST_DAY
+							  ,TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') AS WEEK_LAST_DAY
+							  ,CAL_WEEK.WEEK_START AS START_DAY
+							  ,(CAL_WEEK.WEEK_START + INTERVAL '6 DAYS') AS LAST_DAY
+							  ,Z.CNT
+							  ,Z.PRDCT_TYPE_CD
+							  ,Z.FRST_REG_DT
+						  FROM 
+								(
+									SELECT TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') AS FRST_REG_DT 
+									       ,COUNT(B.PRDCT_TYPE_CD) AS CNT
+									       ,B.PRDCT_TYPE_CD 
+									  FROM TX_PRDCT_USE_TRCK_INFO A
+							    INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+									    ON A.CLRCS_ID = B.CLRCS_ID
+									   AND A.PRDCT_SN = B.PRDCT_SN
+						<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+								INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+							       		ON B.CLRCS_ID = C.CLRCS_ID
+							       	   AND C.INST_ID = #{instId}
+						</if>									   
+									 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+									   AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+								  GROUP BY TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD'), PRDCT_TYPE_CD
+								 )Z
+				RIGHT OUTER JOIN CAL_WEEK
+						      ON Z.FRST_REG_DT <![CDATA[>=]]> TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD')  
+				   	         AND Z.FRST_REG_DT <![CDATA[<=]]> TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD')  
+						ORDER BY CAL_WEEK.WEEK_START
+		)
+		, DGTL_DOWN_TYPE AS (	
+			SELECT 
+					WEEK_FIRST_DAY
+			      , WEEK_LAST_DAY
+			      , COALESCE(SUM(CNT),0) AS DOWN_CNT
+			      , PRDCT_TYPE_CD
+			 FROM DGTL_DOWN 
+			 GROUP BY WEEK_FIRST_DAY ,WEEK_LAST_DAY , PRDCT_TYPE_CD
+		) 
+		, DGTL_DOWN_SUM AS (
+							  SELECT 
+							  		   WEEK_FIRST_DAY AS  DOWN_SEARCH_DATE
+							  		 , WEEK_LAST_DAY AS DGTL_DOWN_WEEK_LAST_DAY
+							  		 , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */
+							    FROM DGTL_DOWN_TYPE
+							GROUP BY WEEK_FIRST_DAY , WEEK_LAST_DAY , PRDCT_TYPE_CD
+		)SELECT 
+				  DOWN_SEARCH_DATE
+			    , DGTL_DOWN_WEEK_LAST_DAY
+				, SUM(DGTL_DOWN_TYPE_01_CNT) AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+		        , SUM(DGTL_DOWN_TYPE_02_CNT) AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+		        , SUM(DGTL_DOWN_TYPE_03_CNT) AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+		        , SUM(DGTL_DOWN_TYPE_04_CNT) AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+		        , SUM(DGTL_DOWN_TYPE_05_CNT) AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */ 
+		   FROM DGTL_DOWN_SUM
+	     GROUP BY DOWN_SEARCH_DATE, DGTL_DOWN_WEEK_LAST_DAY 	
+		ORDER BY DOWN_SEARCH_DATE
+	</select>
+	<!-- 디지털 문화 자원 일별 다운로드 현황 -->
+	<select id="selectStatsDownDayList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_DAY AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      #{fromDate}::DATE, 
+						           				  #{toDate}::DATE, 
+											      INTERVAL '1 DAY'
+							    				)::DATE AS DAY_START
+		)
+		, DGTL_DOWN AS (
+						SELECT
+							   TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') AS DAY_START
+							  ,Z.CNT
+							  ,Z.PRDCT_TYPE_CD
+							  ,Z.FRST_REG_DT
+						  FROM 
+								(
+									 SELECT TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') AS FRST_REG_DT 
+									       ,COUNT(B.PRDCT_TYPE_CD) AS CNT
+									       ,B.PRDCT_TYPE_CD 
+									  FROM TX_PRDCT_USE_TRCK_INFO A
+								INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+								    	ON A.CLRCS_ID = B.CLRCS_ID
+									   AND A.PRDCT_SN = B.PRDCT_SN
+						<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+								INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+							       		ON B.CLRCS_ID = C.CLRCS_ID
+							       	   AND C.INST_ID = #{instId}
+						</if>									   
+									 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+							           AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+									 GROUP BY TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD'), PRDCT_TYPE_CD
+						 		) Z
+				RIGHT OUTER JOIN CAL_DAY
+					          ON TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') =  Z.FRST_REG_DT
+					    ORDER BY CAL_DAY.DAY_START
+		 )
+		 , DGTL_DOWN_TYPE AS (
+						SELECT 
+							    DAY_START
+						      , COALESCE(SUM(CNT),0) AS DOWN_CNT
+						      , PRDCT_TYPE_CD
+						      , FRST_REG_DT
+						 FROM DGTL_DOWN 
+						 GROUP BY DAY_START , FRST_REG_DT ,PRDCT_TYPE_CD
+		 )
+		 , DGTL_DOWN_SUM AS (
+							  SELECT 
+							           DAY_START AS DOWN_SEARCH_DATE
+							         , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DOWN_CNT) ELSE 0 END AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */
+							         , FRST_REG_DT AS DGTL_DOWN_FRST_REG_DT
+							    FROM DGTL_DOWN_TYPE
+							  GROUP BY DAY_START, PRDCT_TYPE_CD , FRST_REG_DT
+		) 
+			SELECT 
+					  DOWN_SEARCH_DATE
+			        , SUM(DGTL_DOWN_TYPE_01_CNT) AS DGTL_DOWN_TYPE_01_CNT   /* 3D데이터 에셋 */
+			        , SUM(DGTL_DOWN_TYPE_02_CNT) AS DGTL_DOWN_TYPE_02_CNT   /* 동영상 */
+			        , SUM(DGTL_DOWN_TYPE_03_CNT) AS DGTL_DOWN_TYPE_03_CNT   /* 이미지 */
+			        , SUM(DGTL_DOWN_TYPE_04_CNT) AS DGTL_DOWN_TYPE_04_CNT   /* 오디오 */
+			        , SUM(DGTL_DOWN_TYPE_05_CNT) AS DGTL_DOWN_TYPE_05_CNT   /* 텍스트 */ 
+			   FROM DGTL_DOWN_SUM
+		   GROUP BY DOWN_SEARCH_DATE 	
+		   ORDER BY DOWN_SEARCH_DATE
+	</select>
+	
+	<!-- 기관별 디지털 문화 자원 년별 1-->
+	<select id="selectStatsInstDgtlYearList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+			, CAL_MONTH AS (
+									  SELECT
+									    GENERATE_SERIES(
+													      DATE_TRUNC('YEAR', #{fromDate}::DATE),
+													      DATE_TRUNC('YEAR', #{toDate}::DATE),
+													      INTERVAL '1 YEAR'
+									    )::DATE AS SEARCH_YEAR
+			)
+			, DGTL_INST AS (
+						  SELECT 
+							       CAL_MONTH.SEARCH_YEAR
+								  ,Z.CNT
+								  ,Z.FRST_REG_DT
+								  ,Z.PRDCT_TYPE_CD
+								  ,Z.INST_ID
+							FROM 
+						   		(	 
+								   SELECT TO_CHAR(A.FRST_REG_DT , 'YYYY') AS FRST_REG_DT
+										   , T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+										   , COUNT(1) AS CNT
+										   , A.INST_ID 
+									 FROM TX_DGTL_CLRCS_MTDT_INFO A
+									INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+										ON T02.CLRCS_ID = A.CLRCS_ID
+									INNER JOIN DATA_TYPE_CTGRY T03
+										ON T03.CTGRY_ID = T02.CTGRY_ID
+									WHERE TO_CHAR(A.FRST_REG_DT,'YYYY')  <![CDATA[>=]]>  TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY')
+									  AND TO_CHAR(A.FRST_REG_DT,'YYYY')  <![CDATA[<=]]>  TO_CHAR(CAST(#{toDate} AS DATE),'YYYY')
+									  AND A.DEL_WTNG_YN  !=  'Y'
+								<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+								       AND A.INST_ID = #{instId}
+								</if>  
+								 GROUP BY TO_CHAR(A.FRST_REG_DT , 'YYYY') , T03.ORG_CTGRY_ID ,A.INST_ID 
+						    	 ) Z
+			      RIGHT OUTER JOIN CAL_MONTH
+						        ON TO_CHAR(CAL_MONTH.SEARCH_YEAR,'YYYY') = Z.FRST_REG_DT
+					      ORDER BY CAL_MONTH.SEARCH_YEAR     
+			    )
+			 , DGTL_INST_TYPE AS (  
+									SELECT
+											 TO_CHAR(SEARCH_YEAR,'YYYY') AS SEARCH_YEAR
+									       , COALESCE(SUM(CNT),0) AS INST_CNT
+									       , PRDCT_TYPE_CD
+									       , INST_ID
+									  FROM DGTL_INST 
+									 WHERE INST_ID <![CDATA[<>]]> '' 
+								  GROUP BY SEARCH_YEAR, PRDCT_TYPE_CD ,INST_ID
+								  ORDER BY SEARCH_YEAR
+			  ) 
+			  , DGTL_INST_SUM AS ( 
+									   SELECT  
+									   		   CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+									         , INST_ID
+									     FROM DGTL_INST_TYPE
+									 GROUP BY PRDCT_TYPE_CD , INST_ID
+			  ) 
+			    SELECT
+			    		 SUM(DGTL_INST_TYPE_01_CNT) AS DGTL_INST_TYPE_01_CNT
+			 			,SUM(DGTL_INST_TYPE_02_CNT) AS DGTL_INST_TYPE_02_CNT
+			 			,SUM(DGTL_INST_TYPE_03_CNT) AS DGTL_INST_TYPE_03_CNT
+			 			,SUM(DGTL_INST_TYPE_04_CNT) AS DGTL_INST_TYPE_04_CNT
+			 			,SUM(DGTL_INST_TYPE_05_CNT) AS DGTL_INST_TYPE_05_CNT
+			 			,INST_ID
+			 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					 		<property name="paramColNm" value="'instNm'"/>
+					 		<property name="paramInstId" value="DGTL_INST_SUM.INST_ID"/>
+						   </include>) AS INST_NM 
+			      FROM DGTL_INST_SUM
+			  GROUP BY INST_ID
+			  ORDER BY INST_ID
+	</select>
+	<!-- 기관별 디지털 문화 자원 월별 2-->
+	<select id="selectStatsInstDgtlMonthList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		, CAL_MONTH AS (
+								  SELECT
+								    GENERATE_SERIES(
+												      DATE_TRUNC('MONTH', #{fromDate}::DATE),
+												      DATE_TRUNC('MONTH', #{toDate}::DATE),
+												      INTERVAL '1 MONTH'
+								    )::DATE AS SEARCH_MONTH
+		)
+		, DGTL_INST AS (
+					  SELECT 
+						       CAL_MONTH.SEARCH_MONTH
+							  ,Z.CNT
+							  ,Z.FRST_REG_DT
+							  ,Z.PRDCT_TYPE_CD
+							  ,Z.INST_ID
+						FROM 
+					   		(	 
+								   SELECT TO_CHAR(A.FRST_REG_DT , 'YYYY-MM') AS FRST_REG_DT
+										   , T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+										   , COUNT(1) AS CNT
+										   , A.INST_ID 
+									 FROM TX_DGTL_CLRCS_MTDT_INFO A
+									INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+										ON T02.CLRCS_ID = A.CLRCS_ID
+									INNER JOIN DATA_TYPE_CTGRY T03
+										ON T03.CTGRY_ID = T02.CTGRY_ID
+			 	   				WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM')
+								  AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM')
+								  AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+								<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+								  AND A.INST_ID = #{instId}
+								</if>								   
+							 GROUP BY TO_CHAR(A.FRST_REG_DT , 'YYYY-MM') , T03.ORG_CTGRY_ID ,A.INST_ID 
+					    	 ) Z
+		      RIGHT OUTER JOIN CAL_MONTH
+					        ON TO_CHAR(CAL_MONTH.SEARCH_MONTH,'YYYY-MM') = Z.FRST_REG_DT
+				      ORDER BY CAL_MONTH.SEARCH_MONTH     
+		    )
+		 , DGTL_INST_TYPE AS (  
+								SELECT
+										 TO_CHAR(SEARCH_MONTH,'YYYY-MM') AS SEARCH_MONTH
+								       , COALESCE(SUM(CNT),0) AS INST_CNT
+								       , PRDCT_TYPE_CD
+								       , INST_ID
+								  FROM DGTL_INST
+								 WHERE INST_ID <![CDATA[<>]]> ''
+							  GROUP BY SEARCH_MONTH, PRDCT_TYPE_CD ,INST_ID
+		  )					  
+		  , DGTL_INST_SUM AS ( 
+							   SELECT  
+							   		   CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+							         , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+							         , INST_ID
+							     FROM DGTL_INST_TYPE
+							 GROUP BY PRDCT_TYPE_CD , INST_ID
+		   )	SELECT
+			    		 SUM(DGTL_INST_TYPE_01_CNT) AS DGTL_INST_TYPE_01_CNT
+			 			,SUM(DGTL_INST_TYPE_02_CNT) AS DGTL_INST_TYPE_02_CNT
+			 			,SUM(DGTL_INST_TYPE_03_CNT) AS DGTL_INST_TYPE_03_CNT
+			 			,SUM(DGTL_INST_TYPE_04_CNT) AS DGTL_INST_TYPE_04_CNT
+			 			,SUM(DGTL_INST_TYPE_05_CNT) AS DGTL_INST_TYPE_05_CNT
+			 			,INST_ID
+			 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					 		<property name="paramColNm" value="'instNm'"/>
+					 		<property name="paramInstId" value="DGTL_INST_SUM.INST_ID"/>
+						   </include>) AS INST_NM 
+			      FROM DGTL_INST_SUM
+			  GROUP BY INST_ID
+			  ORDER BY INST_ID
+	</select>
+	<!-- 기관별 디지털 문화 자원 현황 (주별) 3-->
+	<select id="selectStatsInstDgtlWeekList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		, CAL_WEEK AS (
+						  SELECT
+							    GENERATE_SERIES(
+							    					(
+							    						SELECT 
+	  														   CAST(#{fromDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{fromDate} AS TIMESTAMP))),
+	  											     (
+							    						SELECT 
+	  														   CAST(#{toDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{toDate} AS TIMESTAMP))),
+	  											     INTERVAL '1 WEEK'
+	  											 )::DATE AS WEEK_START
+		)
+		, DGTL_INST AS (
+						 SELECT
+							     TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') AS WEEK_FIRST_DAY
+							   , TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') AS WEEK_LAST_DAY
+							   , CAL_WEEK.WEEK_START AS START_DAY
+							   , (CAL_WEEK.WEEK_START + INTERVAL '6 DAYS') AS LAST_DAY
+							   , Z.CNT
+							   , Z.FRST_REG_DT
+							   , Z.PRDCT_TYPE_CD
+		  					   , Z.INST_ID
+						   FROM 
+								(
+								   SELECT TO_CHAR(A.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+										   , T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+										   , COUNT(1) AS CNT
+										   , A.INST_ID 
+									 FROM TX_DGTL_CLRCS_MTDT_INFO A
+									INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+										ON T02.CLRCS_ID = A.CLRCS_ID
+									INNER JOIN DATA_TYPE_CTGRY T03
+										ON T03.CTGRY_ID = T02.CTGRY_ID
+									  WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+									    AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+									    AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+								<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+								       AND A.INST_ID = #{instId}
+								</if>										  
+								   GROUP BY TO_CHAR(A.FRST_REG_DT , 'YYYY-MM-DD') , T03.ORG_CTGRY_ID ,A.INST_ID 
+							 	 )Z
+			    RIGHT OUTER JOIN CAL_WEEK
+						      ON Z.FRST_REG_DT <![CDATA[>=]]> TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') 
+						     AND Z.FRST_REG_DT <![CDATA[<=]]> TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD')  
+						ORDER BY CAL_WEEK.WEEK_START
+	    )
+        , DGTL_INST_TYPE AS ( 
+								SELECT 
+									    START_DAY
+								      , LAST_DAY
+								      , COALESCE(SUM(CNT),0) AS INST_CNT
+								      , FRST_REG_DT
+								      , PRDCT_TYPE_CD
+								      , INST_ID
+								 FROM DGTL_INST
+								WHERE INST_ID <![CDATA[<>]]> '' 
+							 GROUP BY WEEK_FIRST_DAY , FRST_REG_DT , PRDCT_TYPE_CD ,START_DAY,LAST_DAY,PRDCT_TYPE_CD,INST_ID
+		 )					 
+		 , DGTL_INST_SUM AS (
+							   SELECT 
+							            CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+							          , INST_ID
+							     FROM DGTL_INST_TYPE
+							 GROUP BY PRDCT_TYPE_CD,INST_ID
+		 )
+		 	SELECT
+		    		 SUM(DGTL_INST_TYPE_01_CNT) AS DGTL_INST_TYPE_01_CNT
+		 			,SUM(DGTL_INST_TYPE_02_CNT) AS DGTL_INST_TYPE_02_CNT
+		 			,SUM(DGTL_INST_TYPE_03_CNT) AS DGTL_INST_TYPE_03_CNT
+		 			,SUM(DGTL_INST_TYPE_04_CNT) AS DGTL_INST_TYPE_04_CNT
+		 			,SUM(DGTL_INST_TYPE_05_CNT) AS DGTL_INST_TYPE_05_CNT
+		 			,INST_ID
+		 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+				 		<property name="paramColNm" value="'instNm'"/>
+				 		<property name="paramInstId" value="DGTL_INST_SUM.INST_ID"/>
+					   </include>) AS INST_NM 
+			  FROM DGTL_INST_SUM
+		  GROUP BY INST_ID	  
+		  ORDER BY INST_ID
+	</select>
+	<!-- 기관별 디지털 문화 자원 현황 (일별) 4-->
+	<select id="selectStatsInstDgtlDayList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		, CAL_DAY AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      #{fromDate}::DATE, 
+						           				    #{toDate}::DATE, 
+											      INTERVAL '1 DAY'
+							    				)::DATE AS DAY_START
+		 )
+		, DGTL_INST AS (
+							SELECT
+							   TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') AS DAY_START
+							  ,Z.CNT
+							  ,Z.FRST_REG_DT
+							  ,Z.PRDCT_TYPE_CD
+							  ,Z.INST_ID
+							FROM 
+								(
+									 SELECT TO_CHAR(A.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+										   , T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+										   , COUNT(1) AS CNT
+										   , A.INST_ID 
+									 FROM TX_DGTL_CLRCS_MTDT_INFO A
+									INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+										ON T02.CLRCS_ID = A.CLRCS_ID
+									INNER JOIN DATA_TYPE_CTGRY T03
+										ON T03.CTGRY_ID = T02.CTGRY_ID
+									  WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+									    AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+									    AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+								<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+								       AND A.INST_ID = #{instId}
+								</if>										  
+								   GROUP BY TO_CHAR(A.FRST_REG_DT , 'YYYY-MM-DD') , T03.ORG_CTGRY_ID ,A.INST_ID  
+								 ) Z
+				   RIGHT OUTER JOIN CAL_DAY
+							     ON TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') =  Z.FRST_REG_DT
+		)
+		, DGTL_INST_TYPE AS (
+				SELECT 
+					    DAY_START
+				      , COALESCE(SUM(CNT),0) AS INST_CNT
+				      , FRST_REG_DT
+				      , PRDCT_TYPE_CD
+				      , INST_ID
+				 FROM DGTL_INST 
+				WHERE INST_ID <![CDATA[<>]]> ''
+			    GROUP BY DAY_START , FRST_REG_DT , PRDCT_TYPE_CD ,INST_ID
+		)	    
+		, DGTL_INST_SUM AS ( 
+									   SELECT  
+									   		   CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+									         , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+									         , INST_ID
+									     FROM DGTL_INST_TYPE
+									 GROUP BY PRDCT_TYPE_CD , INST_ID
+			  ) 
+			    SELECT
+			    		 SUM(DGTL_INST_TYPE_01_CNT) AS DGTL_INST_TYPE_01_CNT
+			 			,SUM(DGTL_INST_TYPE_02_CNT) AS DGTL_INST_TYPE_02_CNT
+			 			,SUM(DGTL_INST_TYPE_03_CNT) AS DGTL_INST_TYPE_03_CNT
+			 			,SUM(DGTL_INST_TYPE_04_CNT) AS DGTL_INST_TYPE_04_CNT
+			 			,SUM(DGTL_INST_TYPE_05_CNT) AS DGTL_INST_TYPE_05_CNT
+			 			,INST_ID
+			 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					 		<property name="paramColNm" value="'instNm'"/>
+					 		<property name="paramInstId" value="DGTL_INST_SUM.INST_ID"/>
+						   </include>) AS INST_NM 
+			      FROM DGTL_INST_SUM
+			  GROUP BY INST_ID
+			  ORDER BY INST_ID
+	</select>
+	
+	<!-- 기관별 디지털 문화 자원 현황 (년별) 좌변이 날짜 5-->
+	<select id="selectStatsInstDetlYearList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+	WITH CAL_MONTH AS (
+								  SELECT
+									    GENERATE_SERIES(
+													      DATE_TRUNC('YEAR', #{fromDate}::DATE),
+													      DATE_TRUNC('YEAR', #{toDate}::DATE),
+													      INTERVAL '1 YEAR'
+									    )::DATE AS SEARCH_YEAR
+	)
+	, DGTL_INST AS (
+						SELECT 
+						       CAL_MONTH.SEARCH_YEAR
+							  ,Z.CNT
+							  ,Z.FRST_REG_DT
+							  ,Z.PRDCT_TYPE_CD
+							  ,Z.INST_ID
+						FROM 
+					   		(	 
+							   SELECT TO_CHAR(B.FRST_REG_DT , 'YYYY') AS FRST_REG_DT
+									   , B.CLRCS_ID 
+									   , B.PRDCT_TYPE_CD
+									   , COUNT(B.PRDCT_TYPE_CD) AS CNT
+									   , A.INST_ID 
+								 FROM TX_DGTL_CLRCS_MTDT_INFO A
+						   INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B 
+								   ON  A.CLRCS_ID = B.CLRCS_ID
+			 	   				WHERE TO_CHAR(B.FRST_REG_DT,'YYYY')  <![CDATA[>=]]>  TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY')
+								  AND TO_CHAR(B.FRST_REG_DT,'YYYY')  <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY')
+								  AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			  AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			<if test= "paramInstId != '' and paramInstId != null">
+								  AND INST_ID =#{paramInstId}
+								</if> 
+							 GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY') , B.CLRCS_ID  ,B.PRDCT_TYPE_CD ,A.INST_ID 
+					    	 ) Z
+		      RIGHT OUTER JOIN CAL_MONTH
+					        ON TO_CHAR(CAL_MONTH.SEARCH_YEAR,'YYYY') = Z.FRST_REG_DT
+     )
+     ,DGTL_INST_TYPE AS (  
+								SELECT
+										 TO_CHAR(SEARCH_YEAR,'YYYY') AS SEARCH_YEAR
+								       , COALESCE(SUM(CNT),0) AS INST_CNT
+								       , PRDCT_TYPE_CD
+								       , INST_ID
+								  FROM DGTL_INST
+							  GROUP BY SEARCH_YEAR, PRDCT_TYPE_CD ,INST_ID
+	 )
+	 , DGTL_INST_SUM AS (
+					 		SELECT 
+						   		   SEARCH_YEAR AS DGTL_INST_SEARCH_DATE
+						   		 , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+					             , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+					         	 , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+					         	 , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+					         	 , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+						         , INST_ID
+						     FROM DGTL_INST_TYPE
+						 GROUP BY PRDCT_TYPE_CD , INST_ID ,SEARCH_YEAR
+	 )	SELECT  
+		 		    DGTL_INST_SEARCH_DATE
+		   		  , SUM(DGTL_INST_TYPE_01_CNT) AS  DGTL_INST_TYPE_01_CNT  /* 3D데이터 에셋 */
+		          , SUM(DGTL_INST_TYPE_02_CNT) AS  DGTL_INST_TYPE_02_CNT/* 동영상 */
+		          , SUM(DGTL_INST_TYPE_03_CNT) AS  DGTL_INST_TYPE_03_CNT/* 이미지 */
+		          , SUM(DGTL_INST_TYPE_04_CNT) AS  DGTL_INST_TYPE_04_CNT/* 오디오 */
+		          , SUM(DGTL_INST_TYPE_05_CNT) AS  DGTL_INST_TYPE_05_CNT/* 텍스트 */
+		          , INST_ID
+		     FROM DGTL_INST_SUM
+		 GROUP BY INST_ID ,DGTL_INST_SEARCH_DATE
+		 ORDER BY DGTL_INST_SEARCH_DATE
+	</select>
+	
+	<!-- 기관별 디지털 문화 자원 현황 (월별) 좌변이 날짜 6-->
+	<select id="selectStatsInstDetlMonthList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+	WITH CAL_MONTH AS (
+								  SELECT
+								    GENERATE_SERIES(
+												      DATE_TRUNC('MONTH', #{fromDate}::DATE),
+												      DATE_TRUNC('MONTH', #{toDate}::DATE),
+												      INTERVAL '1 MONTH'
+								    )::DATE AS SEARCH_MONTH
+	)
+	, DGTL_INST AS (
+						SELECT 
+						       CAL_MONTH.SEARCH_MONTH
+							  ,Z.CNT
+							  ,Z.FRST_REG_DT
+							  ,Z.PRDCT_TYPE_CD
+							  ,Z.INST_ID
+						FROM 
+					   		(	 
+							   SELECT TO_CHAR(B.FRST_REG_DT , 'YYYY-MM') AS FRST_REG_DT
+									   , B.CLRCS_ID 
+									   , B.PRDCT_TYPE_CD
+									   , COUNT(B.PRDCT_TYPE_CD) AS CNT
+									   , A.INST_ID 
+								 FROM TX_DGTL_CLRCS_MTDT_INFO A
+						   INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B 
+								   ON  A.CLRCS_ID = B.CLRCS_ID
+			 	   				WHERE TO_CHAR(B.FRST_REG_DT,'YYYY-MM')  <![CDATA[>=]]>  TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM')
+								  AND TO_CHAR(B.FRST_REG_DT,'YYYY-MM')  <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM')
+								  AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			  AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			<if test= "paramInstId != '' and paramInstId != null">
+								  AND INST_ID =#{paramInstId}
+								</if> 
+							 GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY-MM') , B.CLRCS_ID  ,B.PRDCT_TYPE_CD ,A.INST_ID 
+					    	 ) Z
+		      RIGHT OUTER JOIN CAL_MONTH
+					        ON TO_CHAR(CAL_MONTH.SEARCH_MONTH,'YYYY-MM') = Z.FRST_REG_DT
+     )
+     ,DGTL_INST_TYPE AS (  
+								SELECT
+										 TO_CHAR(SEARCH_MONTH,'YYYY-MM') AS SEARCH_MONTH
+								       , COALESCE(SUM(CNT),0) AS INST_CNT
+								       , PRDCT_TYPE_CD
+								       , INST_ID
+								  FROM DGTL_INST
+							  GROUP BY SEARCH_MONTH, PRDCT_TYPE_CD ,INST_ID
+	 )
+	 , DGTL_INST_SUM AS ( 
+						  SELECT 
+						   		   SEARCH_MONTH AS DGTL_INST_SEARCH_DATE
+						   		 , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+					         	 , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+					        	 , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+					         	 , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+					          	 , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+						         , INST_ID
+						     FROM DGTL_INST_TYPE
+						 GROUP BY PRDCT_TYPE_CD , INST_ID ,SEARCH_MONTH
+      )	SELECT  
+		 		    DGTL_INST_SEARCH_DATE
+		   		  , SUM(DGTL_INST_TYPE_01_CNT) AS  DGTL_INST_TYPE_01_CNT  /* 3D데이터 에셋 */
+		          , SUM(DGTL_INST_TYPE_02_CNT) AS  DGTL_INST_TYPE_02_CNT/* 동영상 */
+		          , SUM(DGTL_INST_TYPE_03_CNT) AS  DGTL_INST_TYPE_03_CNT/* 이미지 */
+		          , SUM(DGTL_INST_TYPE_04_CNT) AS  DGTL_INST_TYPE_04_CNT/* 오디오 */
+		          , SUM(DGTL_INST_TYPE_05_CNT) AS  DGTL_INST_TYPE_05_CNT/* 텍스트 */
+		          , INST_ID
+		     FROM DGTL_INST_SUM
+		 GROUP BY INST_ID ,DGTL_INST_SEARCH_DATE
+		 ORDER BY DGTL_INST_SEARCH_DATE
+	</select>
+	<!-- 기관별 디지털 문화 자원 현황 (주별) 좌변이 날짜 7-->
+	<select id="selectStatsInstDetlWeekList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+	WITH CAL_WEEK AS (
+					  SELECT
+						    GENERATE_SERIES(
+						    					(
+						    						SELECT 
+  														   CAST(#{fromDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{fromDate} AS TIMESTAMP))),
+  											     (
+						    						SELECT 
+  														   CAST(#{toDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{toDate} AS TIMESTAMP))),
+  											     INTERVAL '1 WEEK'
+  											 )::DATE AS WEEK_START
+	)
+	, DGTL_INST AS (
+						SELECT 
+						         TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') AS WEEK_FIRST_DAY
+							   , TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') AS WEEK_LAST_DAY
+							   , CAL_WEEK.WEEK_START AS START_DAY
+							   , (CAL_WEEK.WEEK_START + INTERVAL '6 DAYS') AS LAST_DAY
+							   , Z.CNT
+							   , Z.FRST_REG_DT
+							   , Z.PRDCT_TYPE_CD
+		  					 , Z.INST_ID
+						FROM 
+					   		(	 
+							   SELECT 
+							   		  TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+								     , B.CLRCS_ID 
+								     , B.PRDCT_TYPE_CD
+								     , COUNT(B.PRDCT_TYPE_CD) AS CNT
+								     , A.INST_ID 
+							     FROM TX_DGTL_CLRCS_MTDT_INFO A
+						   INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B 
+								   ON  A.CLRCS_ID = B.CLRCS_ID 
+							    WHERE TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+							      AND TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+								  AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			  AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			<if test= "paramInstId != '' and paramInstId != null">
+								  AND INST_ID =#{paramInstId}
+								</if> 
+							 GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') , B.CLRCS_ID  ,B.PRDCT_TYPE_CD ,A.INST_ID
+					    	 ) Z
+		      RIGHT OUTER JOIN CAL_WEEK
+					        ON Z.FRST_REG_DT <![CDATA[>=]]> TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') 
+						    AND Z.FRST_REG_DT <![CDATA[<=]]> TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD')
+     )
+     ,DGTL_INST_TYPE AS (  
+							SELECT 
+								    START_DAY
+							      , LAST_DAY
+							      , COALESCE(SUM(CNT),0) AS INST_CNT
+							      , FRST_REG_DT
+							      , PRDCT_TYPE_CD
+							      , INST_ID
+							 FROM DGTL_INST
+						 GROUP BY WEEK_FIRST_DAY , FRST_REG_DT , PRDCT_TYPE_CD ,START_DAY,LAST_DAY,PRDCT_TYPE_CD,INST_ID
+	 )
+	 , DGTL_INST_SUM AS (
+					 		SELECT 
+						   		    START_DAY AS DGTL_INST_SEARCH_DATE
+						          , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+						          , INST_ID
+						     FROM DGTL_INST_TYPE
+						 GROUP BY PRDCT_TYPE_CD , INST_ID ,START_DAY
+	)	SELECT  
+		 		    DGTL_INST_SEARCH_DATE
+		   		  , SUM(DGTL_INST_TYPE_01_CNT) AS  DGTL_INST_TYPE_01_CNT  /* 3D데이터 에셋 */
+		          , SUM(DGTL_INST_TYPE_02_CNT) AS  DGTL_INST_TYPE_02_CNT/* 동영상 */
+		          , SUM(DGTL_INST_TYPE_03_CNT) AS  DGTL_INST_TYPE_03_CNT/* 이미지 */
+		          , SUM(DGTL_INST_TYPE_04_CNT) AS  DGTL_INST_TYPE_04_CNT/* 오디오 */
+		          , SUM(DGTL_INST_TYPE_05_CNT) AS  DGTL_INST_TYPE_05_CNT/* 텍스트 */
+		          , INST_ID
+		     FROM DGTL_INST_SUM
+		 GROUP BY INST_ID ,DGTL_INST_SEARCH_DATE
+		 ORDER BY DGTL_INST_SEARCH_DATE
+	</select>
+	<!-- 기관별 디지털 문화 자원 현황 (일별) 좌변이 날짜 8-->
+	<select id="selectStatsInstDetlDayList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+	WITH CAL_DAY AS (
+								  SELECT
+							    GENERATE_SERIES(
+											      #{fromDate}::DATE, 
+						           				    #{toDate}::DATE, 
+											      INTERVAL '1 DAY'
+							    				)::DATE AS DAY_START
+	)
+	, DGTL_INST AS (
+						SELECT 
+						       TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') AS DAY_START
+								  ,Z.CNT
+								  ,Z.FRST_REG_DT
+								  ,Z.PRDCT_TYPE_CD
+								  ,Z.INST_ID
+						FROM 
+					   		(	 
+							   SELECT 
+							   		  TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+									, B.CLRCS_ID 
+									, B.PRDCT_TYPE_CD
+									, COUNT(B.PRDCT_TYPE_CD) AS CNT
+									, A.INST_ID
+								 FROM TX_DGTL_CLRCS_MTDT_INFO A
+						   INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B 
+								   ON  A.CLRCS_ID = B.CLRCS_ID
+			 	   				WHERE TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD')  <![CDATA[>=]]>  TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+								  AND TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD')  <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+								  AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			  AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			<if test= "paramInstId != '' and paramInstId != null">
+								  AND INST_ID =#{paramInstId}
+								</if> 
+							 GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') , B.CLRCS_ID  ,B.PRDCT_TYPE_CD ,A.INST_ID 
+					    	 ) Z
+					      RIGHT OUTER JOIN CAL_DAY
+							 ON TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') = Z.FRST_REG_DT
+     )
+     ,DGTL_INST_TYPE AS (  
+							SELECT
+									 DAY_START
+							       , COALESCE(SUM(CNT),0) AS INST_CNT
+							       , PRDCT_TYPE_CD
+							       , INST_ID
+							  FROM DGTL_INST
+						  GROUP BY DAY_START, PRDCT_TYPE_CD ,INST_ID
+	)
+	, DGTL_INST_SUM AS (
+						SELECT 
+				   		    DAY_START AS DGTL_INST_SEARCH_DATE
+				   		  , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+				          , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+				          , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+				          , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+				          , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(INST_CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+				          , INST_ID
+				     FROM DGTL_INST_TYPE
+				 GROUP BY PRDCT_TYPE_CD , INST_ID ,DAY_START
+	)		SELECT  
+		 		    DGTL_INST_SEARCH_DATE
+		   		  , SUM(DGTL_INST_TYPE_01_CNT) AS  DGTL_INST_TYPE_01_CNT  /* 3D데이터 에셋 */
+		          , SUM(DGTL_INST_TYPE_02_CNT) AS  DGTL_INST_TYPE_02_CNT/* 동영상 */
+		          , SUM(DGTL_INST_TYPE_03_CNT) AS  DGTL_INST_TYPE_03_CNT/* 이미지 */
+		          , SUM(DGTL_INST_TYPE_04_CNT) AS  DGTL_INST_TYPE_04_CNT/* 오디오 */
+		          , SUM(DGTL_INST_TYPE_05_CNT) AS  DGTL_INST_TYPE_05_CNT/* 텍스트 */
+		          , INST_ID
+		     FROM DGTL_INST_SUM
+		 GROUP BY INST_ID ,DGTL_INST_SEARCH_DATE
+		 ORDER BY DGTL_INST_SEARCH_DATE
+	</select>
+	
+	
+	<!-- 디지털 문화 자원 현황 (년 단위 상세 화면) 9-->
+	<select id="selectStatsDgtlYearDtlList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+								    GENERATE_SERIES(
+												      DATE_TRUNC('YEAR', #{fromDate}::DATE),
+												      DATE_TRUNC('YEAR', #{toDate}::DATE),
+												      INTERVAL '1 YEAR'
+								    				)::DATE AS SEARCH_YEAR
+		)
+		, DGTL_CLC AS (
+							SELECT 
+				       			    CAL_MONTH.SEARCH_YEAR
+								  , Z.CNT
+								  , Z.FRST_REG_DT
+								  , Z.PRDCT_TYPE_CD
+	             			  FROM
+							  	  (	 
+									   SELECT    TO_CHAR(B.FRST_REG_DT , 'YYYY') AS FRST_REG_DT
+											   , B.CLRCS_ID 
+											   , B.PRDCT_TYPE_CD
+											   , COUNT(B.PRDCT_TYPE_CD) AS CNT
+										 FROM TX_DGTL_CLRCS_MTDT_INFO A
+								   INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B 
+										   ON B.CLRCS_ID = A.CLRCS_ID
+										<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+									       AND A.INST_ID = #{instId}
+										</if>										   
+										  WHERE TO_CHAR(B.FRST_REG_DT,'YYYY')  <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY')
+			  								AND TO_CHAR(B.FRST_REG_DT,'YYYY')  <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY')
+			  								AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			  			AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+									  GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY') , B.CLRCS_ID  ,B.PRDCT_TYPE_CD
+		    			       	   ) Z
+						 RIGHT OUTER JOIN CAL_MONTH
+									   ON TO_CHAR(CAL_MONTH.SEARCH_YEAR,'YYYY') = Z.FRST_REG_DT
+		 )
+		 , DGTL_CLC_TYPE AS (
+				 SELECT
+						 TO_CHAR(SEARCH_YEAR,'YYYY') AS SEARCH_YEAR
+				       , COALESCE(SUM(CNT),0) AS DGTL_CNT
+				       , PRDCT_TYPE_CD
+				 FROM DGTL_CLC
+				 GROUP BY SEARCH_YEAR, FRST_REG_DT ,PRDCT_TYPE_CD
+		 ) 
+		 , DGTL_CLC_SUM AS (
+						   SELECT
+						   		    SEARCH_YEAR AS DGTL_CLC_SEARCH_DATE
+						   		  , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+						     FROM DGTL_CLC_TYPE
+						 GROUP BY SEARCH_YEAR ,PRDCT_TYPE_CD
+		 ) 
+		 	SELECT 
+		 		 DGTL_CLC_SEARCH_DATE
+		   		  <if test= "paramConType == 'ALL'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+			          , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+			          , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+			          , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+			          , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		          <if test= "paramConType == '3D'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+		          </if>
+		          <if test= "paramConType == 'VD'">  
+			   		  , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+		          </if>
+		          <if test= "paramConType == 'IM'">  
+			   		  , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+		          </if>
+		          <if test= "paramConType == 'AU'">  
+			   		  , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+		          </if>
+		          <if test= "paramConType == 'TX'">  
+			   		  , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		     FROM DGTL_CLC_SUM
+		 GROUP BY DGTL_CLC_SEARCH_DATE
+		 ORDER BY DGTL_CLC_SEARCH_DATE
+	</select>
+	
+	<!-- 디지털 문화 자원 현황 (월 단위 상세 화면) 10-->
+	<select id="selectStatsDgtlMonthDtlList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+								    GENERATE_SERIES(
+												      DATE_TRUNC('MONTH', #{fromDate}::DATE),
+												      DATE_TRUNC('MONTH', #{toDate}::DATE),
+												      INTERVAL '1 MONTH'
+								    				)::DATE AS SEARCH_MONTH
+		)
+		, DGTL_CLC AS (
+							SELECT 
+				       			    CAL_MONTH.SEARCH_MONTH
+								  , Z.CNT
+								  , Z.FRST_REG_DT
+								  , Z.PRDCT_TYPE_CD
+	             			  FROM
+							  	  (	 
+									   SELECT   TO_CHAR(B.FRST_REG_DT , 'YYYY-MM') AS FRST_REG_DT
+											   , B.CLRCS_ID 
+											   , B.PRDCT_TYPE_CD
+											   , COUNT(B.PRDCT_TYPE_CD) AS CNT
+										 FROM TX_DGTL_CLRCS_MTDT_INFO A
+								   INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B 
+										   ON  A.CLRCS_ID = B.CLRCS_ID
+									   <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+									      AND A.INST_ID = #{instId}
+									   </if>   
+									    WHERE TO_CHAR(B.FRST_REG_DT,'YYYY-MM')  <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM')
+		  								  AND TO_CHAR(B.FRST_REG_DT,'YYYY-MM')  <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM')
+		  								  AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+			 	   			  			  AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y' 
+										GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY-MM') , B.CLRCS_ID  ,B.PRDCT_TYPE_CD
+		    			       	   ) Z
+						 RIGHT OUTER JOIN CAL_MONTH
+									   ON TO_CHAR(CAL_MONTH.SEARCH_MONTH,'YYYY-MM') = Z.FRST_REG_DT
+		 )
+		 , DGTL_CLC_TYPE AS (
+				 SELECT
+						 TO_CHAR(SEARCH_MONTH,'YYYY-MM') AS SEARCH_MONTH
+				       , COALESCE(SUM(CNT),0) AS DGTL_CNT
+				       , PRDCT_TYPE_CD
+				 FROM DGTL_CLC
+				 GROUP BY SEARCH_MONTH, FRST_REG_DT ,PRDCT_TYPE_CD
+		 )
+		 , DGTL_CLC_SUM AS ( 
+							   SELECT
+							   		    SEARCH_MONTH AS DGTL_CLC_SEARCH_DATE
+							   		  , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+							          , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+							     FROM DGTL_CLC_TYPE
+							 GROUP BY SEARCH_MONTH ,PRDCT_TYPE_CD
+		  )
+		  	SELECT 
+		 		 		DGTL_CLC_SEARCH_DATE
+		   		  <if test= "paramConType == 'ALL'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+			          , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+			          , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+			          , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+			          , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		          <if test= "paramConType == '3D'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+		          </if>
+		          <if test= "paramConType == 'VD'">  
+			   		  , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+		          </if>
+		          <if test= "paramConType == 'IM'">  
+			   		  , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+		          </if>
+		          <if test= "paramConType == 'AU'">  
+			   		  , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+		          </if>
+		          <if test= "paramConType == 'TX'">  
+			   		  , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		     FROM DGTL_CLC_SUM
+		 GROUP BY DGTL_CLC_SEARCH_DATE
+		 ORDER BY DGTL_CLC_SEARCH_DATE
+	</select>
+	<!-- 디지털 문화 자원 현황 (주 단위 상세 화면) 11-->
+	<select id="selectStatsDgtlWeekDtlList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_WEEK AS (
+						  SELECT
+						    	GENERATE_SERIES(
+			    					(
+			    						SELECT 
+											  CAST(#{fromDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{fromDate} AS TIMESTAMP))),
+									(
+			    						SELECT 
+											  CAST(#{toDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{toDate} AS TIMESTAMP))),
+									    INTERVAL '1 WEEK'
+  								)::DATE AS WEEK_START
+		)
+		, DGTL_CLC AS (
+						SELECT
+							   TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') AS WEEK_FIRST_DAY
+							  ,TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') AS WEEK_LAST_DAY
+							  ,CAL_WEEK.WEEK_START AS START_DAY
+							  ,(CAL_WEEK.WEEK_START + INTERVAL '6 DAYS') AS LAST_DAY
+							  ,Z.CNT
+							  ,Z.FRST_REG_DT
+							  ,Z.PRDCT_TYPE_CD
+	                      FROM
+						      (
+				                	SELECT 
+				                			  TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+											, B.CLRCS_ID 
+											, B.PRDCT_TYPE_CD
+											, COUNT(B.PRDCT_TYPE_CD) AS CNT
+									   FROM TX_DGTL_CLRCS_MTDT_INFO A
+								 INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B 
+										 ON  A.CLRCS_ID = B.CLRCS_ID
+									<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+									    AND A.INST_ID = #{instId}
+									</if>		 
+									  WHERE TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+							            AND TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+								        AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			        AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y'		 
+	                               GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') , B.CLRCS_ID  ,B.PRDCT_TYPE_CD
+						       )Z
+          		 RIGHT OUTER JOIN CAL_WEEK
+							   ON Z.FRST_REG_DT <![CDATA[>=]]> TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD')
+                              AND Z.FRST_REG_DT <![CDATA[<=]]> TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD')
+		)
+	  , DGTL_CLC_TYPE AS (
+			SELECT 
+				    START_DAY
+			      , TO_CHAR(LAST_DAY,'YYYY-MM-DD') as LAST_DAY
+			      , COALESCE(SUM(CNT),0) AS DGTL_CNT
+			      , FRST_REG_DT
+			      , PRDCT_TYPE_CD
+			 FROM DGTL_CLC 
+			 GROUP BY FRST_REG_DT , PRDCT_TYPE_CD ,START_DAY,TO_CHAR(LAST_DAY,'YYYY-MM-DD'),PRDCT_TYPE_CD
+	  ) 
+	  , DGTL_CLC_SUM AS (
+					    SELECT 
+					    		START_DAY AS DGTL_CLC_SEARCH_DATE  
+					   		  , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+					          , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+					          , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+					          , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+					          , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+					      FROM DGTL_CLC_TYPE
+					  GROUP BY START_DAY ,PRDCT_TYPE_CD
+	  )
+	  		SELECT 
+		 		 		DGTL_CLC_SEARCH_DATE
+		   		  <if test= "paramConType == 'ALL'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+			          , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+			          , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+			          , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+			          , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		          <if test= "paramConType == '3D'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+		          </if>
+		          <if test= "paramConType == 'VD'">  
+			   		  , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+		          </if>
+		          <if test= "paramConType == 'IM'">  
+			   		  , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+		          </if>
+		          <if test= "paramConType == 'AU'">  
+			   		  , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+		          </if>
+		          <if test= "paramConType == 'TX'">  
+			   		  , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		    FROM DGTL_CLC_SUM
+		GROUP BY DGTL_CLC_SEARCH_DATE
+		ORDER BY DGTL_CLC_SEARCH_DATE
+	</select>
+	<!-- 디지털 문화 자원 현황 (일 단위 상세 화면) 12-->
+	<select id="selectStatsDgtlDayDtlList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_DAY AS (
+	  						SELECT
+								    GENERATE_SERIES(
+												      #{fromDate}::DATE, 
+							           				    #{toDate}::DATE, 
+												       INTERVAL '1 DAY'
+								    				)::DATE AS DAY_START
+		)
+		, DGTL_CLC AS ( 
+						SELECT
+							   TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') AS DAY_START
+							  ,Z.CNT
+							  ,Z.PRDCT_TYPE_CD
+							  ,Z.FRST_REG_DT
+						  FROM 	  
+							  (
+								 SELECT 
+								 		 TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+									   , B.PRDCT_TYPE_CD
+									   , COUNT(B.PRDCT_TYPE_CD) AS CNT
+								    FROM TX_DGTL_CLRCS_MTDT_INFO A
+							  INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+								      ON A.CLRCS_ID = B.CLRCS_ID
+								  <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+									 AND A.INST_ID = #{instId}
+								  </if>								      
+								   WHERE TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD')  <![CDATA[>=]]>  TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+								     AND TO_CHAR(B.FRST_REG_DT,'YYYY-MM-DD')  <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+								     AND A.DEL_WTNG_YN  <![CDATA[<>]]>'Y'
+				 	   			     AND B.DEL_WTNG_YN  <![CDATA[<>]]>'Y'     
+								GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') ,B.PRDCT_TYPE_CD
+							  )Z
+						 RIGHT OUTER JOIN CAL_DAY
+						       ON TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') =  Z.FRST_REG_DT
+		  )
+		 , DGTL_CLC_TYPE AS (  
+			   SELECT  
+			   		  DAY_START
+				    , COALESCE(SUM(CNT),0) AS DGTL_CNT
+					, FRST_REG_DT
+			        , PRDCT_TYPE_CD 
+			   FROM DGTL_CLC
+			   GROUP BY DAY_START,FRST_REG_DT, PRDCT_TYPE_CD
+		 )
+		 , DGTL_CLC_SUM AS (  
+						    SELECT
+						    		DAY_START AS DGTL_CLC_SEARCH_DATE
+						   		  , CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+						          , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(DGTL_CNT) ELSE 0 END AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+						      FROM DGTL_CLC_TYPE
+						  GROUP BY DAY_START,PRDCT_TYPE_CD
+		  )
+		  		  SELECT 
+		 		 		DGTL_CLC_SEARCH_DATE
+		   		  <if test= "paramConType == 'ALL'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+			          , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+			          , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+			          , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+			          , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		          <if test= "paramConType == '3D'">  
+			   		  , SUM(DGTL_CLC_TYPE_01_CNT) AS DGTL_CLC_TYPE_01_CNT   /* 3D데이터 에셋 */
+		          </if>
+		          <if test= "paramConType == 'VD'">  
+			   		  , SUM(DGTL_CLC_TYPE_02_CNT) AS DGTL_CLC_TYPE_02_CNT   /* 동영상 */
+		          </if>
+		          <if test= "paramConType == 'IM'">  
+			   		  , SUM(DGTL_CLC_TYPE_03_CNT) AS DGTL_CLC_TYPE_03_CNT   /* 이미지 */
+		          </if>
+		          <if test= "paramConType == 'AU'">  
+			   		  , SUM(DGTL_CLC_TYPE_04_CNT) AS DGTL_CLC_TYPE_04_CNT   /* 오디오 */
+		          </if>
+		          <if test= "paramConType == 'TX'">  
+			   		  , SUM(DGTL_CLC_TYPE_05_CNT) AS DGTL_CLC_TYPE_05_CNT   /* 텍스트 */
+		          </if>
+		    FROM DGTL_CLC_SUM
+		GROUP BY DGTL_CLC_SEARCH_DATE
+		ORDER BY DGTL_CLC_SEARCH_DATE
+	</select>
+	
+	<!-- 기관별 디지털 문화 자원 현황(메인용 주별 삭제용) -->
+	<select id="selectMainStatsInstDgtlWeek" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		SELECT 		
+		       CASE WHEN PRDCT_TYPE_CD = 'D01' THEN SUM(CNT) ELSE 0 END AS DGTL_INST_TYPE_01_CNT   /* 3D데이터 에셋 */
+	         , CASE WHEN PRDCT_TYPE_CD = 'D02' THEN SUM(CNT) ELSE 0 END AS DGTL_INST_TYPE_02_CNT   /* 동영상 */
+	         , CASE WHEN PRDCT_TYPE_CD = 'D03' THEN SUM(CNT) ELSE 0 END AS DGTL_INST_TYPE_03_CNT   /* 이미지 */
+	         , CASE WHEN PRDCT_TYPE_CD = 'D04' THEN SUM(CNT) ELSE 0 END AS DGTL_INST_TYPE_04_CNT   /* 오디오 */
+	         , CASE WHEN PRDCT_TYPE_CD = 'D05' THEN SUM(CNT) ELSE 0 END AS DGTL_INST_TYPE_05_CNT   /* 텍스트 */
+		      ,Z.INST_ID
+		      , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+			 		<property name="paramColNm" value="'instNm'"/>
+			 		<property name="paramInstId" value="Z.INST_ID"/>
+				 </include>) AS INST_NM
+		 FROM 
+		 (
+				 SELECT TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+					    , B.PRDCT_TYPE_CD
+					    , COUNT(B.PRDCT_TYPE_CD) AS CNT
+					    , A.INST_ID
+					FROM TX_DGTL_CLRCS_MTDT_INFO A
+		      INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO  B
+				      ON  A.CLRCS_ID = B.CLRCS_ID
+				     AND EXTRACT(WEEK FROM B.FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{fromDate} AS DATE))
+			    GROUP BY TO_CHAR(B.FRST_REG_DT , 'YYYY-MM-DD') , B.PRDCT_TYPE_CD, A.INST_ID
+		  ) Z
+		GROUP BY Z.PRDCT_TYPE_CD,Z.INST_ID
+	</select>
+	
+	<!-- 디지털 문화 자원 현황 (써클 챠트)-->
+	<select id="selectStatsDgtlDayCircle" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 		
+		         SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D01' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_01_CNT /* 3D데이터 에셋 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D02' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_02_CNT /* 동영상 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D03' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_03_CNT /* 이미지 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D04' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_04_CNT /* 오디오 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D05' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_05_CNT  /* 텍스트 */
+		 FROM 
+		 (
+			   SELECT   TO_CHAR(A.FRST_REG_DT , 'YYYY-MM-DD') AS FRST_REG_DT
+				      , T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+				      , COUNT(1) AS CNT 
+				 FROM TX_DGTL_CLRCS_MTDT_INFO A
+				INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+				   ON T02.CLRCS_ID = A.CLRCS_ID
+				INNER JOIN DATA_TYPE_CTGRY T03
+				   ON T03.CTGRY_ID = T02.CTGRY_ID
+			    WHERE A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+			   <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+    			  AND A.INST_ID = #{instId}
+			   </if>    
+				  AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> #{fromDate}
+				  AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> #{toDate}
+		     GROUP BY TO_CHAR(A.FRST_REG_DT , 'YYYY-MM-DD') , T03.ORG_CTGRY_ID
+		  ) Z
+	</select>
+	
+	<!-- 디지털 문화 자원 현황 (써클 챠트)-->
+	<select id="selectStatsDgtlWeekCircle" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 		
+		         SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D01' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_01_CNT /* 3D데이터 에셋 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D02' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_02_CNT /* 동영상 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D03' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_03_CNT /* 이미지 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D04' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_04_CNT /* 오디오 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D05' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_05_CNT  /* 텍스트 */
+		 FROM 
+		 (
+			 	SELECT    EXTRACT(WEEK FROM A.FRST_REG_DT) AS FRST_REG_DT
+				   		, T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+				        , COUNT(1) AS CNT 
+				 FROM TX_DGTL_CLRCS_MTDT_INFO A
+				INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+				   ON T02.CLRCS_ID = A.CLRCS_ID
+				INNER JOIN DATA_TYPE_CTGRY T03
+				   ON T03.CTGRY_ID = T02.CTGRY_ID
+			    WHERE A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+			 <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+    			  AND A.INST_ID = #{instId}
+			 </if>      
+			      AND EXTRACT(WEEK FROM A.FRST_REG_DT) <![CDATA[>=]]> EXTRACT(WEEK FROM CAST(#{fromDate} AS DATE))
+			      AND EXTRACT(WEEK FROM A.FRST_REG_DT) <![CDATA[<=]]> EXTRACT(WEEK FROM CAST(#{toDate} AS DATE))
+			 GROUP BY EXTRACT(WEEK FROM A.FRST_REG_DT) , T03.ORG_CTGRY_ID 
+		  ) Z
+	</select>
+	
+	<!-- 디지털 문화 자원 현황 (써클 챠트)-->
+	<select id="selectStatsDgtlMonthCircle" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 		
+		         SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D01' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_01_CNT /* 3D데이터 에셋 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D02' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_02_CNT /* 동영상 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D03' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_03_CNT /* 이미지 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D04' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_04_CNT /* 오디오 */
+				,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D05' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_05_CNT  /* 텍스트 */
+		 FROM 
+		 (
+			   SELECT   TO_CHAR(A.FRST_REG_DT , 'YYYY-MM') AS FRST_REG_DT
+				      , T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+				      , COUNT(1) AS CNT
+				 FROM TX_DGTL_CLRCS_MTDT_INFO A
+				INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+				   ON T02.CLRCS_ID = A.CLRCS_ID
+				INNER JOIN DATA_TYPE_CTGRY T03
+				   ON T03.CTGRY_ID = T02.CTGRY_ID
+				WHERE A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+		      <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+    			  AND A.INST_ID = #{instId}
+			  </if> 
+				  AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM') <![CDATA[>=]]> TO_CHAR(TO_DATE(#{fromDate},'YYYY-MM-DD'),'YYYY-MM')
+				  AND TO_CHAR(A.FRST_REG_DT,'YYYY-MM') <![CDATA[<=]]> TO_CHAR(TO_DATE(#{toDate},'YYYY-MM-DD'),'YYYY-MM')
+		     GROUP BY TO_CHAR(A.FRST_REG_DT , 'YYYY-MM') , T03.ORG_CTGRY_ID
+		  ) Z
+	</select>
+	
+	<!-- 디지털 문화 자원 현황 (써클 챠트)-->
+	<select id="selectStatsDgtlYearCircle" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH RECURSIVE DATA_TYPE_CTGRY (ORG_CTGRY_ID, ORG_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID
+			 	  , A.CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE 1 = 1
+			   	AND A.CTGRY_TYPE_CD = 'CLRCSCT002' 
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ORG_CTGRY_ID
+			     ,  B.ORG_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 	
+			 SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D01' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_01_CNT /* 3D데이터 에셋 */
+			,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D02' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_02_CNT /* 동영상 */
+			,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D03' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_03_CNT /* 이미지 */
+			,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D04' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_04_CNT /* 오디오 */
+			,SUM(CASE WHEN Z.PRDCT_TYPE_CD = 'D05' THEN Z.CNT ELSE 0 END) AS DGTL_CIR_TYPE_05_CNT  /* 텍스트 */
+		 FROM 
+		 (
+			   SELECT   TO_CHAR(A.FRST_REG_DT , 'YYYY') AS FRST_REG_DT
+				      , T03.ORG_CTGRY_ID AS PRDCT_TYPE_CD
+				      , COUNT(1) AS CNT 
+				 FROM TX_DGTL_CLRCS_MTDT_INFO A
+				INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+				   ON T02.CLRCS_ID = A.CLRCS_ID
+				INNER JOIN DATA_TYPE_CTGRY T03
+				   ON T03.CTGRY_ID = T02.CTGRY_ID
+				WHERE A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+				  AND TO_CHAR(A.FRST_REG_DT,'YYYY') <![CDATA[>=]]> TO_CHAR(TO_DATE(#{fromDate},'YYYY-MM-DD'),'YYYY')
+				  AND TO_CHAR(A.FRST_REG_DT,'YYYY') <![CDATA[<=]]> TO_CHAR(TO_DATE(#{toDate},'YYYY-MM-DD'),'YYYY')
+			<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+			      AND A.INST_ID = #{instId}
+			</if> 			       
+		     GROUP BY TO_CHAR(A.FRST_REG_DT , 'YYYY') , T03.ORG_CTGRY_ID
+		  ) Z
+	</select>
+	
+	
+	<!-- 사용자 접속 이력 상세 (월별)-->
+	<select id="selectStatsConUserYearList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      DATE_TRUNC('YEAR', #{fromDate}::DATE),
+											      DATE_TRUNC('YEAR', #{toDate}::DATE),
+											      INTERVAL '1 YEAR'
+							    )::DATE AS SEARCH_YEAR
+		)
+		, CON_HIS AS(
+					SELECT 
+					       CAL_MONTH.SEARCH_YEAR
+						  ,Z.CNT
+						  ,Z.FRST_REG_DT
+					FROM 
+				   		 (
+				   		 	SELECT  COUNT(MBR_ID) AS CNT
+							       ,TO_CHAR(FRST_REG_DT,'YYYY') AS FRST_REG_DT
+							  FROM TX_MBR_CNTN_HSTRY
+			  				 WHERE MENU_ID = 'WWW'
+			  				   AND TO_CHAR(FRST_REG_DT,'YYYY') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY')
+			  				   AND TO_CHAR(FRST_REG_DT,'YYYY') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY')
+			  			  GROUP BY MBR_ID ,TO_CHAR(FRST_REG_DT,'YYYY')
+				    	  ) Z
+			 	  RIGHT OUTER JOIN CAL_MONTH
+			               ON Z.FRST_REG_DT = TO_CHAR(CAL_MONTH.SEARCH_YEAR,'YYYY') 
+			         ORDER BY CAL_MONTH.SEARCH_YEAR         
+	    )
+		  SELECT
+		         COALESCE(SUM(CNT),0) AS USER_CNT
+		       , TO_CHAR(SEARCH_YEAR,'YYYY') AS USER_SEARCH_DATE
+		    FROM CON_HIS
+		GROUP BY TO_CHAR(SEARCH_YEAR,'YYYY')
+		ORDER BY USER_SEARCH_DATE
+	</select>
+	<!-- 사용자 접속 이력 상세 (월별)-->
+	<select id="selectStatsUserConMonthList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_MONTH AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      DATE_TRUNC('MONTH', #{fromDate}::DATE),
+											      DATE_TRUNC('MONTH', #{toDate}::DATE),
+											      INTERVAL '1 MONTH'
+							    )::DATE AS SEARCH_MONTH
+		)
+		, CON_HIS AS(
+					SELECT 
+					       CAL_MONTH.SEARCH_MONTH
+						  ,Z.CNT
+						  ,Z.FRST_REG_DT
+					FROM 
+				   		 (
+				   		 	SELECT  COUNT(MBR_ID) AS CNT
+							       ,TO_CHAR(FRST_REG_DT,'YYYY-MM') AS FRST_REG_DT
+							  FROM TX_MBR_CNTN_HSTRY
+			  				 WHERE MENU_ID = 'WWW'
+			  				   AND TO_CHAR(FRST_REG_DT,'YYYY-MM') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM')
+			  				   AND TO_CHAR(FRST_REG_DT,'YYYY-MM') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM')
+			  			  GROUP BY MBR_ID ,TO_CHAR(FRST_REG_DT,'YYYY-MM')
+				    	  ) Z
+		 RIGHT OUTER JOIN CAL_MONTH
+		               ON  Z.FRST_REG_DT = TO_CHAR(CAL_MONTH.SEARCH_MONTH,'YYYY-MM')
+		         ORDER BY CAL_MONTH.SEARCH_MONTH         
+	    )
+		  SELECT
+				 COALESCE(SUM(CNT),0) AS USER_CNT
+		       , TO_CHAR(SEARCH_MONTH,'YYYY-MM') AS USER_SEARCH_DATE
+		    FROM CON_HIS
+		GROUP BY TO_CHAR(SEARCH_MONTH,'YYYY-MM')
+		ORDER BY USER_SEARCH_DATE
+	</select>
+	<!-- 사용자 접속 이력 상세 (주별)-->
+	<select id="selectStatsUserConWeekList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_WEEK AS (
+						  SELECT
+						    GENERATE_SERIES(
+						    					(
+						    						SELECT 
+  														   CAST(#{fromDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{fromDate} AS TIMESTAMP))),
+  											     (
+						    						SELECT 
+  														   CAST(#{toDate} AS TIMESTAMP) - INTERVAL '1 day' * EXTRACT(DOW FROM CAST(#{toDate} AS TIMESTAMP))),
+  											     INTERVAL '1 WEEK'
+  											 )::DATE AS WEEK_START
+		)
+		, CON_HIS AS (
+						SELECT
+							   TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD') AS WEEK_FIRST_DAY
+							  ,TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD') AS WEEK_LAST_DAY
+							  ,CAL_WEEK.WEEK_START AS START_DAY
+							  ,(CAL_WEEK.WEEK_START + INTERVAL '6 DAYS') AS LAST_DAY
+							  ,Z.CNT
+						   FROM 
+								(
+									SELECT  COUNT(MBR_ID) AS CNT
+									       ,TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') AS FRST_REG_DT
+									  FROM TX_MBR_CNTN_HSTRY
+					  				 WHERE MENU_ID = 'WWW'
+					  				   AND TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+					  				   AND TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+					  			  GROUP BY MBR_ID ,TO_CHAR(FRST_REG_DT,'YYYY-MM-DD')
+				  			    )Z
+			  	    RIGHT OUTER JOIN CAL_WEEK
+			  			     ON  Z.FRST_REG_DT <![CDATA[>=]]> TO_CHAR(CAL_WEEK.WEEK_START,'YYYY-MM-DD')
+					        AND  Z.FRST_REG_DT<![CDATA[<=]]> TO_CHAR((CAL_WEEK.WEEK_START + INTERVAL '6 DAYS'),'YYYY-MM-DD')
+					   ORDER BY CAL_WEEK.WEEK_START
+		)
+	    SELECT  
+	    		WEEK_FIRST_DAY AS USER_SEARCH_DATE
+			  , COALESCE(SUM(CNT),0) AS USER_CNT
+		  FROM CON_HIS
+	  GROUP BY WEEK_FIRST_DAY
+      ORDER BY USER_SEARCH_DATE
+	</select>
+	
+	<!-- 사용자 접속 이력 상세 (일별)-->
+	<select id="selectStatsUserConDayList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		WITH CAL_DAY AS (
+							  SELECT
+							    GENERATE_SERIES(
+											      #{fromDate}::DATE, 
+						           				    #{toDate}::DATE, 
+											      INTERVAL '1 DAY'
+							    				)::DATE AS DAY_START
+		)
+		, MEM AS (
+					SELECT
+						   TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD') AS DAY_START
+						  ,Z.CNT
+						  ,Z.FRST_REG_DT
+					FROM 
+						(
+							  SELECT  
+							  		  COUNT(MBR_ID) AS CNT
+								     ,TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') AS FRST_REG_DT
+								FROM TX_MBR_CNTN_HSTRY
+						  	   WHERE MENU_ID = 'WWW'
+						  		 AND TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') <![CDATA[>=]]> TO_CHAR(CAST(#{fromDate} AS DATE),'YYYY-MM-DD')
+						  		 AND TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') <![CDATA[<=]]> TO_CHAR(CAST(#{toDate} AS DATE),'YYYY-MM-DD')
+						  	GROUP BY MBR_ID ,TO_CHAR(FRST_REG_DT,'YYYY-MM-DD')
+						 ) Z
+         	  RIGHT OUTER JOIN CAL_DAY
+         			   ON  Z.FRST_REG_DT = TO_CHAR(CAL_DAY.DAY_START,'YYYY-MM-DD')
+			     ORDER BY CAL_DAY.DAY_START
+		 )
+		SELECT 
+			    DAY_START AS USER_SEARCH_DATE
+		      , COALESCE(SUM(CNT),0) AS USER_CNT
+		  FROM MEM 
+	  GROUP BY DAY_START
+	  ORDER BY USER_SEARCH_DATE
+	</select>
+	<select id="selectInstList" parameterType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO"  resultType="kr.go.culture.xr.admin.statsMgt.vo.StatsVO">
+		SELECT  
+        		INST_ID
+		      , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+							 		<property name="paramColNm" value="'instNm'"/>
+							 		<property name="paramInstId" value="A.INST_ID"/>
+					   </include>) AS INST_NM
+  		FROM TX_DGTL_CLRCS_MTDT_INFO A
+  	GROUP BY INST_ID
+  	ORDER BY INST_ID
+	</select>
+</mapper>

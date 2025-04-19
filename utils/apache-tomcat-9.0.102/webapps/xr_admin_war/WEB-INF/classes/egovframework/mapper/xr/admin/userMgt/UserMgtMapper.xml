@@ -1,0 +1,708 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper">
+	<!-- 사용자 목록 조회 -->
+	<select id="selectUserList" resultType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectUserList */
+			   XTUI.USER_LIST_NO
+			 , XTUI.USER_ID
+			 , XTUI.AUTHRT_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getAuthrtInfo">
+					<property name="paramAuthrtId" value="XTUI.AUTHRT_ID"/>
+				</include>) AS AUTHRT_NM
+			 , XTUI.INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instNm'"/>
+					<property name="paramInstId" value="XTUI.INST_ID"/>
+				</include>) AS INST_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instCd'"/>
+					<property name="paramInstId" value="XTUI.INST_ID"/>
+				</include>) AS INST_CD
+			 , XTUI.USER_NM AS USER_NM
+			 , XTUI.USER_NCM_NM AS USER_NCM
+			 , XTUI.USER_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000006'"/>
+					<property name="paramCdId" value="XTUI.USER_TYPE_CD"/>
+				</include>) AS  USER_TYPE_CD_NM 
+			 , XTUI.USER_STTS_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000007'"/>
+					<property name="paramCdId" value="XTUI.USER_STTS_CD"/>
+				</include>) AS USER_STTS_CD_NM 
+			 , XTUI.TELNO
+			 , XTUI.MB_NO
+			 , XTUI.EML_ADDR
+			 , XTUI.APRV_YN
+			 , (CASE WHEN XTUI.APRV_YN = 'Y'
+						  THEN '승인'
+					 ELSE '승인대기'
+				END) AS APRV_YN_NM
+			 , XTUI.AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUI.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUI.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XTUI.APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUI.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XTUI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTUI.FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTUI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTUI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT 
+					   ROW_NUMBER()OVER(ORDER BY TUI.FRST_REG_DT ASC) AS USER_LIST_NO	
+					 , TUI.USER_ID
+					 , TUI.AUTHRT_ID
+					 , TUI.INST_ID
+					 , TUI.USER_NM
+					 , TUI.USER_NCM_NM
+					 , TUI.USER_TYPE_CD  
+					 , TUI.USER_STTS_CD
+					 , TUI.TELNO
+					 , TUI.MB_NO
+					 , TUI.EML_ADDR
+					 , TUI.APRV_YN
+					 , TUI.AUTZR_ID
+					 , TUI.APRV_DT
+					 , TUI.DEL_YN
+					 , TUI.FRST_RGTR_ID
+					 , TUI.FRST_REG_DT
+					 , TUI.LAST_MDFR_ID
+					 , TUI.LAST_MDFCN_DT
+				  FROM TX_USER_INFO TUI
+				 WHERE TUI.DEL_YN = 'N'
+				   AND TUI.USER_TYPE_CD = #{paramSrchUserTypeCd}
+			<if test="paramSrchUserInfoString != '' and paramSrchUserInfoString != null and paramSrchUserInfoDiv != '' and paramSrchUserInfoDiv != null">
+				<choose>
+					<when test="paramSrchUserInfoDiv == 'ID' ">
+				   AND TUI.USER_ID LIKE CONCAT('%', #{paramSrchUserInfoString}, '%')
+					</when>
+					<when test="paramSrchUserInfoDiv == 'NM' ">
+				   AND TUI.USER_NM LIKE CONCAT('%', #{paramSrchUserInfoString}, '%')
+					</when>
+					<when test="paramSrchUserInfoDiv == 'NCM' ">
+				   AND TUI.USER_NCM_NM LIKE CONCAT('%', #{paramSrchUserInfoString}, '%')
+					</when>
+					<otherwise>
+				   AND 1 = 2
+					</otherwise>
+				</choose>
+			</if>
+			<if test="paramSrchInstInfoString != '' and paramSrchInstInfoString != null and paramSrchInstInfoDiv != '' and paramSrchInstInfoDiv != null">
+				   AND TUI.INST_ID IN (SELECT TII.INST_ID 
+										 FROM TX_INST_INFO TII
+										WHERE TII.DEL_YN = 'N'
+				<choose>
+					<when test="paramSrchInstInfoDiv == 'ID' ">
+										  AND TII.INST_ID LIKE CONCAT('%', #{paramSrchInstInfoString}, '%')
+					</when>
+					<when test="paramSrchInstInfoDiv == 'NM' ">
+										  AND TII.INST_NM LIKE CONCAT('%', #{paramSrchInstInfoString}, '%')
+					</when>
+					<when test="paramSrchInstInfoDiv == 'CD' ">
+										  AND TII.INST_CD LIKE CONCAT('%', #{paramSrchInstInfoString}, '%')
+					</when>
+					<otherwise>
+										  AND 1 = 2 
+					</otherwise>
+				</choose>
+									  )
+			</if>
+			<if test="paramSrchUserAuthrtId != '' and paramSrchUserAuthrtId != null">
+				   AND TUI.AUTHRT_ID = #{paramSrchUserAuthrtId}
+			</if>
+			<if test="paramSrchUserSttCd != '' and paramSrchUserSttCd != null">
+				   AND TUI.USER_STTS_CD = #{srchUserSttsCd} 
+			</if>
+			   ) XTUI
+		 ORDER BY XTUI.USER_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}
+	</select>
+	
+	
+	<select id="selectUserTotListCnt" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectUserTotListCnt */
+			   COUNT(USER_ID) AS TOT_LIST_CNT
+		  FROM TX_USER_INFO TUI
+		 WHERE TUI.DEL_YN = 'N'
+		   AND TUI.USER_TYPE_CD = #{paramSrchUserTypeCd}
+			<if test="paramSrchUserInfoString != '' and paramSrchUserInfoString != null and paramSrchUserInfoDiv != '' and paramSrchUserInfoDiv != null">
+				<choose>
+					<when test="paramSrchUserInfoDiv == 'ID' ">
+		   AND TUI.USER_ID LIKE CONCAT('%', #{paramSrchUserInfoString}, '%')
+					</when>
+					<when test="paramSrchUserInfoDiv == 'NM' ">
+		   AND TUI.USER_NM LIKE CONCAT('%', #{paramSrchUserInfoString}, '%')
+					</when>
+					<when test="paramSrchUserInfoDiv == 'NCM' ">
+		   AND TUI.USER_NCM_NM LIKE CONCAT('%', #{paramSrchUserInfoString}, '%')
+					</when>
+					<otherwise>
+		   AND 1 = 2
+					</otherwise>
+				</choose>
+			</if>
+			<if test="paramSrchInstInfoString != '' and paramSrchInstInfoString != null and paramSrchInstInfoDiv != '' and paramSrchInstInfoDiv != null">
+		   AND TUI.INST_ID IN (SELECT TII.INST_ID 
+								 FROM TX_INST_INFO TII
+								WHERE TII.DEL_YN = 'N'
+				<choose>
+					<when test="paramSrchInstInfoDiv == 'ID' ">
+										  AND TII.INST_ID LIKE CONCAT('%', #{paramSrchInstInfoString}, '%')
+					</when>
+					<when test="paramSrchInstInfoDiv == 'NM' ">
+								  AND TII.INST_NM LIKE CONCAT('%', #{paramSrchInstInfoString}, '%')
+					</when>
+					<when test="paramSrchInstInfoDiv == 'CD' ">
+								  AND TII.INST_CD LIKE CONCAT('%', #{paramSrchInstInfoString}, '%')
+					</when>
+					<otherwise>
+								  AND 1 = 2 
+					</otherwise>
+				</choose>
+							  )
+			</if>
+			<if test="paramSrchUserAuthrtId != '' and paramSrchUserAuthrtId != null">
+		   AND TUI.AUTHRT_ID = #{paramSrchUserAuthrtId}
+			</if>
+			<if test="paramSrchUserSttCd != '' and paramSrchUserSttCd != null">
+		   AND TUI.USER_STTS_CD = #{srchUserSttsCd} 
+			</if>
+	</select>
+
+
+	<!-- 사용자 정보 조회  -->
+	<select id="selectUserInfo" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectUserInfo */
+			   TUI.USER_ID
+			 , TUI.AUTHRT_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getAuthrtInfo">
+					<property name="paramAuthrtId" value="TUI.AUTHRT_ID"/>
+				</include>) AS AUTHRT_NM
+			 , TUI.INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instNm'"/>
+					<property name="paramInstId" value="TUI.INST_ID"/>
+				</include>) AS INST_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instCd'"/>
+					<property name="paramInstId" value="TUI.INST_ID"/>
+				</include>) AS INST_CD
+			 , TUI.USER_NM
+			 , TUI.USER_NCM_NM AS USER_NCM
+			 , TUI.USER_TYPE_CD  /*사용자 유형 코드- 기관 사용자- 슈퍼 관리자*/
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000006'"/>
+					<property name="paramCdId" value="TUI.USER_TYPE_CD"/>
+				</include>) AS  USER_TYPE_CD_NM 
+			 , TUI.USER_STTS_CD  /*사용자 상태 코드*/
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000007'"/>
+					<property name="paramCdId" value="TUI.USER_STTS_CD"/>
+				</include>) AS USER_STTS_CD_NM 
+			 , TUI.TELNO
+			 , TUI.MB_NO
+			 , TUI.EML_ADDR
+			 , TUI.APRV_YN
+			 , (CASE WHEN TUI.APRV_YN = 'Y'
+						  THEN '승인'
+					 ELSE '미승인'
+				 END) AS APRV_YN_NM
+			 , TUI.AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TUI.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TUI.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , TUI.APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TUI.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , TUI.DEL_YN
+			 , TUI.FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TUI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TUI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TUI.FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TUI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TUI.LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TUI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TUI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , TUI.LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TUI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_USER_INFO TUI
+		 WHERE TUI.DEL_YN = 'N'
+		   AND TUI.USER_TYPE_CD = #{paramSrchUserTypeCd}
+		   AND TUI.USER_ID = #{paramUserId}
+	</select>
+
+
+	<select id="checkDuplicateUserId" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO">
+		SELECT
+			   (CASE WHEN COUNT(TUI.USER_ID) > 0
+					 THEN 'Y'
+				ELSE 'N'
+				END) AS CHK_DUPL_USER_ID_YN
+		  FROM TX_USER_INFO TUI
+		 WHERE TUI.USER_ID = #{paramUserId}
+	</select>
+
+
+	<!-- 사용자 등록(기관) -->
+	<insert id="insertUserInfo" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO">
+		INSERT INTO TX_USER_INFO /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.insertUserInfo */
+			   (
+			   USER_ID
+			 , AUTHRT_ID
+			 , INST_ID
+			 , USER_NM
+			 , USER_NCM_NM
+			 , USER_TYPE_CD
+			 , USER_STTS_CD
+			 , TELNO
+			 , MB_NO
+			 , EML_ADDR
+			 , APRV_YN
+		<if test='aprvYn != "" and aprvYn != "" and aprvYn == "Y"'>
+			 , AUTZR_ID
+			 , APRV_DT
+		</if>
+			 , DEL_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{userId}
+			 , #{authrtId}
+			 , #{instId}
+			 , #{userNm}
+			 , #{userNcm}
+			 , #{userTypeCd}
+			 , #{userSttsCd}
+			 , #{telno}
+			 , #{mbNo}
+			 , #{emlAddr}
+			 , #{aprvYn}
+		<if test='aprvYn != "" and aprvYn != "" and aprvYn == "Y"'>
+			 , #{autzrId}
+			 , NOW()
+		</if>
+			 , 'N' 
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+
+	<!-- 사용자 정보 수정 -->
+	<update id="updateUserInfo" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO">
+		UPDATE TX_USER_INFO /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.updateUserInfo */
+		   SET USER_NM = #{userNm}
+			 , AUTHRT_ID = #{authrtId}
+			 , USER_NCM_NM = #{userNcm}
+			 , USER_TYPE_CD = #{userTypeCd}
+			 , USER_STTS_CD = #{userSttsCd}
+			 , TELNO = #{telno}
+			 , MB_NO = #{mbNo}
+			 , EML_ADDR = #{emlAddr}
+			 , APRV_YN = #{aprvYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE USER_ID = #{userId}
+		   AND DEL_YN = 'N'
+	</update> 
+
+
+	<!-- 사용자 승인 이력 조회 -->
+	<select id="selectUserAprvHstryList" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="kr.go.culture.xr.admin.userMgt.vo.UserAprvHstryVO">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectUserAprvHstryList */
+			   XTUAH.APRV_LIST_NO AS APRV_LIST_NO
+			 , XTUAH.USER_ID AS USER_ID
+			 , XTUAH.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instNm'"/>
+					<property name="paramInstId" value="XTUAH.INST_ID"/>
+				</include>) AS INST_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instCd'"/>
+					<property name="paramInstId" value="XTUAH.INST_ID"/>
+				</include>) AS INST_CD
+			 ,  XTUAH.HSTRY_SN
+			 ,  XTUAH.APRV_YN
+			 , (CASE WHEN XTUAH.APRV_YN = 'Y'
+			 			  THEN '승인'
+					 WHEN XTUAH.APRV_YN = 'N'
+						  THEN '미승인'
+					 ELSE ''
+				 END) AS APRV_YN_NM
+			 , XTUAH.RJCT_CN
+			 , XTUAH.AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUAH.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUAH.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XTUAH.APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+						 	<property name="paramDateFormat" value="'CHAR19'"/>
+						 	<property name="paramDate" value="XTUAH.APRV_DT"/>
+						   </include>) AS APRV_DT_V19
+			 , XTUAH.RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUAH.RGTR_ID"/>
+				</include>) AS RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUAH.RGTR_ID"/>
+				</include>) AS RGTR_NCM
+			 , XTUAH.REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUAH.REG_DT"/>
+				</include>) AS REG_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TUAH.HSTRY_SN ASC) AS APRV_LIST_NO
+					 , TUAH.USER_ID
+					 , TUAH.INST_ID
+					 , TUAH.HSTRY_SN
+					 , TUAH.APRV_YN
+					 , TUAH.RJCT_CN
+					 , TUAH.AUTZR_ID
+					 , TUAH.APRV_DT
+					 , TUAH.RGTR_ID
+					 , TUAH.REG_DT
+				  FROM TX_USER_APRV_HSTRY TUAH
+				 WHERE TUAH.USER_ID = #{paramUserId}
+			   ) XTUAH
+		ORDER BY XTUAH.APRV_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramTabAprvHstryListPageNo} - 1) * #{paramRecordCnt}
+	</select>
+
+
+	<select id="selectUserAprvHstryTotListCnt" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectUserAprvHstryTotListCnt */ 
+			   COUNT(HSTRY_SN) AS USER_APRV_HSTRY_TOT_CNT
+		  FROM TX_USER_APRV_HSTRY TUAH
+		 WHERE TUAH.USER_ID = #{paramUserId}
+	</select>
+
+
+	<!-- 승인 내역 등록 -->
+	<insert id="insertUserAprvHstryInfo" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserAprvHstryVO">
+		<selectKey keyColumn="HSTRY_SN" keyProperty="hstrySn" resultType="Integer" order="BEFORE">
+			SELECT COALESCE(MAX(CAST(HSTRY_SN AS INTEGER)),0) + 1 
+			  FROM TX_USER_APRV_HSTRY TUAH 
+			 WHERE TUAH.USER_ID = #{userId}
+		</selectKey>
+		INSERT INTO TX_USER_APRV_HSTRY /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.insertUserAprvHstryInfo */
+			   (
+			   USER_ID
+			 , INST_ID
+			 , HSTRY_SN
+			 , APRV_YN
+			 , RJCT_CN
+			 , AUTZR_ID
+			 , APRV_DT
+			 , RGTR_ID
+			 , REG_DT
+			   )
+		VALUES (
+			   #{userId}
+			 , #{instId}
+			 , #{hstrySn}
+			 , #{aprvYn} 
+			 , #{rjctCn}
+			 , #{autzrId}
+			 , NOW()
+			 , #{rgtrId}
+			 , NOW()
+			   )
+	</insert>
+
+
+	<!-- 사용자 승인 정보 업데이트  -->
+	<update id="updateUserAprvInfo" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO">
+		UPDATE TX_USER_INFO /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.updateUserAprvInfo */
+		   SET APRV_YN = #{aprvYn}
+			 , AUTHRT_ID = #{authrtId}
+			 , AUTZR_ID = #{autzrId}
+			 , USER_STTS_CD = #{userSttsCd}
+			 , APRV_DT = NOW() 
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE DEL_YN = 'N'
+		   AND USER_ID = #{paramUserId}
+	</update>
+
+
+	<!-- 사용자 접속 이력 조회 -->
+	<select id="selectUserCntnHstryList" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="kr.go.culture.xr.admin.userMgt.vo.UserCntnHstryVO">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectUserCntnHstryList */
+			   XTUCH.CNTN_LIST_NO AS CNTN_LIST_NO
+			 , XTUCH.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instNm'"/>
+					<property name="paramInstId" value="XTUCH.INST_ID"/>
+				</include>) AS INST_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instCd'"/>
+					<property name="paramInstId" value="XTUCH.INST_ID"/>
+				</include>) AS INST_CD
+			 , XTUCH.CNTN_DT AS CNTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR14'"/>
+					<property name="paramDate" value="XTUCH.CNTN_DT"/>
+				</include>) AS CNTN_DT_V14
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUCH.CNTN_DT"/>
+				</include>) AS CNTN_DT_V19
+		  FROM (
+				SELECT 
+					   ROW_NUMBER()OVER(ORDER BY CNTN_DT ASC) AS CNTN_LIST_NO
+					 , INST_ID
+					 , CNTN_DT
+				  FROM TX_USER_CNTN_HSTRY TUCH
+				 WHERE TUCH.USER_ID = #{paramUserId}
+			   ) XTUCH
+		ORDER BY XTUCH.CNTN_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramTabCntnHstryListPageNo} - 1) * #{paramRecordCnt}
+	</select>
+	
+	
+	<!-- 사용자 접속 이력 총 수 -->
+	<select id="selectUserCntnHstryTotListCnt" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="java.lang.Integer">
+		SELECT 
+			   COUNT(TUCH.USER_ID) AS USER_CNTN_HSTRY_TOT_CNT
+		  FROM TX_USER_CNTN_HSTRY TUCH
+		 WHERE TUCH.USER_ID = #{paramUserId}
+	</select>
+
+
+	<!-- 접속 이력 등록 -->
+	<insert id="insertCntnHrstInfo" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserCntnHstryVO">
+		INSERT INTO TX_USER_CNTN_HSTRY /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.insertCntnHrstInfo */
+			   (
+			   USER_ID
+			 , INST_ID
+			 , CNTN_DT
+			   )
+		SELECT
+			   TUI.USER_ID
+			 , COALESCE(TUI.INST_ID, '')
+			 , NOW()
+		  FROM TX_USER_INFO TUI
+		 WHERE TUI.USER_ID = #{userId}
+		   AND TUI.DEL_YN = 'N'
+		   AND TUI.APRV_YN = 'Y'
+	</insert>
+
+
+	<!-- 로그인 사용자 아이디/비밀번호 찾기 -->
+	<select id="selectLostUserID" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserCntnHstryVO" resultType="kr.go.culture.xr.admin.userMgt.vo.UserCntnHstryVO">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectLostUserID */
+			   TUI.USER_ID AS USER_ID
+		  FROM TX_USER_INFO TUI
+		 WHERE TUI.DEL_YN = 'N'
+		   AND TUI.EML_ADDR = #{paramEmlAddr}
+		<if test="paramUserId != null and paramUserId != null ">
+		   AND TUI.USER_ID = #{paramUserId}
+		</if>
+	</select>
+
+
+	<!-- 사용자 비밀번호 변경 -->
+	<update id="updateUserPwdChange" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserCntnHstryVO">
+		UPDATE TX_USER_INFO
+		   SET LAST_MDFR_ID = #{paramUserId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE DEL_YN = 'N'
+		   AND USER_ID = #{paramUserId}
+		   AND EML_ADDR = #{paramEmlAddr}
+	</update>
+	
+	
+	<!--  -->
+	<select id="selectInstUserList" parameterType="kr.go.culture.xr.admin.instMgt.vo.InstInfoVO" resultType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectInstUserList */
+			   XTUI.USER_LIST_NO
+			 , XTUI.USER_ID
+			 , XTUI.AUTHRT_ID
+			 , XTUI.INST_ID
+			 , XTUI.USER_NM
+			 , XTUI.USER_NCM_NM AS USER_NCM
+			 , XTUI.USER_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000006'"/>
+					<property name="paramCdId" value="XTUI.USER_TYPE_CD"/>
+				</include>) AS  USER_TYPE_CD_NM 
+			 , XTUI.USER_STTS_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000007'"/>
+					<property name="paramCdId" value="XTUI.USER_STTS_CD"/>
+				</include>) AS USER_STTS_CD_NM 
+			 , XTUI.TELNO
+			 , XTUI.MB_NO
+			 , XTUI.EML_ADDR
+			 , XTUI.APRV_YN
+			 , (CASE WHEN XTUI.APRV_YN = 'Y'
+						  THEN '승인'
+					 ELSE '승인대기'
+				END) AS APRV_YN_NM
+			 , XTUI.AUTZR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUI.AUTZR_ID"/>
+				</include>) AS AUTZR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUI.AUTZR_ID"/>
+				</include>) AS AUTZR_NCM
+			 , XTUI.APRV_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUI.APRV_DT"/>
+				</include>) AS APRV_DT_V19
+			 , XTUI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTUI.FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTUI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTUI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTUI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTUI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTUI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT 
+					   ROW_NUMBER()OVER(ORDER BY TUI.FRST_REG_DT ASC) AS USER_LIST_NO	
+					 , TUI.USER_ID
+					 , TUI.AUTHRT_ID
+					 , TUI.INST_ID
+					 , TUI.USER_NM
+					 , TUI.USER_NCM_NM
+					 , TUI.USER_TYPE_CD  
+					 , TUI.USER_STTS_CD
+					 , TUI.TELNO
+					 , TUI.MB_NO
+					 , TUI.EML_ADDR
+					 , TUI.APRV_YN
+					 , TUI.AUTZR_ID
+					 , TUI.APRV_DT
+					 , TUI.DEL_YN
+					 , TUI.FRST_RGTR_ID
+					 , TUI.FRST_REG_DT
+					 , TUI.LAST_MDFR_ID
+					 , TUI.LAST_MDFCN_DT
+				  FROM TX_USER_INFO TUI
+				 WHERE TUI.DEL_YN = 'N'
+				   AND TUI.INST_ID = #{paramInstId}
+			   ) XTUI
+		 ORDER BY XTUI.USER_LIST_NO DESC
+		 LIMIT #{paramTabUserRecordCnt}
+		OFFSET (#{paramTabUserListPageNo} - 1) * #{paramTabUserRecordCnt}
+	</select>
+	
+	
+	<!--  -->
+	<select id="selectInstUserTotListCnt" parameterType="kr.go.culture.xr.admin.instMgt.vo.InstInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectInstUserTotListCnt */
+			   COUNT(USER_ID) AS TOT_LIST_CNT
+		  FROM TX_USER_INFO TUI
+		 WHERE TUI.DEL_YN = 'N'
+		   AND TUI.INST_ID = #{paramInstId}
+	</select>
+	
+	<select id="selectUserTypeInfo" parameterType="kr.go.culture.xr.admin.userMgt.vo.UserInfoVO" resultType="java.lang.String">
+		SELECT /* kr.go.culture.xr.admin.userMgt.mapper.UserMgtMapper.selectUserTypeInfo */
+			   TUI.USER_TYPE_CD
+		  FROM TX_USER_INFO TUI
+		 WHERE TUI.DEL_YN = 'N'
+		   AND TUI.USER_ID = #{userId}
+	</select>
+	
+</mapper>

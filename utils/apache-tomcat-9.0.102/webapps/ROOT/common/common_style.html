@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+
+<!-- Meta Tag -->
+<link rel="shortcut icon" href="https://www.bigdata-culture.kr/bigdata/images/marketc.ico">
+<meta property="keywords" content="">
+<meta property="title" content="">
+<meta property="description" content="">
+
+<!-- Sns -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="">
+<meta property="og:description" content="">
+<meta property="og:site_name" content="문화 빅데이터 플랫폼">
+<meta property="og:url" content="http://www.bigdata-culture.kr/bigdata/user/main.do?">
+<meta property="og:image" content="https://www.bigdata-culture.kr/bigdata/images/opengraph.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:alt" content="문화 빅데이터 플랫폼">
+
+<title>문화 빅데이터 플랫폼</title>
+<link type="text/css" rel="stylesheet" href="../common/css/swiper.min.css" />
+<link type="text/css" rel="stylesheet" href="../common/css/jquery-ui.css">
+<link rel="stylesheet" href="/bigdata/css/common.css" type="text/css">
+<!-- css original -->
+<link rel="stylesheet" href="https://www.bigdata-culture.kr/bigdata/css/common.css" type="text/css">
+<link rel="stylesheet" href="https://www.bigdata-culture.kr/bigdata/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://www.bigdata-culture.kr/bigdata/css/responsive.css" type="text/css">
+<link rel="stylesheet" href="https://www.bigdata-culture.kr/bigdata/css/trand.css" type="text/css">
+<link type="text/css" rel="stylesheet" href="../common/css/common.css" />
+<link type="text/css" rel="stylesheet" href="../common/css/default.css" />
+
+<script type="text/javascript" src="../common/js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="../common/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="../common/js/swiper.min.js"></script>
+<script type="text/javascript" src="../common/js/design.js"></script>
+<style type="text/css">
+  .sub {padding:20px 30px;}
+  .sub .w {margin-bottom:40px;}
+  .sub .btn {margin-bottom:5px;}
+  .sub div.btm_area { margin:0; text-align:left; }
+  .sub .h3_w .h_inR {position:relative; top:0; margin:0;}
+  .sub .st_tb {border:none;}
+
+</style>
+</head>
+  
+
+<body class="sub"> 
+  
+  <div class="cnt">
+    <h3><span>버튼 스타일</span></h3>
+    <div class="w">
+      <h4>기본버튼</h4>
+      <a href="#" class="btn btn_cancel"><span>취소</span></a>
+      <a href="#" class="btn btn_ok"><span>확인</span></a>       
+    </div>
+
+    <div class="w">
+      <h4>테이블 내에 사용</h4>
+      <div class="tb">
+        <span class="b_w">                     					
+          <label for="emailChk" class="hidden">중복확인 버튼</label>
+          <input type="button" id="emailChk" class="btn btn_side btn_check" value="중복확인" onclick="chkEmail();" title="중복확인">  
+        </span>
+        <span class="b_w">
+          <label for="agencyChk" class="hidden">기관검색 버튼</label>
+          <input type="button" id="agencyChk" value="기관검색" class="btn btn_side btn_check" onclick="chkOrgan_layerOpen();">					
+        </span>
+        <span class="b_w">
+          <label for="" class="hidden">추가</label>
+          <input type="button" id="" value="추가" class="btn btn_side btn_check" onclick="chkOrgan_layerOpen();">					
+        </span>
+        <span class="b_w sch_file_box">
+          <input type="file" class="btn" name="represent_img" onchange="javascript:document.getElementById('represent_img_route').value=this.value">		
+          <a href="#" type="button" class="btn btn_side"><span>찾아보기</span></a>
+        </span>
+      </div>
+      <div class="st_tb">
+        <a href="#" class="btn btn_icon btn_direct"><span>바로가기</span></a>
+        <a href="#" class="btn btn_icon st01 btn_view"><span>상세보기</span></a>
+      </div>      
+      
+    </div>
+
+    <div class="w h3_w">
+      <h4>아이콘이 사용되는 버튼</h4>
+      <a href="#" class="btn btn_icon btn_direct"><span>바로가기</span></a>
+    </div>
+
+
+    <div class="w h3_w">
+      <h4>컨텐츠 사이드에 사용되는 버튼</h4>
+      <div class="h_inR">
+        <a href="#" class="btn btn_icon btn_down"><span>다운로드</span></a>        
+        <a href="#" class="btn btn_icon btn_cart"><span>장바구니</span></a>
+        <a href="#" class="btn btn_icon btn_preview"><span>미리보기</span></a>
+        <a href="#" class="btn btn_icon btn_direct"><span>바로가기</span></a>        
+        <a href="#" class="btn btn_icon btn_view"><span>상세보기</span></a>        
+        <a href="#" class="btn btn_w "><span>전체선택</span></a>
+      </div> 
+    </div>  
+    
+
+    <div class="w">
+      <h4>하단에 사용되는 버튼</h4>
+      <div class="btm_area " >
+        <label for="joinBtn" class="hidden">회원가입버튼</label>
+        <input type="submit" value="회원가입하기" id="joinBtn" class="btn btn_join">		
+        <button type="button" id="" class="btn btn_pay">
+          <span>결제하기</span>			 
+        </button>			         
+        <a href="#" class="btn btn_request"><span>문의하기</span></a>
+        <a href="#" class="btn btn_apply"><span>등록</span></a><br>
+        <a href="#" class="btn btn_apply"><span>신청하기</span></a>
+        <a href="#" class="btn btn_apply"><span>제출하기</span></a>		<br>
+        <a href="#" class="btn btn_list"><span>목록</span></a>
+        <a href="#" class="btn btn_apply02"><span>신청하기</span></a>
+        <a href="#" class="btn btn_write"><span>글쓰기</span></a>
+      </div>
+    </div>
+
+    <div class="w">
+      <h4>스타일 버튼</h4>
+      <a href="#" class="btn btn_icon btn_go st01"><span><i>접수확인</i></span></a><br>      
+    </div>
+
+
+    
+    
+
+  </div>
+  
+</body>
+</html>

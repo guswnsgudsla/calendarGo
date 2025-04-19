@@ -1,0 +1,26 @@
+package com.proj.calendar.vo;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class CalendarGoVO {
+	private String vCalId;	//일정ID
+	private String vStrDt;	//시작날짜
+	private String vEndDt;	//종료날짜
+	private String vCont;	//일정내용
+	
+	private String yearData;	//년도선택
+	private String yearYn;		//년도있는지Yn
+	
+	private String calId;
+	private String calStrDate;
+	private String calEndDate;
+	private String calCont;
+	private String calRegDate;
+	private String calDelYn;
+	private String calModDate;
+	private String calAnvYn;
+	private String calAnvYear;
+}

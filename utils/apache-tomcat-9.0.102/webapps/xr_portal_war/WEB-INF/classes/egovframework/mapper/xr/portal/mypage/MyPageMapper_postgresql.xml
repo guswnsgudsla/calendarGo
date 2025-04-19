@@ -1,0 +1,732 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.portal.mypage.mapper.MyPageMapper">
+
+	<select id="selectMyUsePrssStat" parameterType="kr.go.culture.xr.egovframework.com.cmm.LoginVO" resultType="kr.go.culture.xr.portal.mypage.vo.UsePrssStatVo">
+		SELECT /* 내 사용현황 통계 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMyUsePrssStat */
+			   (SELECT COUNT(1)
+			      FROM TX_MBR_DWNLD_HSTRY
+			     WHERE MBR_ID = #{id}
+			       AND DEL_YN = 'N'
+			   ) AS DWNLD_CNT			/* 다운로드 수 */
+			 , (SELECT COUNT(1)
+			      FROM TX_MBR_CLRCS_EXCN_HSTRY
+			     WHERE MBR_ID = #{id}
+			       AND RCS_EXCN_CD = '02'
+			       AND DEL_YN = 'N'
+			   ) AS SCRP_CNT			/* 스크랩 수 */
+			 , (SELECT COUNT(DISTINCT CLRCS_ID)
+			      FROM TX_MBR_CLRCS_EXCN_HSTRY
+			     WHERE MBR_ID = #{id}
+			       AND RCS_EXCN_CD = '01'
+			       AND DEL_YN = 'N'
+			   ) AS SRCH_CNT			/* 검색 수 */
+			 , (SELECT COUNT(1)
+			      FROM TX_PR_INFO
+			     WHERE FRST_RGTR_ID = #{id}
+			   ) AS CNJT_CASE_CNT		/* 활용사례 수 */
+	</select>
+
+	<sql id="sqlMyDwnldRsc">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 INNER JOIN (
+		 		SELECT CLRCS_ID
+		 		     , MAX(FRST_REG_DT) AS REG_DT
+		 		  FROM TX_MBR_DWNLD_HSTRY
+		 		 WHERE MBR_ID = #{mbrId}
+			       AND DEL_YN = 'N'
+		 		 GROUP BY CLRCS_ID
+		       ) T03
+		    ON T03.CLRCS_ID = T01.CLRCS_ID
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y'
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+			 	   AND T12.ROOT_CTGRY_ID = #{srchDataTypeCtgryId}
+		       )
+		 </if>
+		  <if test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 </if>
+		 ORDER BY T03.REG_DT DESC
+	</sql>
+
+	<select id="selectMyDwnldRscCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer">
+		/* 내 다운로드 자원 카운트 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMyDwnldRscCnt */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlMyDwnldRsc" />
+			   ) A
+	</select>
+
+	<select id="selectMyDwnldRscList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 내 다운로드 자원 목록 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMyDwnldRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+			<include refid="sqlMyDwnldRsc" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+		 <if test='pagingYn != null and pagingYn.equals("N")'>
+		OFFSET 0 ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</select>
+
+	<sql id="sqlMyScrpRsc">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 INNER JOIN (
+		 		SELECT CLRCS_ID
+		 		     , MAX(FRST_REG_DT) AS REG_DT
+		 		  FROM TX_MBR_CLRCS_EXCN_HSTRY
+		 		 WHERE MBR_ID = #{mbrId}
+		 		   AND RCS_EXCN_CD = '02'
+		 		   AND DEL_YN = 'N'
+		 		 GROUP BY CLRCS_ID
+		       ) T03
+		    ON T03.CLRCS_ID = T01.CLRCS_ID
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y'
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+			 	   AND T12.ROOT_CTGRY_ID = #{srchDataTypeCtgryId}
+		       )
+		 </if>
+		 <if test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 </if>
+		 ORDER BY T03.REG_DT DESC
+	</sql>
+
+	<select id="selectMyScrpRscCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer">
+		/* 내 스크랩 자원 카운트 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMyScrpRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlMyScrpRsc" />
+			   ) A
+	</select>
+
+	<select id="selectMyScrpRscList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 내 스크랩 자원 목록 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMyScrpRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+			<include refid="sqlMyScrpRsc" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+		 <if test='pagingYn != null and pagingYn.equals("N")'>
+		OFFSET 0 ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</select>
+
+	<sql id="sqlMySrchRsc">
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 INNER JOIN (
+		 		SELECT CLRCS_ID
+		 		     , MAX(FRST_REG_DT) AS REG_DT
+		 		  FROM TX_MBR_CLRCS_EXCN_HSTRY
+		 		 WHERE MBR_ID = #{mbrId}
+		 		   AND RCS_EXCN_CD = '01'
+		 		   AND DEL_YN = 'N'
+		 		 GROUP BY CLRCS_ID
+		       ) T03
+		    ON T03.CLRCS_ID = T01.CLRCS_ID
+		 WHERE 1 = 1
+		   AND T01.RLS_YN = 'Y'
+		 <if test='srchDataTypeCtgryId != null and !srchDataTypeCtgryId.equals("")'>
+		   AND T01.CLRCS_ID IN (
+		   		SELECT T11.CLRCS_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T12
+			 	    ON T12.CTGRY_ID = T11.CTGRY_ID
+			 	   AND T12.ROOT_CTGRY_ID = #{srchDataTypeCtgryId}
+		       )
+		 </if>
+		 <if test='srchVal != null and !srchVal.equals("")'>
+		   AND (
+		   		   UPPER(T01.CLRCS_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_SBTTL_NM) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR UPPER(T01.CLRCS_EXPLN_CN) LIKE '%'||UPPER(#{srchVal})||'%'
+		   		OR T01.CLRCS_ID IN (
+			   		SELECT CLRCS_ID
+				 	  FROM TX_CLRCS_TAG_INFO
+				 	 WHERE TAG_NM LIKE '%'||UPPER(#{srchVal})||'%'
+		   		   )
+		       )
+		 </if>
+		 ORDER BY T03.REG_DT DESC
+	</sql>
+
+	<select id="selectMySrchRscCnt" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="java.lang.Integer">
+		/* 내 검색 자원 카운트 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMySrchRscCnt */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlMySrchRsc" />
+			   ) A
+	</select>
+
+	<select id="selectMySrchRscList" parameterType="kr.go.culture.xr.portal.dgtlcltrsc.vo.SrchDgtlClrcsRscVo" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 내 검색 자원 목록 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMySrchRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+			<include refid="sqlMySrchRsc" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+		 <if test='pagingYn != null and pagingYn.equals("N")'>
+		OFFSET 0 ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</select>
+
+	<sql id="sqlMyQna">
+		SELECT
+			   T01.PST_ID				/* 게시물아이디 */
+			 , T01.BBS_ID				/* 게시판아이디 */
+			 , T01.CLSF_CD				/* 분류코드 */
+			 , T01.UP_PST_ID			/* 상위게시물아이디 */
+			 , T01.PST_STEP_NO			/* 게시물단계번호 */
+			 , T01.PST_ORD_NO AS PST_ORD				/* 게시물순서 */
+			 , COALESCE(T03.CLRCS_NM, T01.PST_TTL_NM) AS PST_TTL				/* 게시물제목 */
+			 , T01.PST_CN				/* 게시물내용 */
+			 , T01.WRT_INST_ID			/* 작성기관아이디 */
+			 , T01.WRTR_ID				/* 작성자아이디 */
+			 , T01.WRTR_NM				/* 작성자명 */
+			 , T01.PRVT_YN				/* 비공개여부 */
+			 , T01.ATCH_FILE_GROUP_ID	/* 첨부파일그룹아이디 */
+			 , COALESCE(T03.INQ_CNT, T01.INQ_CNT) AS INQ_CNT	/* 조회수 */
+			 , T01.NTC_PSTG_YN			/* 공지게시여부 */
+			 , T01.LNKG_CONTS_ID		/* 연결콘텐츠아이디 */
+			 , T01.NTFC_TRGT_INST_ID	/* 알림대상기관아이디 */
+			 , T01.NTFC_RGTR_ID			/* 알림등록자아이디 */
+			 , T01.NTFC_YN				/* 알림여부 */
+			 , T01.NTFC_DT				/* 알림일시 */
+			 , T01.IDNTY_YN				/* 확인여부 */
+			 , T01.IDFR_ID				/* 확인자아이디 */
+			 , T01.IDNTY_DT				/* 확인일시 */
+			 , T01.PRGRS_STTS_CD		/* 진행상태코드 */
+			 , T01.PRGRS_AUTZR_ID		/* 진행승인자아이디 */
+			 , T01.PRGRS_DCSN_DT		/* 진행결정일시 */
+			 , T01.PRGRS_DCSN_CN		/* 진행결정내용 */
+			 , T01.RTNG_SCR				/* 평점점수 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.OPSE_CNT				/* 반대수 */
+			 , T01.FRST_RGTR_ID			/* 최초등록자아이디 */
+			 , T01.FRST_REG_DT			/* 최초등록일시 */
+			 , T01.LAST_MDFR_ID			/* 최종수정자아이디 */
+			 , TO_CHAR(T01.LAST_MDFCN_DT, 'YYYY-MM-DD HH24:MI') AS LAST_MDFCN_DT /* 최종수정일시 */
+			 , ROW_NUMBER() OVER (ORDER BY T01.FRST_REG_DT) AS PST_SN
+			 , T02.ANSWR_NM
+             , T02.ANS_CN 
+             , TO_CHAR(T02.LAST_MDFCN_DT, 'YYYY-MM-DD HH24:MI') AS ANS_LAST_MDFCN_DT /* 최종수정일시 */
+			 , T03.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T03.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+		  FROM TX_BBS_INFO T01
+		  LEFT OUTER JOIN 
+		       (
+		       	SELECT PST_ID
+		       		 , ANS_ID
+		       		 , ANS_CN
+		       		 , ANSWR_ID
+		       		 , ANSWR_NM
+		       		 , LAST_MDFCN_DT
+		       		 , ROW_NUMBER() OVER (PARTITION BY PST_ID ORDER BY LAST_MDFCN_DT DESC) AS ANS_SN
+		       	  FROM TX_PST_ANS_INFO 
+		       ) T02
+            ON T01.PST_ID = T02.PST_ID
+           AND T02.ANS_SN = 1
+		  LEFT OUTER JOIN TX_DGTL_CLRCS_MTDT_INFO T03
+		    ON T03.CLRCS_ID = T01.LNKG_CONTS_ID
+		 WHERE T01.DEL_YN != 'Y'
+		   AND T01.BBS_ID IN ('QNA', 'SQNA')
+		 <if test='wrtrId != null and !wrtrId.equals("")'>
+		   AND T01.WRTR_ID = #{wrtrId} 
+		 </if> 
+       <if test='srchValue != null and !srchValue.equals("")'>
+		<choose>
+			<when test='srchKey != null and srchKey.equals("A")'>
+		  AND (UPPER(T03.CLRCS_NM) LIKE '%'||UPPER(#{srchValue})||'%' OR UPPER(T01.PST_TTL_NM) LIKE '%'||UPPER(#{srchValue})||'%')
+			</when>
+			<when test='srchKey != null and srchKey.equals("B")'>
+		   AND UPPER(T01.PST_CN) LIKE '%'||UPPER(#{srchValue})||'%' 
+			</when>
+			<otherwise>
+      	   AND (
+		        UPPER(T03.CLRCS_NM) LIKE '%'||UPPER(#{srchValue})||'%' 
+		        OR UPPER(T01.PST_CN) LIKE '%'||UPPER(#{srchValue})||'%' 
+		        OR UPPER(T01.PST_TTL_NM) LIKE '%'||UPPER(#{srchValue})||'%'
+		    	)
+			</otherwise>
+		</choose>
+      </if>
+		 <if test='pstId != null and !pstId.equals("")'>
+		   AND T01.PST_ID = #{pstId} 
+		 </if> 
+		 <if test='lnkgContsId != null and !lnkgContsId.equals("")'>
+		   AND T01.LNKG_CONTS_ID = #{lnkgContsId} 
+		 </if>
+		 <if test='clsfCd != null and !clsfCd.equals("")'>
+		   AND T01.CLSF_CD = #{clsfCd}
+         </if>  
+		ORDER BY T01.FRST_REG_DT DESC, T01.INQ_CNT DESC
+	</sql>
+
+	<select id="selectMyQnaCnt" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo" resultType="java.lang.Integer">
+		SELECT /* 내 문의내역 카운트 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMyQnaCnt */
+		       COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlMyQna" />
+			   ) A
+	</select>
+
+	<select id="selectMyQnaList" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo" resultType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo">
+		/* 내 문의내역 목록 조회 kr.go.culture.xr.portal.mypage.mapper.MyPageMapper.selectMyQnaList */
+		SELECT 
+		       A.*
+		     , CASE WHEN A.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW()) THEN 'Y'
+		            ELSE 'N'
+		       END AS NEW_YN 
+		  FROM (
+			<include refid="sqlMyQna" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+		 <if test='pagingYn != null and pagingYn.equals("N")'>
+		OFFSET 0 ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</select>
+
+</mapper>

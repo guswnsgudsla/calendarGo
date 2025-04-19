@@ -1,0 +1,12 @@
+package com.proj.calendar.vo;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class CalendarGoVO {
+	private String vStrDt;	//시작날짜
+	private String vEndDt;	//종료날짜
+	private String vCont;	//내용
+}

@@ -1,0 +1,11 @@
+@charset "UTF-8";
+
+#calendar_wrap {width: 800px; margin: 10px; }
+#fc-daygrid-body:hover {cursor:pointer; }
+
+
+
+
+
+
+#calendarModal {display: none; }

@@ -1,0 +1,5 @@
+package com.proj.calendar.dao;
+
+public class CalendarGoMapper {
+
+}

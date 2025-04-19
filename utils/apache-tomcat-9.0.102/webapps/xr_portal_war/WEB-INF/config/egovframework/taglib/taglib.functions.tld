@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/sml/ns/j2ee/ 
+	http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd" version="2.0">
+	<description>functions library</description>
+	<display-name>functions</display-name>
+	<tlib-version>1.0</tlib-version>
+	<short-name>pf</short-name>
+	
+	<function>
+		<name>calculDivideCeil</name>
+		<description><![CDATA[num1 / num2으로 나누기를 한 후 올림 후 int형으로 출력한다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncMath</function-class>
+		<function-signature>int calculDivideCeil(int, int)</function-signature>
+		<example><![CDATA[<c:out value="${pf:calculDivideCeil(num1, num2)}">]]></example>
+	</function>
+	
+	<function>
+		<name>subString</name>
+		<description><![CDATA[length가 s보다 크면 s의 최대 length로 글자를 사용]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncString</function-class>
+		<function-signature>java.lang.String subString(java.lang.String, int)</function-signature>
+		<example><![CDATA[<c:out value="${pf:substring(str, len)}">]]></example>
+	</function>
+	
+	<function>
+		<name>getLPad</name>
+		<description><![CDATA[왼쪽에 len만큼 문자 채우기]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncString</function-class>
+		<function-signature>java.lang.String getLPad(java.lang.String, int, java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:getLPad(str, len, fill)}">]]></example>
+	</function>
+	<!--  
+	<function>
+		<name>decryptAES256</name>
+		<description><![CDATA[문자를 복호화해서 보여줍니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncSecurity</function-class>
+		<function-signature>java.lang.String decryptAES256(java.lang.String, java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:decryptAES256(str, key)}">]]></example>
+	</function>
+	
+	<function>
+		<name>encryptSHA256</name>
+		<description><![CDATA[문자를 단방향 암호화합니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncSecurity</function-class>
+		<function-signature>java.lang.String encryptSHA256(java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:encryptSHA256(str)}">]]></example>
+	</function>
+	-->
+	<function>
+		<name>arrayFindValue</name>
+		<description><![CDATA[List<Object>에서 문자가 있는지 확인합니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncString</function-class>
+		<function-signature>java.lang.Boolean arrayFindValue(java.util.ArrayList, java.lang.String, java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:arrayFindValue(list, listValue, findValue)}">]]></example>
+	</function>
+	
+	<function>
+		<name>nl2br</name>
+		<description><![CDATA[줄바꿈 문자를 html태그로 변경합니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncHttp</function-class>
+		<function-signature>java.lang.String nl2br(java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:nl2br(value)}">]]></example>
+	</function>
+	
+	<function>
+		<name>boardCateMap</name>
+		<description><![CDATA[String 형태의 카테고리 json을 Map으로 변환합니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncBoard</function-class>
+		<function-signature>java.util.LinkedHashMap getCateMap(java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:boardCateMap(value)}">]]></example>
+	</function>
+
+	<function>
+		<name>newArticle</name>
+		<description><![CDATA[java.sql.Date의 날짜와 현재 날짜와의 차이를 날짜(Integer)로 리턴합니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncBoard</function-class>
+		<function-signature>java.lang.Long newArticle(java.util.Date)</function-signature>
+		<example><![CDATA[<c:out value="${pf:newArticle(value)}">]]></example>
+	</function>
+
+	<function>
+		<name>getTaxonomy</name>
+		<description><![CDATA[String 형태의 카테고리 json을 List<Map<String, Object>>로 변환합니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncBoard</function-class>
+		<function-signature>java.util.List getTaxonomy(java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${getTaxonomy(value)}">]]></example>
+	</function>
+	
+	<function>
+		<name>beautyFileSize</name>
+		<description><![CDATA[파일 사이즈를 보기 좋도록 변환합니다.]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncFile</function-class>
+		<function-signature>java.lang.String beautyFileSize(java.lang.Double)</function-signature>
+		<example><![CDATA[<c:out value="${beautyFileSize(value)}">]]></example>
+	</function>
+	
+	<function>
+		<name>getStringTime</name>
+		<description><![CDATA[Integer 형태의 초를 시분초 표시]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncString</function-class>
+		<function-signature>java.lang.String getStringTime(java.lang.Integer)</function-signature>
+		<example><![CDATA[<c:out value="${pf:getStringTime(value)}">]]></example>
+	</function>
+	
+	<function>
+		<name>getDateDifference</name>
+		<description><![CDATA[두날짜 차이표시, 24시간 넘길시 등록일표시용, 현재시간 null일경우 오늘날짜 계산]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncString</function-class>
+		<function-signature>java.lang.String getDateDifference(java.lang.String, java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:getStringTime(등록일, 현재시간)}">]]></example>
+	</function>
+	
+	<function>
+		<name>getMaskingName</name>
+		<description><![CDATA[이름 마스킹 가운데 *]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncString</function-class>
+		<function-signature>java.lang.String getMaskingName(java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:getMaskingName(이름)}">]]></example>
+	</function>
+	
+	<function>
+		<name>getMaskingID</name>
+		<description><![CDATA[ID 앞 3개 빼고 *]]></description>
+		<function-class>kr.go.culture.xr.portal.cmmn.util.fnc.FncString</function-class>
+		<function-signature>java.lang.String getMaskingID(java.lang.String)</function-signature>
+		<example><![CDATA[<c:out value="${pf:getMaskingID(ID)}">]]></example>
+	</function>
+</taglib>

@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.menuMgt.mapper.MenuMgtMapper">
+	<!-- 메뉴 List -->
+	<select id="selectMenuList" resultType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">
+	 	SELECT
+			  Y.MENU_LIST_NO
+			, Y.MENU_ID
+			, Y.MENU_NM
+		    , Y.UP_MENU_ID
+		    , Y.SUB_MENU_YN
+		    , Y.SORT_SN
+		    , Y.UP_SORT_SN
+		    , Y.MENU_SORT 
+		    , Y.MENU_DEPTH
+		    , Y.MENU_TYPE_CD
+		    , Y.MENU_TYPE_CD_NM
+		    , Y.LNKG_CONTS_ID
+		    , Y.SCRN_URI_ADDR
+		    , Y.MENU_EXPLN_CN AS MENU_EXPLN
+		    , Y.USE_YN
+		    , Y.USE_YN_NM
+		    , Y.FRST_RGTR_ID
+		    , Y.FRST_REG_DT
+		    , Y.LAST_MDFR_ID
+		    , Y.LAST_MDFCN_DT
+	  FROM 
+	  (
+	 	SELECT
+	 			  X.MENU_LIST_NO
+	 			, X.MENU_ID
+	 			, X.MENU_NM
+			    , X.UP_MENU_ID
+			    , X.SUB_MENU_YN
+			    , X.SORT_SN
+			    , X.UP_SORT_SN
+			    , (CASE WHEN X.UP_SORT_SN IS NULL 
+		      		   THEN CONCAT(CAST(X.SORT_SN AS TEXT),'0') 
+		               ELSE CONCAT(CAST(X.UP_SORT_SN AS TEXT),CAST(X.SORT_SN AS TEXT))
+		           END) AS MENU_SORT 
+			    , X.MENU_DEPTH
+			    , X.MENU_TYPE_CD
+			    , X.MENU_TYPE_CD_NM
+			    , X.LNKG_CONTS_ID
+			    , X.SCRN_URI_ADDR
+			    , X.MENU_EXPLN_CN
+			    , X.USE_YN
+			    , X.USE_YN_NM
+			    , X.FRST_RGTR_ID
+			    , X.FRST_REG_DT
+			    , X.LAST_MDFR_ID
+			    , X.LAST_MDFCN_DT
+	 	  FROM (
+	 	  		SELECT	
+						ROW_NUMBER()OVER(ORDER BY TMI.SORT_SN ASC) AS MENU_LIST_NO
+					  ,	TMI.MENU_ID
+					  , TMI.MENU_NM
+					  , TMI.UP_MENU_ID
+					  , (CASE WHEN (SELECT  COUNT(1) FROM TX_MENU_INFO WHERE UP_MENU_ID = TMI.MENU_ID AND USE_YN = 'Y') > 0
+					         THEN 'Y'
+					         ELSE 'N'
+					     END) AS SUB_MENU_YN 
+					  , TMI.SORT_SN
+					  , (SELECT SORT_SN FROM TX_MENU_INFO A WHERE A.MENU_ID = TMI.UP_MENU_ID) AS UP_SORT_SN
+					  , CASE WHEN COALESCE(NULLIF(TMI.UP_MENU_ID, ''), '')='' THEN 1 ELSE 2 END AS MENU_DEPTH 
+					  , TMI.MENU_TYPE_CD
+					  , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					 		<property name="paramClsfCd" value="'CLSF000017'"/>
+					 		<property name="paramCdId" value="MENU_TYPE_CD"/>
+						 </include>) AS MENU_TYPE_CD_NM
+					  , TMI.LNKG_CONTS_ID
+					  , TMI.SCRN_URI_ADDR
+					  , TMI.MENU_EXPLN_CN
+					  , TMI.USE_YN
+					  , ( CASE WHEN TMI.USE_YN = 'Y' THEN '사용' 
+					           WHEN TMI.USE_YN = 'N' THEN '미사용'
+					           ELSE '미사용'
+					       END ) AS USE_YN_NM
+					  , TMI.FRST_RGTR_ID
+					  , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 		<property name="paramDateFormat" value="'CHAR10'"/>
+					 		<property name="paramDate" value="TMI.FRST_REG_DT"/>
+						 </include>) AS FRST_REG_DT
+					  , TMI.LAST_MDFR_ID
+					  , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 		<property name="paramDateFormat" value="'CHAR10'"/>
+					 		<property name="paramDate" value="TMI.LAST_MDFCN_DT"/>
+						 </include>) AS LAST_MDFCN_DT
+				  FROM TX_MENU_INFO	TMI
+				 WHERE 1=1
+				   AND TMI.DEL_YN = 'N'
+				<if test= "paramMenuId != '' and paramMenuId != null">
+				   AND TMI.MENU_ID = TRIM(#{paramMenuId})
+				</if>
+				<if test= "paramMenuNm != '' and paramMenuNm != null">
+				   AND TMI.MENU_NM = TRIM(#{paramMenuNm})
+				</if>
+				<if test= "paramUpMenuId != '' and paramUpMenuId != null">
+				   AND TMI.UP_MENU_ID = TRIM(#{paramUpMenuId})
+				</if>
+				<if test= "paramUseYn != '' and paramUseYn != null">
+				   AND TMI.USE_YN = TRIM(#{paramUseYn})
+				</if>
+				<if test= "paramMenuTypeCd != '' and paramMenuTypeCd != null">
+				   AND TMI.MENU_TYPE_CD = TRIM(#{paramMenuTypeCd})
+				</if>
+				<if test= "paramMenuClsfCd != '' and paramMenuClsfCd != null">
+				   AND TMI.MENU_CLSF_CD = TRIM(#{paramMenuClsfCd})
+				</if>
+				 <if test="paramAuthId != '' and paramAuthId != null">
+					 AND TMI.MENU_ID in (SELECT MENU_ID
+					 				   	  FROM TX_AUTHRT_MENU_REL_INFO
+					 					 WHERE 1=1
+					 					   AND AUTHRT_ID = #{paramAuthId}
+					 					   AND DEL_YN = 'N')
+				 </if>
+	 	  ) X
+	 	)Y 
+	 	 ORDER BY CAST(Y.MENU_SORT AS INT)
+	</select>
+	
+	<!-- 정렬 순서 조회 -->
+	<select id="selectMenuSortList" resultType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">
+			  SELECT  
+			          MENU_ID 
+			        , SORT_SN 
+				FROM TX_MENU_INFO 
+			   WHERE MENU_CLSF_CD =#{paramMenuClsfCd}
+			     AND DEL_YN = 'N'
+			   <choose>
+			   	<when test= "paramDepth == 'BI'">
+			   		AND COALESCE(NULLIF(UP_MENU_ID,'') ,'') = ''
+			   		AND SORT_SN >= #{paramSortSn}
+			   	</when>
+			   	<when test= "paramDepth == 'SM'">
+			   		AND UP_MENU_ID = #{paramUpMenuId}
+			   		AND SORT_SN >= #{paramSortSn}
+			   	</when>
+			   	<when test= "paramDepth != 'BI' and paramDepth != 'SM'">
+			   		AND MENU_ID = ''
+			   	</when>
+			   </choose>
+		       ORDER BY SORT_SN 
+	</select>
+	<!--타 메뉴 정렬 순서 중복 update  -->
+	<update id="updateMenuSortInfo" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">	
+		UPDATE TX_MENU_INFO /* kr.go.culture.xr.admin.menuMgt.mapper.MenuMapper.updateMenuSortInfo */
+		   SET   
+		         SORT_SN   		= #{paramSortSn}
+		       , LAST_MDFR_ID 	= #{paramLastMdfrId}
+		       , LAST_MDFCN_DT 	= NOW()
+		 WHERE MENU_ID 			= #{paramMenuId}
+		   AND DEL_YN 			= 'N'
+	</update>
+	 <!-- 메뉴 등록 -->
+	<insert id="insertMenuInfo" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">	
+		INSERT INTO TX_MENU_INFO /* kr.go.culture.xr.admin.menuMgt.mapper.MenuMapper.insertMenuInfo */
+				 (
+				 	MENU_ID
+				  , MENU_NM
+				  , UP_MENU_ID
+				  , SORT_SN
+				  , MENU_TYPE_CD
+				  , MENU_CLSF_CD
+				  , LNKG_CONTS_ID
+				  , SCRN_URI_ADDR
+				  , MENU_EXPLN_CN
+				  , USE_YN
+				  , FRST_RGTR_ID
+				  , FRST_REG_DT
+				  , LAST_MDFR_ID
+				  , LAST_MDFCN_DT
+				  ) VALUES (
+				    #{menuId} 	   
+                  , #{paramMenuNm}
+				  , #{paramUpMenuId}
+				  , #{paramSortSn}
+				  , #{paramMenuTypeCd}
+				  , #{paramMenuClsfCd}
+				  , #{paramLnkgContsId}
+				  , #{paramScrnUriAddr}
+				  , #{paramMenuExpln}
+				  , #{paramUseYn}
+				  , #{paramFrstRgtrId}
+				  , NOW()
+				  , #{paramLastMdfrId}
+				  , NOW()
+				  )
+	</insert>
+	 
+	<!-- 메뉴 이력 insert -->
+	<insert id="insertHstryMenuInfo" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">	
+		INSERT INTO TX_MENU_CHG_HSTRY /* kr.go.culture.xr.admin.menuMgt.mapper.MenuMapper.insertHstryMenuInfo */
+				 (
+				 	MENU_ID
+				  , CHG_HSTRY_SN
+				  , CHG_HSTRY_TYPE_CD  <!-- - 등록- 수정- 삭제 -->
+				  , MENU_NM
+				  , UP_MENU_ID
+				  , SORT_SN
+				  , MENU_TYPE_CD
+				  , LNKG_CONTS_ID
+				  , SCRN_URI_ADDR
+				  , MENU_EXPLN_CN
+				  , USE_YN
+				  , DEL_YN
+				  , MENU_CLSF_CD
+				  , RGTR_ID
+				  , REG_DT
+				  ) VALUES (
+				   	#{menuId}
+                  , (SELECT NEXTVAL('sq_tx_menu_chg_hstry_01'))
+                  , #{chgHstryTypeCd}
+				  , #{paramMenuNm}
+				  , #{paramUpMenuId}
+				  , #{paramSortSn}
+				  , #{paramMenuTypeCd}
+				  , #{paramLnkgContsId}
+				  , #{paramScrnUriAddr}
+				  , #{paramMenuExpln}
+				  , #{paramUseYn}
+				  , #{delYn}
+				  , #{paramMenuClsfCd}
+				  , #{paramFrstRgtrId}
+				  , NOW()
+				  )
+	</insert>
+	<!-- 메뉴 이력 개수 조회 -->
+	<select id="selectHstryMenuTotListCnt" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO" resultType="Integer">
+		SELECT
+			   COUNT (TMCH.MENU_ID) AS TOT_LIST_CNT
+		  FROM TX_MENU_CHG_HSTRY TMCH
+		 WHERE 1=1
+		  <if test= "paramMenuId != '' and paramMenuId != null">
+		   AND TMCH.MENU_ID = TRIM(#{paramMenuId})
+		 </if>
+		 <if test= "paramMenuNm != '' and paramMenuNm != null">
+		   AND REPLACE(TRIM(TMCH.MENU_NM), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{paramMenuNm}),' ',''), '%')
+		 </if>
+		 <if test= "paramMenuTypeCd != '' and paramMenuTypeCd != null">
+		   AND TMCH.MENU_TYPE_CD = TRIM(#{paramMenuTypeCd})
+		 </if>
+		 <if test= "paramUseYn != '' and paramUseYn != null">
+		   AND TMCH.USE_YN = TRIM(#{paramUseYn})
+		 </if>
+	</select>
+	
+	<!-- 메뉴 이력 조회 -->
+	<select id="selectHstryMenuList" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO" resultType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">
+	 SELECT 
+	 		  XTMCH.MENU_HRST_LIST_NO
+	 		, XTMCH.MENU_ID
+	 		, XTMCH.CHG_HSTRY_SN
+	 		, XTMCH.CHG_HSTRY_TYPE_CD
+	 		, XTMCH.CHG_HSTRY_TYPE_CD_NM
+	 		, XTMCH.MENU_NM
+	 		, XTMCH.UP_MENU_ID
+	 		, XTMCH.USE_YN
+	 		, XTMCH.SORT_SN
+	 		, XTMCH.MENU_TYPE_CD
+	 		, XTMCH.LNKG_CONTS_ID
+	 		, XTMCH.SCRN_URI_ADDR
+	 		, XTMCH.MENU_EXPLN_CN AS MENU_EXPLN
+	 		, XTMCH.RGTR_ID AS FRST_RGTR_ID
+	 		, XTMCH.FRST_RGTR_NM AS FRST_RGTR_NM
+	 		, XTMCH.REG_DT
+	 		, XTMCH.FRST_REG_DT_V19
+	 		, XTMCH.MENU_CLSF_CD
+	 		, XTMCH.DEL_YN
+	 		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />	
+	   FROM (	
+		SELECT	  /* kr.go.culture.xr.admin.menuMgt.mapper.MenuMapper.insertHstryMenuInfo */	
+					ROW_NUMBER()OVER(ORDER BY TMCH.REG_DT ASC) AS MENU_HRST_LIST_NO
+				  , TMCH.MENU_ID
+				  , TMCH.CHG_HSTRY_SN
+				  , TMCH.CHG_HSTRY_TYPE_CD  <!-- - 등록- 수정- 삭제 -->
+				  , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					 		<property name="paramClsfCd" value="'CLSF000001'"/>
+					 		<property name="paramCdId" value="TMCH.CHG_HSTRY_TYPE_CD"/>
+					  </include>) AS CHG_HSTRY_TYPE_CD_NM
+				  , TMCH.MENU_NM
+				  , TMCH.UP_MENU_ID
+				  , TMCH.USE_YN
+				  , TMCH.SORT_SN
+				  , TMCH.MENU_TYPE_CD
+				  , TMCH.LNKG_CONTS_ID
+				  , TMCH.SCRN_URI_ADDR
+				  , TMCH.MENU_EXPLN_CN
+				  , TMCH.RGTR_ID
+				  , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+				 		<property name="paramColNm" value="'userNm'"/>
+				 		<property name="paramUserId" value="TMCH.RGTR_ID"/>
+					</include>) AS FRST_RGTR_NM
+				  , TMCH.REG_DT
+				  , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+				 		<property name="paramDateFormat" value="'CHAR19'"/>
+				 		<property name="paramDate" value="TMCH.REG_DT"/>
+					 </include>) AS FRST_REG_DT_V19
+				  , TMCH.MENU_CLSF_CD AS MENU_CLSF_CD
+				  , TMCH.DEL_YN AS DEL_YN
+		  FROM TX_MENU_CHG_HSTRY TMCH
+		 WHERE  1=1
+		 <if test= "paramMenuId != '' and paramMenuId != null">
+		   AND TMCH.MENU_ID = TRIM(#{paramMenuId})
+		 </if>
+		 <if test= "paramMenuNm != '' and paramMenuNm != null">
+		   AND REPLACE(TRIM(TMCH.MENU_NM), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{paramMenuNm}),' ',''), '%')
+		 </if>
+		 <if test= "paramMenuTypeCd != '' and paramMenuTypeCd != null">
+		   AND TMCH.MENU_TYPE_CD = TRIM(#{paramMenuTypeCd})
+		 </if>
+		 <if test= "paramUseYn != '' and paramUseYn != null">
+		   AND TMCH.USE_YN = TRIM(#{paramUseYn})
+		 </if>
+		 <if test= "paramMenuClsfCd != '' and paramMenuClsfCd != null">
+		   AND TMCH.MENU_CLSF_CD = TRIM(#{paramMenuClsfCd})
+		 </if>
+	) XTMCH
+	ORDER BY XTMCH.MENU_HRST_LIST_NO DESC
+	<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+		    
+	</select>
+	
+	 <!-- 메뉴 수정 -->
+	<update id="updateMenuInfo" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">	
+		UPDATE TX_MENU_INFO /* kr.go.culture.xr.admin.menuMgt.mapper.MenuMapper.updateMenu */
+		   SET   MENU_NM   		= #{paramMenuNm}
+		       , UP_MENU_ID 	= #{paramUpMenuId}
+		       , SORT_SN   		= #{paramSortSn}
+		       , MENU_TYPE_CD 	= #{paramMenuTypeCd}
+		       , LNKG_CONTS_ID 	= #{paramLnkgContsId}
+		       , SCRN_URI_ADDR 	= #{paramScrnUriAddr}
+		       , MENU_EXPLN_CN 	= #{paramMenuExpln}
+		       , USE_YN  		= #{paramUseYn}
+		       , LAST_MDFR_ID 	= #{paramLastMdfrId}
+		       , LAST_MDFCN_DT 	= NOW()
+		 WHERE MENU_ID 			= #{paramMenuId}
+		   AND DEL_YN 			= 'N'
+	</update>
+	<!-- 메뉴 삭제 -->
+	<update id="deleteMenu" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">	
+		UPDATE TX_MENU_INFO /* kr.go.culture.xr.admin.menuMgt.mapper.MenuMapper.deleteMenu */
+		   SET   
+		         USE_YN			= 'N'
+		       , DEL_YN			= 'Y'
+		       , LAST_MDFR_ID 	= #{paramLastMdfrId}
+		       , LAST_MDFCN_DT 	= NOW()
+		 WHERE MENU_ID 			= #{paramMenuId}
+		   AND MENU_CLSF_CD     = TRIM(#{paramMenuClsfCd})
+	</update>
+	<select id="selectOneDepthMenuist" resultType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">
+		SELECT  
+				MENU_ID 
+      		  , MENU_NM 
+  		  FROM TX_MENU_INFO 
+		 WHERE MENU_CLSF_CD = TRIM(#{paramMenuClsfCd})
+		   AND COALESCE(NULLIF(UP_MENU_ID, ''), '')=''
+		   AND DEL_YN = 'N'
+	  ORDER BY SORT_SN 
+	</select>
+	
+	<select id="selectMenuId" resultType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">
+		SELECT (CASE WHEN X.MAX_MENU_ID ='MENU000000' THEN 'MENU000001' ELSE X.MAX_MENU_ID END) AS MAX_MENU_ID /* 초기 값이 없을 경우 */
+		  FROM (
+		   <if test= "paramMenuClsfCd == 'MNCLSF0001'">
+			(SELECT CONCAT('MENU', RIGHT(CONCAT('000000', CAST(REPLACE(MAX(MENU_ID), 'MENU', '') AS INT) + 1), 6)) AS MAX_MENU_ID
+		   	   FROM TX_MENU_INFO WHERE MENU_CLSF_CD = #{paramMenuClsfCd}) 
+		   </if>
+		   <if test= "paramMenuClsfCd == 'MNCLSF0002'">
+			(SELECT CONCAT('WWW', RIGHT(CONCAT('000000', CAST(REPLACE(MAX(MENU_ID), 'W', '') AS INT) + 1), 6)) AS MAX_MENU_ID
+		   	   FROM TX_MENU_INFO WHERE MENU_CLSF_CD = #{paramMenuClsfCd}) 
+		   </if>
+  		)X
+	</select>
+	<!-- 순번 보정 쿼리 -->
+	<update id="updateCorrectSortSn" parameterType="kr.go.culture.xr.admin.menuMgt.vo.MenuVO">
+		UPDATE TX_MENU_INFO AS A 
+		   SET SORT_SN = B.MENU_LIST_NO
+		  FROM 
+		 	(SELECT	
+					ROW_NUMBER()OVER(ORDER BY TMI.SORT_SN ASC) AS MENU_LIST_NO
+				,	TMI.MENU_ID AS MENU_ID
+		  	   FROM TX_MENU_INFO	TMI
+              WHERE TMI.MENU_CLSF_CD = #{paramMenuClsfCd}
+                AND TMI.DEL_YN = 'N'
+			    <choose>
+				    <when test= "paramDepth == 'BI'">
+				   		AND COALESCE(NULLIF(UP_MENU_ID,'') ,'') = ''
+				   	</when>
+				   	<when test= "paramDepth == 'SM'">
+				   		AND TMI.UP_MENU_ID = #{paramUpMenuId}
+				   	</when>
+				   	<when test= "paramDepth != 'BI' and paramDepth != 'SM'">
+				   		AND MENU_ID = ''
+				   	</when>
+				</choose>
+		   	 )B 
+		 WHERE A.MENU_ID = B.MENU_ID
+	</update>
+	
+</mapper>

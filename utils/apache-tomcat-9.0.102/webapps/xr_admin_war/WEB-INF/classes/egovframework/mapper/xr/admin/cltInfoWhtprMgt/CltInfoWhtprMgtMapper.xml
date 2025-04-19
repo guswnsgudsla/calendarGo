@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper">
+
+	<!-- 문화자원백서 목록보기 -->
+	<select id="selectWhtprInfoList" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectWhtprInfoList */
+			   XTWI.LIST_WHTPR_NO AS LIST_WHTPR_NO
+			 , XTWI.WHTPR_ID AS WHTPR_ID
+			 , XTWI.WHTPR_NM AS WHTPR_NM
+			 , XTWI.WHTPR_EXPLN_CN AS WHTPR_CN
+			 , XTWI.ATCH_FILE_GROUP_ID AS ATCH_FILE_GROUP_ID
+			 , XTWI.PBLCN_YR AS PBLCN_YR
+			 , XTWI.PBLCN_YN AS PBLCN_YN
+			 , (CASE WHEN XTWI.PBLCN_YN = 'Y'
+						  THEN '발행'
+					 ELSE '미발행'
+				END) AS PBLCN_YN_NM
+			 , XTWI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTWI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTWI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTWI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTWI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTWI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTWI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTWI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTWI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTWI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TWI.WHTPR_ID ASC) AS LIST_WHTPR_NO
+					 , TWI.WHTPR_ID
+					 , TWI.WHTPR_NM
+					 , TWI.WHTPR_EXPLN_CN
+					 , TWI.ATCH_FILE_GROUP_ID
+					 , TWI.PBLCN_YR
+					 , TWI.PBLCN_YN
+					 , TWI.FRST_RGTR_ID
+					 , TWI.FRST_REG_DT
+					 , TWI.LAST_MDFR_ID
+					 , TWI.LAST_MDFCN_DT
+				  FROM TX_WHTPR_INFO TWI
+				 WHERE 1 = 1
+		<if test="paramSrchString != null and paramSrchString != ''">
+				   AND TWI.WHTPR_NM LIKE CONCAT('%', TRIM(#{paramSrchString}), '%')
+		</if>
+			   ) XTWI
+		 ORDER BY XTWI.LIST_WHTPR_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}
+	</select>
+
+
+	<!-- 문화자원백서 목록수 -->
+	<select id="selectWhtprTotListCnt" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectWhtprTotListCnt */
+			   COUNT(TWI.WHTPR_ID) AS TOT_LIST_CNT
+		  FROM TX_WHTPR_INFO TWI
+		 WHERE 1 = 1
+		<if test="paramSrchString != null and paramSrchString != ''">
+		   AND TWI.WHTPR_NM LIKE CONCAT('%', TRIM(#{paramSrchString}), '%')
+		</if>
+	</select>
+	
+	
+	<!-- 문화자원백서 상세보기 -->
+	<select id="selectWhtprInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectWhtprInfo */
+			   TWI.WHTPR_ID AS WHTPR_ID
+			 , TWI.WHTPR_NM AS WHTPR_NM
+			 , TWI.WHTPR_EXPLN_CN AS WHTPR_CN
+			 , TWI.ATCH_FILE_GROUP_ID AS ATCH_FILE_GROUP_ID
+			 , TWI.PBLCN_YR AS PBLCN_YR
+			 , TWI.PBLCN_YN AS PBLCN_YN
+			 , (CASE WHEN TWI.PBLCN_YN = 'Y'
+						  THEN '발행'
+					 ELSE '미발행'
+				END) AS PBLCN_YN_NM
+			 , TWI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TWI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TWI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TWI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TWI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TWI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TWI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TWI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , TWI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TWI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_WHTPR_INFO TWI
+		 WHERE TWI.WHTPR_ID = #{paramWhtprId}
+	</select>
+	
+	
+	<!-- 문화자원백서 백서아이디 가져오기 -->
+	<select id="selectWhtprId" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectWhtprId */
+				CONCAT('WHTPR', RIGHT(CONCAT('00000', NEXTVAL('sq_tx_whtpr_info_01')), 5)) AS WHTPR_ID
+	</select>
+
+
+	<!-- 문화자원백서 등록하기 -->
+	<insert id="insertWhtprInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.insertWhtprInfo */
+					TX_WHTPR_INFO
+			   (
+			   WHTPR_ID
+			 , WHTPR_NM
+			 , WHTPR_EXPLN_CN
+			 , ATCH_FILE_GROUP_ID
+			 , PBLCN_YR
+			 , PBLCN_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{whtprId}
+			 , #{whtprNm}
+			 , #{whtprCn}
+			 , #{atchFileGroupId}
+			 , #{pblcnYr}
+			 , #{pblcnYn}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 문화자원백서 수정하기 -->
+	<update id="updateWhtprInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.updateWhtprInfo */
+			   TX_WHTPR_INFO
+		   SET WHTPR_NM = #{whtprNm}
+			 , WHTPR_EXPLN_CN = #{whtprCn}
+			 , ATCH_FILE_GROUP_ID = #{atchFileGroupId}
+			 , PBLCN_YR = #{pblcnYr}
+			 , PBLCN_YN = #{pblcnYn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</update>
+	
+	
+	<!-- 문화자원백서 삭제하기 -->
+	<delete id="deleteWhtprInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteWhtprInfo */
+		  FROM TX_WHTPR_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</delete>
+	
+	
+	<!-- 연도별 정보화 인원현황 정보 보기 -->
+	<select id="selectYrInfrmNmprPrssInfoList" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.YrInfrmNmprPrssInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectYrInfrmNmprPrssInfoList */
+			   TYINPI.WHTPR_ID AS WHTPR_ID
+			 , TYINPI.SE_YR AS SE_YR
+			 , TYINPI.HQ_NOPE AS HQ_NOPE
+			 , TYINPI.OGDP_INST_NOPE AS OGDP_INST_NOPE
+			 , TYINPI.PBLC_INST_NOPE AS PBLC_INST_NOPE
+			 , TYINPI.INST_CNT AS INST_CNT
+			 , TYINPI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , TYINPI.FRST_REG_DT AS FRST_REG_DT
+			 , TYINPI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , TYINPI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+		  FROM TX_YR_INFRM_NMPR_PRSS_INFO TYINPI
+		 WHERE 1 = 1
+		   <if test="paramWhtprId != null and paramWhtprId  != ''">
+            AND TYINPI.WHTPR_ID = #{paramWhtprId}
+           </if>
+		 ORDER BY TYINPI.SE_YR ASC
+	</select>
+	
+	
+	<!-- 연도별 정보화 인원현황 정보 등록 -->
+	<insert id="insertYrInfrmNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.YrInfrmNmprPrssInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.insertYrInfrmNmprPrssInfo */
+					TX_YR_INFRM_NMPR_PRSS_INFO
+			   (
+			   WHTPR_ID
+			 , SE_YR
+			 , HQ_NOPE
+			 , OGDP_INST_NOPE
+			 , PBLC_INST_NOPE
+			 , INST_CNT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{whtprId}
+			 , #{seYr}
+			 , #{hqNope}
+			 , #{ogdpInstNope}
+			 , #{pblcInstNope}
+			 , #{instCnt}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 연도별 정보화 인원현황 정보 수정 -->
+	<update id="updateYrInfrmNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.YrInfrmNmprPrssInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.updateYrInfrmNmprPrssInfo */
+			   TX_YR_INFRM_NMPR_PRSS_INFO
+		   SET SE_YR = #{paramSeYr}
+			 , HQ_NOPE = #{hqNope}
+			 , OGDP_INST_NOPE = #{ogdpInstNope}
+			 , PBLC_INST_NOPE = #{pblcInstNope}
+			 , INST_CNT = #{instCnt}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE 1 = 1
+		   AND WHTPR_ID = #{paramWhtprId}
+		   AND SE_YR = #{paramSeYr}
+	</update>
+	
+	
+	<!-- 연도별 정보화 인원현황 정보 삭제 -->
+	<delete id="deleteYrInfrmNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.YrInfrmNmprPrssInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteYrInfrmNmprPrssInfo */
+			FROM TX_YR_INFRM_NMPR_PRSS_INFO
+		WHERE 1 = 1
+		AND WHTPR_ID = #{paramWhtprId}
+		AND SE_YR = #{paramSeYr}
+	</delete>
+	
+	
+	<!-- 연도별 정보화 인원현황 정보 일괄 삭제(백서정보삭제) -->
+	<delete id="deleteYrInfrmNmprPrssInfoListAll" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteYrInfrmNmprPrssInfoListAll */
+		  FROM TX_YR_INFRM_NMPR_PRSS_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</delete>
+	
+	
+	<!-- 정보화 및 정보보호 인원현황 정보 보기 -->
+	<select id="selectInfrmInfscrNmprPrssInfoList" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InfrmInfscrNmprPrssInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectInfrmInfscrNmprPrssInfoList */
+			   TIINPI.WHTPR_ID AS WHTPR_ID
+			 , TIINPI.PRSS_SN AS PRSS_SN
+			 , TIINPI.INST_TYPE_CD AS INST_TYPE_CD
+			 , TIINPI.WHOL_NOPE AS WHOL_NOPE
+			 , TIINPI.INFRM_NOPE AS INFRM_NOPE
+			 , TIINPI.INFSCR_NOPE AS INFSCR_NOPE
+			 , TIINPI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , TIINPI.FRST_REG_DT AS FRST_REG_DT
+			 , TIINPI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , TIINPI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+		  FROM TX_INFRM_INFSCR_NMPR_PRSS_INFO TIINPI
+		 WHERE 1 = 1
+		   <if test="paramWhtprId != null and paramWhtprId  != ''">
+            AND TIINPI.WHTPR_ID = #{paramWhtprId}
+           </if>
+		 ORDER BY TIINPI.PRSS_SN ASC 
+	</select>
+	
+	
+	<!-- 정보화 및 정보보호 인원현황 정보 등록 -->
+	<insert id="insertInfrmInfscrNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InfrmInfscrNmprPrssInfoVO">
+	INSERT INTO /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.insertInfrmInfscrNmprPrssInfo */
+					TX_INFRM_INFSCR_NMPR_PRSS_INFO
+			   (
+			   WHTPR_ID
+			 , PRSS_SN
+			 , INST_TYPE_CD
+			 , WHOL_NOPE
+			 , INFRM_NOPE
+			 , INFSCR_NOPE
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{whtprId}
+			 , #{prssSn}
+			 , #{instTypeCd}
+			 , #{wholNope}
+			 , #{infrmNope}
+			 , #{infscrNope}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   ) 
+	</insert>
+	
+	
+	<!-- 정보화 및 정보보호 인원현황 정보 수정 -->
+	<update id="updateInfrmInfscrNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InfrmInfscrNmprPrssInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.updateInfrmInfscrNmprPrssInfo */
+			   TX_INFRM_INFSCR_NMPR_PRSS_INFO
+		   SET INST_TYPE_CD = #{instTypeCd}
+			 , WHOL_NOPE = #{wholNope}
+			 , INFRM_NOPE = #{infrmNope}
+			 , INFSCR_NOPE = #{infscrNope}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE 1 = 1
+		   AND WHTPR_ID = #{paramWhtprId}
+		   AND PRSS_SN = #{paramPrssSn}
+	</update>
+	
+	
+	<!-- 정보화 및 정보보호 인원현황 정보 삭제 -->
+	<delete id="deleteInfrmInfscrNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InfrmInfscrNmprPrssInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteInfrmInfscrNmprPrssInfo */
+		  FROM TX_INFRM_INFSCR_NMPR_PRSS_INFO
+		 WHERE 1 = 1
+		   AND WHTPR_ID = #{paramWhtprId}
+		   AND PRSS_SN = #{paramPrssSn}
+	</delete>
+	
+	
+	<!-- 정보화 및 정보보호 인원현황 일괄 삭제(백서정보삭제) -->
+	<delete id="deleteInfrmInfscrNmprPrssInfoListAll" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteInfrmInfscrNmprPrssInfoListAll */
+		  FROM TX_INFRM_INFSCR_NMPR_PRSS_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</delete>
+	
+	
+	<!-- 기관별 정보화 인원현황 정보 보기 -->
+	<select id="selectInstInfrmNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InstInfrmNmprPrssInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectInstInfrmNmprPrssInfo */
+			   TIINPI.WHTPR_ID AS WHTPR_ID
+			 , TIINPI.WHOL_INST_CNT AS TOT_INST_CNT
+			 , TIINPI.INFRM_AVG_RT AS INFRM_AVG_RT
+			 , TIINPI.INFRM_AVG_MRT_INST_CNT AS INFRM_AVG_MRT_INST_CNT
+			 , TIINPI.INFRM_AVG_UNDR_INST_CNT AS INFRM_AVG_UNDR_INST_CNT
+			 , TIINPI.INFSCR_AVG_RT AS INFSCR_AVG_RT
+			 , TIINPI.INFSCR_AVG_MRT_INST_CNT AS INFSCR_AVG_MRT_INST_CNT
+			 , TIINPI.INFSCR_AVG_UNDR_INST_CNT AS INFSCR_AVG_UNDR_INST_CNT
+			 , TIINPI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , TIINPI.FRST_REG_DT AS FRST_REG_DT
+			 , TIINPI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , TIINPI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+		  FROM TX_INST_INFRM_NMPR_PRSS_INFO TIINPI
+		 WHERE TIINPI.WHTPR_ID =  #{paramWhtprId}
+	</select>
+	
+	
+	<!-- 기관별 정보화 인원현황 정보 등록 -->
+	<insert id="insertInstInfrmNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InstInfrmNmprPrssInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.insertInstInfrmNmprPrssInfo */
+					TX_INST_INFRM_NMPR_PRSS_INFO
+			   (
+			   WHTPR_ID
+			 , WHOL_INST_CNT
+			 , INFRM_AVG_RT
+			 , INFRM_AVG_MRT_INST_CNT
+			 , INFRM_AVG_UNDR_INST_CNT
+			 , INFSCR_AVG_RT
+			 , INFSCR_AVG_MRT_INST_CNT
+			 , INFSCR_AVG_UNDR_INST_CNT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{whtprId}
+			 , #{totInstCnt}
+			 , #{infrmAvgRt}
+			 , #{infrmAvgMrtInstCnt}
+			 , #{infrmAvgUndrInstCnt}
+			 , #{infscrAvgRt}
+			 , #{infscrAvgMrtInstCnt}
+			 , #{infscrAvgUndrInstCnt}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 기관별 정보화 인원현황 정보 수정 -->
+	<update id="updateInstInfrmNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InstInfrmNmprPrssInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.updateInstInfrmNmprPrssInfo */
+			   TX_INST_INFRM_NMPR_PRSS_INFO
+		   SET WHOL_INST_CNT = #{totInstCnt}
+			 , INFRM_AVG_RT = #{infrmAvgRt}
+			 , INFRM_AVG_MRT_INST_CNT = #{infrmAvgMrtInstCnt}
+			 , INFRM_AVG_UNDR_INST_CNT = #{infrmAvgUndrInstCnt}
+			 , INFSCR_AVG_RT = #{infscrAvgRt}
+			 , INFSCR_AVG_MRT_INST_CNT = #{infscrAvgMrtInstCnt}
+			 , INFSCR_AVG_UNDR_INST_CNT = #{infscrAvgUndrInstCnt}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</update>
+	
+	
+	<!-- 기관별 정보화 인원현황 정보 삭제 -->
+	<delete id="deleteInstInfrmNmprPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.InstInfrmNmprPrssInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteInstInfrmNmprPrssInfo */
+		  FROM TX_INST_INFRM_NMPR_PRSS_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</delete>
+	
+	
+	<!-- 재원별 정보화 예산현황 정보 보기 -->
+	<select id="selectFircsInfrmBgtPrssInfoList" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.FircsInfrmBgtPrssInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectFircsInfrmBgtPrssInfoList */
+			   TFIBPI.WHTPR_ID AS WHTPR_ID
+			 , TFIBPI.SE_YR AS SE_YR
+			 , TFIBPI.STCF_BGT_AMT AS STCF_BGT_AMT
+			 , TFIBPI.FUND_BGT_AMT AS FUND_BGT_AMT
+			 , TFIBPI.ETC_BGT_AMT AS ETC_BGT_AMT
+			 , TFIBPI.BGT_SUM_AMT AS BGT_SUM_AMT
+			 , TFIBPI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , TFIBPI.FRST_REG_DT AS FRST_REG_DT
+			 , TFIBPI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , TFIBPI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+		  FROM TX_FIRCS_INFRM_BGT_PRSS_INFO TFIBPI
+		  WHERE TFIBPI.WHTPR_ID = #{paramWhtprId}
+		  ORDER BY SE_YR ASC
+	</select>
+	
+	
+	<!-- 재원별 정보화 예산현황 정보 등록 -->
+	<insert id="insertFircsInfrmBgtPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.FircsInfrmBgtPrssInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.insertFircsInfrmBgtPrssInfo */
+					TX_FIRCS_INFRM_BGT_PRSS_INFO
+			   (
+			   WHTPR_ID
+			 , SE_YR
+			 , STCF_BGT_AMT
+			 , FUND_BGT_AMT
+			 , ETC_BGT_AMT
+			 , BGT_SUM_AMT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{whtprId}
+			 , #{seYr}
+			 , #{stcfBgtAmt}
+			 , #{fundBgtAmt}
+			 , #{etcBgtAmt}
+			 , #{bgtSumAmt}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 재원별 정보화 예산현황 정보 수정 -->
+	<update id="updateFircsInfrmBgtPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.FircsInfrmBgtPrssInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.updateFircsInfrmBgtPrssInfo */
+			   TX_FIRCS_INFRM_BGT_PRSS_INFO
+		   SET 
+			  STCF_BGT_AMT = #{stcfBgtAmt}
+			 , FUND_BGT_AMT = #{fundBgtAmt}
+			 , ETC_BGT_AMT = #{etcBgtAmt}
+			 , BGT_SUM_AMT = #{bgtSumAmt}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE WHTPR_ID = #{paramWhtprId}
+		 AND SE_YR = #{seYr}
+	</update>
+	
+	
+	<!-- 재원별 정보화 예산현황 정보 삭제 -->
+	<delete id="deleteFircsInfrmBgtPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.FircsInfrmBgtPrssInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteFircsInfrmBgtPrssInfo */
+		  FROM TX_FIRCS_INFRM_BGT_PRSS_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+		   AND SE_YR = #{paramSeYr}
+	</delete>
+	
+	
+	<!-- 재원별 정보화 예산현황 정보 일괄 삭제(백서정보삭제) -->
+	<delete id="deleteFircsInfrmBgtPrssInfoListAll" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteFircsInfrmBgtPrssInfoListAll */
+		  FROM TX_FIRCS_INFRM_BGT_PRSS_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</delete>
+	
+	
+	<!-- 유형별 정보화 예산현황 정보 보기 -->
+	<select id="selectTypeInfrmBgtPrssInfoList" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.TypeInfrmBgtPrssInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectTypeInfrmBgtPrssInfoList */
+			   TTIBPI.WHTPR_ID AS WHTPR_ID
+			 , TTIBPI.SE_YR AS SE_YR
+			 , TTIBPI.PLNG_BGT_AMT AS PLNG_BGT_AMT
+			 , TTIBPI.DEV_CNST_BGT_AMT AS DEV_CNST_BGT_AMT
+			 , TTIBPI.OPER_MNG_RPRM_BGT_AMT AS OPER_MNG_RPRM_BGT_AMT
+			 , TTIBPI.AST_ACQS_BGT_AMT AS AST_ACQS_BGT_AMT
+			 , TTIBPI.ETC_BGT_AMT AS ETC_BGT_AMT
+			 , TTIBPI.BGT_SUM_AMT AS BGT_SUM_AMT
+			 , TTIBPI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , TTIBPI.FRST_REG_DT AS FRST_REG_DT
+			 , TTIBPI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , TTIBPI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+		  FROM TX_TYPE_INFRM_BGT_PRSS_INFO TTIBPI
+		  WHERE TTIBPI.WHTPR_ID = #{paramWhtprId}
+		  ORDER BY SE_YR ASC
+	</select>
+	
+	
+	<!-- 유형별 정보화 예산현황 정보 등록 -->
+	<insert id="insertTypeInfrmBgtPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.TypeInfrmBgtPrssInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.insertTypeInfrmBgtPrssInfo */
+					TX_TYPE_INFRM_BGT_PRSS_INFO
+			   (
+			   WHTPR_ID
+			 , SE_YR
+			 , PLNG_BGT_AMT
+			 , DEV_CNST_BGT_AMT
+			 , OPER_MNG_RPRM_BGT_AMT
+			 , AST_ACQS_BGT_AMT
+			 , ETC_BGT_AMT
+			 , BGT_SUM_AMT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{whtprId}
+			 , #{seYr}
+			 , #{plngBgtAmt}
+			 , #{devCnstBgtAmt}
+			 , #{operMngRprmBgtAmt}
+			 , #{astAcqsBgtAmt}
+			 , #{etcBgtAmt}
+			 , #{bgtSumAmt}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 유형별 정보화 예산현황 정보 수정 -->
+	<update id="updateTypeInfrmBgtPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.TypeInfrmBgtPrssInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.updateTypeInfrmBgtPrssInfo */
+			   TX_TYPE_INFRM_BGT_PRSS_INFO
+		   SET PLNG_BGT_AMT = #{plngBgtAmt}
+			 , DEV_CNST_BGT_AMT = #{devCnstBgtAmt}
+			 , OPER_MNG_RPRM_BGT_AMT = #{operMngRprmBgtAmt}
+			 , AST_ACQS_BGT_AMT = #{astAcqsBgtAmt}
+			 , ETC_BGT_AMT = #{etcBgtAmt}
+			 , BGT_SUM_AMT = #{bgtSumAmt}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE WHTPR_ID = #{paramWhtprId}
+		   AND SE_YR = #{paramSeYr}
+	</update>
+	
+	
+	<!-- 유형별 정보화 예산현황 정보 삭제 -->
+	<delete id="deleteTypeInfrmBgtPrssInfo" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.TypeInfrmBgtPrssInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteTypeInfrmBgtPrssInfo */
+		  FROM TX_TYPE_INFRM_BGT_PRSS_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+		   AND SE_YR = #{paramSeYr}
+	</delete>
+	
+	
+	<!-- 유형별 정보화 예산현황 정보 일괄 삭제(백서정보삭제) -->
+	<delete id="deleteTypeInfrmBgtPrssInfoListAll" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.deleteTypeInfrmBgtPrssInfoListAll */
+		  FROM TX_TYPE_INFRM_BGT_PRSS_INFO
+		 WHERE WHTPR_ID = #{paramWhtprId}
+	</delete>
+	
+	<select id="selectSearchYr" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.WhtprInfoVO">
+		SELECT/* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.selectTypeInfrmBgtPrssInfoList  */
+		 	PBLCN_YR,
+			WHTPR_ID 
+		FROM TX_WHTPR_INFO
+		ORDER BY PBLCN_YR DESC
+	</select>
+	
+	
+		<!-- 재원별 정보화 예산 통계 -->
+	<select id="fircsInfrmBgtPrssInfoStatistics" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.FircsInfrmBgtPrssInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.FircsInfrmBgtPrssInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.fircsInfrmBgtPrssInfoStatistics  */
+			SE_YR,
+			STCF_BGT_AMT,
+			FUND_BGT_AMT,
+			ETC_BGT_AMT ,
+			BGT_SUM_AMT ,
+			LAST_MDFCN_DT,
+			BGT_SUM_AMT
+		FROM TX_FIRCS_INFRM_BGT_PRSS_INFO 
+		WHERE 1 = 1
+		<if test="whtprId != null and whtprId != ''">
+		   AND WHTPR_ID = #{whtprId}
+		</if>
+		ORDER BY SE_YR 
+	</select>
+	
+	<!-- 유형별 정보화 예산 통계 -->
+	<select id="typeInfrmBgtPrssInfoStatistics" parameterType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.TypeInfrmBgtPrssInfoVO" resultType="kr.go.culture.xr.admin.cltInfoWhtprMgt.vo.TypeInfrmBgtPrssInfoVO">
+		SELECT  /* kr.go.culture.xr.admin.cltInfoWhtprMgt.mapper.CltInfoWhtprMgtMapper.typeInfrmBgtPrssInfoStatistics  */
+			SE_YR, 
+			PLNG_BGT_AMT,
+			DEV_CNST_BGT_AMT,
+			OPER_MNG_RPRM_BGT_AMT,
+			AST_ACQS_BGT_AMT,
+			ETC_BGT_AMT, 
+			BGT_SUM_AMT
+ 		FROM TX_TYPE_INFRM_BGT_PRSS_INFO
+ 		WHERE 1 = 1
+ 		<if test="whtprId != null and whtprId != ''">
+		   AND WHTPR_ID = #{whtprId}
+		</if>
+		ORDER BY SE_YR 
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>

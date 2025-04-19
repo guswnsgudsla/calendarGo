@@ -1,0 +1,1372 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper">
+    <select id="selectInstInfo" parameterType="java.lang.String" resultType="kr.go.culture.xr.admin.dgtlMgt.entity.InstInfo">
+        SELECT INST_ID
+             , INST_NM
+        FROM TX_INST_INFO
+       WHERE 1=1
+        <if test='instId != null and !instId.equals("")'>
+         AND INST_ID = #{instId}
+        </if>
+        AND RLS_YN = 'Y'
+        AND DEL_YN = 'N'
+        ORDER BY INST_NM ASC
+    </select>
+
+    <sql id="sqlDgtlCltRscWithInfo">
+        WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+            (
+            /* 계층구조의 시작조건 쿼리 */
+            SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+            , A.CTGRY_NM	AS ROOT_CTGRY_NM
+            , A.CTGRY_ID
+            ,	A.CTGRY_NM
+            ,	A.UP_CTGRY_ID
+            ,	A.CTGRY_STEP_NO
+            ,	1
+            ,	ARRAY[A.CTGRY_ID::TEXT]
+            ,	FALSE
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+            AND A.CTGRY_STEP_NO = 1
+            UNION ALL
+            /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+            SELECT B.ROOT_CTGRY_ID
+            ,  B.ROOT_CTGRY_NM
+            ,	A.CTGRY_ID
+            , A.CTGRY_NM
+            , A.UP_CTGRY_ID
+            , A.CTGRY_STEP_NO
+            , B.DEPTH + 1
+            , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+            , A.CTGRY_ID = ANY(B.PATH)
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            INNER JOIN DATA_TYPE_ROOT_CTGRY B
+            ON B.CTGRY_ID = A.UP_CTGRY_ID
+            WHERE 1 = 1
+            AND NOT CYCLE
+            )
+        <if test='srchDataTypeCdVal != null and !srchDataTypeCdVal.equals("")'>
+            , DATA_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+            (
+            /* 계층구조의 시작조건 쿼리 */
+            SELECT A.CTGRY_ID
+            , A.CTGRY_ID
+            ,	A.CTGRY_NM
+            ,	A.UP_CTGRY_ID
+            ,	A.CTGRY_STEP_NO
+            ,	1
+            ,	ARRAY[A.CTGRY_ID::TEXT]
+            ,	FALSE
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            <choose>
+                <when test='srchDataDtlTypeCdVal != null and !srchDataDtlTypeCdVal.equals("")'>
+                    WHERE A.CTGRY_ID = #{srchDataDtlTypeCdVal}
+                </when>
+                <otherwise>
+                    WHERE A.CTGRY_ID = #{srchDataTypeCdVal}
+                </otherwise>
+            </choose>
+            UNION ALL
+            /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+            SELECT B.ORG_CTGRY_ID
+            ,	A.CTGRY_ID
+            , A.CTGRY_NM
+            , A.UP_CTGRY_ID
+            , A.CTGRY_STEP_NO
+            , B.DEPTH + 1
+            , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+            , A.CTGRY_ID = ANY(B.PATH)
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            INNER JOIN DATA_TYPE_CTGRY B
+            ON B.CTGRY_ID = A.UP_CTGRY_ID
+            WHERE 1 = 1
+            AND NOT CYCLE
+            )
+        </if>
+        <if test='srchCntTypeCdVal != null and !srchCntTypeCdVal.isEmpty()'>
+            <!-- 콘텐츠 타입코드가 없고, 시대 타입코드가 없을시 With RECURSIVE가 붙어야 함 -->
+            <if test='srchDataTypeCdVal == null or srchDataTypeCdVal.isEmpty()'>
+                WITH RECURSIVE CONTS_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+            </if>
+            <if test='srchDataTypeCdVal != null and !srchDataTypeCdVal.equals("")'>
+                , CONTS_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+            </if>
+            (
+            /* 계층구조의 시작조건 쿼리 */
+            SELECT A.CTGRY_ID
+            , A.CTGRY_ID
+            ,	A.CTGRY_NM
+            ,	A.UP_CTGRY_ID
+            ,	A.CTGRY_STEP_NO
+            ,	1
+            ,	ARRAY[A.CTGRY_ID::TEXT]
+            ,	FALSE
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            <choose>
+                <when test='srchCntDtlTypeCdVal != null and !srchCntDtlTypeCdVal.equals("")'>
+                    WHERE A.CTGRY_ID = #{srchCntDtlTypeCdVal}
+                </when>
+                <otherwise>
+                    WHERE A.CTGRY_ID = #{srchCntTypeCdVal}
+                </otherwise>
+            </choose>
+            UNION ALL
+            /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+            SELECT B.ORG_CTGRY_ID
+            ,	A.CTGRY_ID
+            , A.CTGRY_NM
+            , A.UP_CTGRY_ID
+            , A.CTGRY_STEP_NO
+            , B.DEPTH + 1
+            , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+            , A.CTGRY_ID = ANY(B.PATH)
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            INNER JOIN CONTS_TYPE_CTGRY B
+            ON B.CTGRY_ID = A.UP_CTGRY_ID
+            WHERE 1 = 1
+            AND NOT CYCLE
+            )
+        </if>
+        <if test='srchNationTypeCdVal != null and !srchNationTypeCdVal.equals("")'>
+            <if test='(srchDataTypeCdVal == null or srchDataTypeCdVal.isEmpty()) and (srchCntTypeCdVal == null or srchCntTypeCdVal.isEmpty())'>
+                WITH RECURSIVE NTN_TAGE_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+            </if>
+            <if test='srchCntTypeCdVal != null and !srchCntTypeCdVal.equals("")'>
+                , NTN_TAGE_TYPE_CTGRY (ORG_CTGRY_ID, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+            </if>
+            (
+            /* 계층구조의 시작조건 쿼리 */
+            SELECT A.CTGRY_ID
+            , A.CTGRY_ID
+            ,	A.CTGRY_NM
+            ,	A.UP_CTGRY_ID
+            ,	A.CTGRY_STEP_NO
+            ,	1
+            ,	ARRAY[A.CTGRY_ID::TEXT]
+            ,	FALSE
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            <choose>
+                <when test='srchNationDtlTypeCdVal != null and srchNationDtlTypeCdVal.equals("")'>
+                    WHERE A.CTGRY_ID = #{srchNationDtlTypeCdVal}
+                </when>
+                <otherwise>
+                    WHERE A.CTGRY_ID = #{srchNationTypeCdVal}
+                </otherwise>
+            </choose>
+            UNION ALL
+            /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+            SELECT B.ORG_CTGRY_ID
+            ,	A.CTGRY_ID
+            , A.CTGRY_NM
+            , A.UP_CTGRY_ID
+            , A.CTGRY_STEP_NO
+            , B.DEPTH + 1
+            , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+            , A.CTGRY_ID = ANY(B.PATH)
+            FROM TX_CLRCS_CLSF_CTGRY_INFO A
+            INNER JOIN NTN_TAGE_TYPE_CTGRY B
+            ON B.CTGRY_ID = A.UP_CTGRY_ID
+            WHERE 1 = 1
+            AND NOT CYCLE
+            )
+        </if>
+    </sql>
+
+
+    <sql id="sqlDgtlCltRscInfo">
+        SELECT
+        row_number() over (order by T01.FRST_REG_DT ASC ,T01.CLRCS_ID DESC) AS ROW_NUMBER
+        ,  T01.CLRCS_ID				/* 문화자원아이디 */
+        , T01.INST_ID				/* 기관아이디 */
+        , (
+        SELECT T08.INST_NM
+        FROM TX_INST_INFO T08
+        WHERE T08.INST_ID = T01.INST_ID
+        ) AS INST_NM				/* 기관명 */
+        , T01.CLRCS_NM				/* 문화자원명 */
+        , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+        , T01.CLRCS_CHN_NM		/* 문화자원중문명 */
+        , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+        , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+        , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+        , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+        , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL	/* 문화자원부제목명 */
+        , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN	/* 문화자원설명 */
+        , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN	/* 문화자원부가설명 */
+        , T01.CLRCS_SZ_CN				/* 문화자원크기 */
+        , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+        , T01.CLCN_CD				/* 소장품코드 */
+        , T01.CLRCS_URL_ADDR			/* 문화자원URL */
+        , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+        , T01.INQ_CNT				/* 조회수 */
+        , T01.RLS_YN				/* 공개여부 */
+        , T01.CPYR_TYPE_CD		/* 저작권유형코드 */
+        , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+        , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+        , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+        , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+        , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+        , T01.DEL_DMND_DT			/* 삭제요청일시 */
+        , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+        , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+        , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+        , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+        , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+        , T01.WRI_NM				/* 작가명 */
+        , T01.FDSP_NM				/* 출토지명 */
+        , T01.DSPY_NM				/* 전시명 */
+        , T01.DSPY_PLC_NM			/* 전시장소명 */
+        , T01.RCMDTN_CNT			/* 추천수 */
+        , T01.DWNLD_CNT				/* 다운로드수 */
+        , T01.DWNLD_APLCN_YN		/* 다운로드 가능여부 */
+        , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+        , (
+        SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+        FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+        INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+        ON T10.CTGRY_ID = T09.CTGRY_ID
+        AND T10.CTGRY_TYPE_CD = 'CLRCSCT001'
+        WHERE T09.CLRCS_ID = T01.CLRCS_ID
+        ) AS INST_CTGRY_NM			/* 기관(레거시)카테고리명 */
+        , (
+        SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+        FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+        INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+        ON T10.CTGRY_ID = T09.CTGRY_ID
+        AND T10.CTGRY_TYPE_CD = 'CLRCSCT002'
+        WHERE T09.CLRCS_ID = T01.CLRCS_ID
+        ) AS DATA_TYPE_CTGRY_NM		/* 데이터유형카테고리명 */
+        , (
+        SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+        FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+        INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+        ON T10.CTGRY_ID = T09.CTGRY_ID
+        AND T10.CTGRY_TYPE_CD = 'CLRCSCT003'
+        WHERE T09.CLRCS_ID = T01.CLRCS_ID
+        ) AS CONTS_TYPE_CTGRY_NM		/* 콘텐츠유형카테고리명 */
+        , (
+        SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+        FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+        INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+        ON T10.CTGRY_ID = T09.CTGRY_ID
+        AND T10.CTGRY_TYPE_CD = 'CLRCSCT004'
+        WHERE T09.CLRCS_ID = T01.CLRCS_ID
+        ) AS SRVC_TYPE_CTGRY_NM		/* 서비스유형카테고리명 */
+        , (
+        SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+        FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+        INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+        ON T10.CTGRY_ID = T09.CTGRY_ID
+        AND T10.CTGRY_TYPE_CD = 'CLRCSCT005'
+        WHERE T09.CLRCS_ID = T01.CLRCS_ID
+        ) AS INDR_TYPE_CTGRY_NM		/* 산업유형카테고리명 */
+        , (
+        SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+        FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+        INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+        ON T10.CTGRY_ID = T09.CTGRY_ID
+        AND T10.CTGRY_TYPE_CD = 'CLRCSCT006'
+        WHERE T09.CLRCS_ID = T01.CLRCS_ID
+        ) AS NTN_TAGE_TYPE_CTGRY_NM	/* 국가지역시대유형카테고리명 */
+        , (
+        SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+        FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+        INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+        ON T10.CTGRY_ID = T09.CTGRY_ID
+        AND T10.CTGRY_TYPE_CD = 'CLRCSCT007'
+        WHERE T09.CLRCS_ID = T01.CLRCS_ID
+        ) AS MTR_TYPE_CTGRY_NM		/* 재질유형카테고리명 */
+        FROM TX_DGTL_CLRCS_MTDT_INFO T01
+        LEFT JOIN (
+        SELECT ATCH_FILE_GROUP_ID
+        , FILE_STRG_PATH_NM
+        , STRG_FILE_NM
+        , ORGNL_ATCH_FILE_NM
+        , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+        FROM TX_ATCH_FILE_DTL_INFO
+        ) T02
+        ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+        AND T02.ATCH_FILE_SN = 1
+        WHERE 1 = 1
+--         AND T01.RLS_YN = 'Y'
+        <if test='clrcsId != null and !clrcsId.equals("")'>
+            AND T01.CLRCS_ID = #{clrcsId}
+        </if>
+        <if test='srchInstTypeCdVal != null and !srchInstTypeCdVal.equals("")'>
+            AND T01.INST_ID = #{srchInstTypeCdVal}
+        </if>
+        <if test='srchDataTypeCdVal != null and !srchDataTypeCdVal.equals("")'>
+            AND T01.CLRCS_ID IN (
+            SELECT T11.CLRCS_ID
+            FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+            INNER JOIN DATA_TYPE_CTGRY T12
+            ON T12.CTGRY_ID = T11.CTGRY_ID
+            )
+        </if>
+        <if test='srchCntTypeCdVal != null and !srchCntTypeCdVal.equals("")'>
+            AND T01.CLRCS_ID IN (
+            SELECT T11.CLRCS_ID
+            FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+            INNER JOIN CONTS_TYPE_CTGRY T12
+            ON T12.CTGRY_ID = T11.CTGRY_ID
+            )
+        </if>
+        <if test='srchNationTypeCdVal != null and !srchNationTypeCdVal.equals("")'>
+            AND T01.CLRCS_ID IN (
+            SELECT T11.CLRCS_ID
+            FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+            INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+            ON T12.CTGRY_ID = T11.CTGRY_ID
+            )
+        </if>
+        <if test='srchDgtlClrcsNmVal != null and !srchDgtlClrcsNmVal.equals("")'>
+            AND T01.CLRCS_NM LIKE '%' || #{srchDgtlClrcsNmVal} || '%'
+        </if>
+        <if test='srchRlsYnVal != null and !srchRlsYnVal.equals("")'>
+            AND T01.RLS_YN = #{srchRlsYnVal}
+        </if>
+<!--        <if test='srchRgnCd != null and !srchRgnCd.equals("")'>-->
+<!--            AND T01.INST_ID IN (-->
+<!--            SELECT INST_ID-->
+<!--            FROM TX_INST_INFO-->
+<!--            WHERE RGN_CD = #{srchRgnCd}-->
+<!--            )-->
+<!--        </if>-->
+<!--        <if test='exbiId != null and !exbiId.equals("")'>-->
+<!--            AND T01.CLRCS_ID IN (-->
+<!--            SELECT CLRCS_ID-->
+<!--            FROM TX_EXBI_CLRCS_REL_INFO-->
+<!--            WHERE EXBI_ID = #{exbiId}-->
+<!--            )-->
+<!--        </if>-->
+        <choose>
+            <when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+            </when>
+            <when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+            </when>
+            <when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+            </when>
+            <when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+            </when>
+        </choose>
+        ORDER BY
+        <choose>
+            <when test='orderByKey != null and orderByKey.equals("A")'>
+                T01.DWNLD_CNT DESC, T01.CLRCS_NM ASC
+            </when>
+            <when test='orderByKey != null and orderByKey.equals("B")'>
+                T01.FRST_REG_DT DESC, T01.CLRCS_ID ASC
+            </when>
+            <when test='orderByKey != null and orderByKey.equals("C")'>
+                T01.RCMDTN_CNT DESC, T01.CLRCS_NM ASC
+            </when>
+            <otherwise>
+                T01.DWNLD_CNT DESC, T01.CLRCS_NM ASC
+            </otherwise>
+        </choose>
+    </sql>
+
+
+
+    <select id="selectDgtlCltRscInfoList" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.SrchDgtlClrcsRscVO" resultType="kr.go.culture.xr.admin.dgtlMgt.entity.DgtlClrcsInfo">
+        <include refid="sqlDgtlCltRscWithInfo" />
+        SELECT /* 디지털문화자원정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltRscInfoList */
+        A.*
+        <include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+        FROM (
+        <include refid="sqlDgtlCltRscInfo" />
+        ) A
+        <include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+    </select>
+
+    <select id="selectDgtlCltRscInfoDtl" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.SrchDgtlClrcsRscVO" resultType="kr.go.culture.xr.admin.dgtlMgt.entity.DgtlClrcsInfo">
+        <include refid="sqlDgtlCltRscWithInfo" />
+        SELECT /* 디지털문화자원정보 목록 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltRscInfoList */
+        A.*
+        , (
+            SELECT T10.ROOT_CTGRY_ID
+            FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+            INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+            ON T10.CTGRY_ID = T09.CTGRY_ID
+            WHERE T09.CLRCS_ID = A.CLRCS_ID
+            LIMIT 1
+            ) AS DATA_TYPE_ROOT_CTGRY_ID
+        FROM (
+        <include refid="sqlDgtlCltRscInfo" />
+        ) A
+    </select>
+
+    <select id="selectDgtlCltRscInfoListCnt" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.SrchDgtlClrcsRscVO" resultType="java.lang.Integer">
+        <include refid="sqlDgtlCltRscWithInfo" />
+        SELECT /* 디지털문화자원정보 카운트 조회 kr.go.culture.xr.portal.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlCltRscInfoCnt */
+        COUNT(1) AS CNT
+        FROM (
+        <include refid="sqlDgtlCltRscInfoCnt" />
+        ) A WHERE 1 = 1
+        <if test='srchRlsYnVal != null and !srchRlsYnVal.equals("")'>
+            AND A.RLS_YN = #{srchRlsYnVal}
+        </if>
+
+    </select>
+
+    <sql id="sqlDgtlCltRscInfoCnt">
+        SELECT
+        T01.CLRCS_ID				/* 문화자원아이디 */
+        ,T01.RLS_YN
+        FROM TX_DGTL_CLRCS_MTDT_INFO T01
+        LEFT JOIN (
+        SELECT ATCH_FILE_GROUP_ID
+        , FILE_STRG_PATH_NM
+        , STRG_FILE_NM
+        , ORGNL_ATCH_FILE_NM
+        , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+        FROM TX_ATCH_FILE_DTL_INFO
+        ) T02
+        ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+        AND T02.ATCH_FILE_SN = 1
+        WHERE 1 = 1
+        --AND T01.RLS_YN = 'Y'
+        <if test='clrcsId != null and !clrcsId.equals("")'>
+            AND T01.CLRCS_ID = #{clrcsId}
+        </if>
+        <if test='srchInstTypeCdVal != null and !srchInstTypeCdVal.equals("")'>
+            AND T01.INST_ID = #{srchInstTypeCdVal}
+        </if>
+        <if test='srchDataTypeCdVal != null and !srchDataTypeCdVal.equals("")'>
+            AND T01.CLRCS_ID IN (
+            SELECT T11.CLRCS_ID
+            FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+            INNER JOIN DATA_TYPE_CTGRY T12
+            ON T12.CTGRY_ID = T11.CTGRY_ID
+            )
+        </if>
+        <if test='srchCntTypeCdVal != null and !srchCntTypeCdVal.equals("")'>
+            AND T01.CLRCS_ID IN (
+            SELECT T11.CLRCS_ID
+            FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+            INNER JOIN CONTS_TYPE_CTGRY T12
+            ON T12.CTGRY_ID = T11.CTGRY_ID
+            )
+        </if>
+        <if test='srchNationTypeCdVal != null and !srchNationTypeCdVal.equals("")'>
+            AND T01.CLRCS_ID IN (
+            SELECT T11.CLRCS_ID
+            FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T11
+            INNER JOIN NTN_TAGE_TYPE_CTGRY T12
+            ON T12.CTGRY_ID = T11.CTGRY_ID
+            )
+        </if>
+        <if test='srchDgtlClrcsNmVal != null and !srchDgtlClrcsNmVal.equals("")'>
+            AND T01.CLRCS_NM LIKE '%' || #{srchDgtlClrcsNmVal} || '%'
+        </if>
+        <!--        <if test='srchRgnCd != null and !srchRgnCd.equals("")'>-->
+        <!--            AND T01.INST_ID IN (-->
+        <!--            SELECT INST_ID-->
+        <!--            FROM TX_INST_INFO-->
+        <!--            WHERE RGN_CD = #{srchRgnCd}-->
+        <!--            )-->
+        <!--        </if>-->
+        <!--        <if test='exbiId != null and !exbiId.equals("")'>-->
+        <!--            AND T01.CLRCS_ID IN (-->
+        <!--            SELECT CLRCS_ID-->
+        <!--            FROM TX_EXBI_CLRCS_REL_INFO-->
+        <!--            WHERE EXBI_ID = #{exbiId}-->
+        <!--            )-->
+        <!--        </if>-->
+        <choose>
+            <when test='srchRlsDt != null and srchRlsDt.equals("D1")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 DAY')
+            </when>
+            <when test='srchRlsDt != null and srchRlsDt.equals("D7")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '7 DAY')
+            </when>
+            <when test='srchRlsDt != null and srchRlsDt.equals("M1")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '1 MONTH')
+            </when>
+            <when test='srchRlsDt != null and srchRlsDt.equals("M6")'>
+                AND T01.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW() - INTERVAL '6 MONTH')
+            </when>
+        </choose>
+        ORDER BY
+        <choose>
+            <when test='orderByKey != null and orderByKey.equals("A")'>
+                T01.DWNLD_CNT DESC, T01.CLRCS_NM ASC
+            </when>
+            <when test='orderByKey != null and orderByKey.equals("B")'>
+                T01.FRST_REG_DT DESC, T01.CLRCS_NM ASC
+            </when>
+            <when test='orderByKey != null and orderByKey.equals("C")'>
+                T01.RCMDTN_CNT DESC, T01.CLRCS_NM ASC
+            </when>
+            <otherwise>
+                T01.DWNLD_CNT DESC, T01.CLRCS_NM ASC
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="selectDgtlCltRcsPrdctInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.SrchDgtlClrcsRscVO" resultType="kr.go.culture.xr.admin.dgtlMgt.entity.DgtlClrcsPrdInfo">
+        /* 디지털문화자원산출물파일정보 목록 조회 kr.go.culture.xr.admin.dgtlcltrsc.mapper.DgtlCltRscMapper.selectDgtlClrcsPrdctFileInfoList */
+        WITH CLRCS_PRDCT_BASE_INFO (FILE_STRG_PATH_NM1, FILE_STRG_PATH_NM2, FILE_STRG_PATH_NM3, FILE_STRG_PATH_NM4,FILE_STRG_PATH_NM) AS
+        (
+        SELECT
+        CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',5) = FILE_NM THEN NULL
+        WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',5) = '' THEN NULL
+        ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',5)
+        END AS FILE_STRG_PATH_NM1
+        , CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',6) = FILE_NM THEN NULL
+        WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',6) = '' THEN NULL
+        ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',6)
+        END AS FILE_STRG_PATH_NM2
+        , CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',7) = FILE_NM THEN NULL
+        WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',7) = '' THEN NULL
+        ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',7)
+        END AS FILE_STRG_PATH_NM3
+        , CASE WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',8) = FILE_NM THEN NULL
+        WHEN SPLIT_PART(FILE_STRG_PATH_NM,'/',8) = '' THEN NULL
+        ELSE SPLIT_PART(FILE_STRG_PATH_NM,'/',8)
+        END AS FILE_STRG_PATH_NM4
+        , FILE_STRG_PATH_NM
+        FROM (
+        SELECT REPLACE(FILE_STRG_PATH_NM, #{fileSavePath}, '') AS FILE_STRG_PATH_NM
+        , FILE_STRG_PATH_NM AS ORG_FILE_STRG_PATH_NM
+        , FILE_NM
+        FROM TX_DGTL_CLRCS_PRDCT_INFO
+        WHERE CLRCS_ID = #{clrcsId}
+        AND PRDCT_CLSF_CD = #{prdctClsfCd}
+        AND FILE_STRG_PATH_NM LIKE #{fileSavePath}||'%'
+        AND RLS_YN = 'Y'
+        ) T01
+        ORDER BY FILE_STRG_PATH_NM
+        )
+        , CLRCS_PRDCT_DIR_INFO (DIR_NM, UP_DIR_NM, UP_ORG_DIR_NM, ORG_DIR_NM, LVL) AS
+        (
+        SELECT FILE_STRG_PATH_NM1 AS DIR_NM
+        , NULL AS UP_DIR_NM
+        , NULL AS UP_ORG_DIR_NM
+        , FILE_STRG_PATH_NM1 AS ORG_DIR_NM
+        , 1 AS LVL
+        FROM CLRCS_PRDCT_BASE_INFO
+        WHERE FILE_STRG_PATH_NM1 IS NOT NULL
+        GROUP BY FILE_STRG_PATH_NM1
+        UNION ALL
+        SELECT FILE_STRG_PATH_NM2 AS DIR_NM
+        , FILE_STRG_PATH_NM1 AS UP_DIR_NM
+        , FILE_STRG_PATH_NM1 AS UP_ORG_DIR_NM
+        , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2 AS ORG_DIR_NM
+        , 2 AS LVL
+        FROM CLRCS_PRDCT_BASE_INFO
+        WHERE FILE_STRG_PATH_NM2 IS NOT NULL
+        GROUP BY FILE_STRG_PATH_NM1,FILE_STRG_PATH_NM2
+        UNION ALL
+        SELECT FILE_STRG_PATH_NM3 AS DIR_NM
+        , FILE_STRG_PATH_NM2 AS UP_DIR_NM
+        , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2 AS UP_ORG_DIR_NM
+        , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2||'/'||FILE_STRG_PATH_NM3 AS ORG_DIR_NM
+        , 3 AS LVL
+        FROM CLRCS_PRDCT_BASE_INFO
+        WHERE FILE_STRG_PATH_NM3 IS NOT NULL
+        GROUP BY FILE_STRG_PATH_NM1,FILE_STRG_PATH_NM2,FILE_STRG_PATH_NM3
+        UNION ALL
+        SELECT FILE_STRG_PATH_NM4 AS DIR_NM
+        , FILE_STRG_PATH_NM3 AS UP_DIR_NM
+        , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2||'/'||FILE_STRG_PATH_NM3 AS UP_ORG_DIR_NM
+        , FILE_STRG_PATH_NM1||'/'||FILE_STRG_PATH_NM2||'/'||FILE_STRG_PATH_NM3||'/'||FILE_STRG_PATH_NM4 AS ORG_DIR_NM
+        , 4 AS LVL
+        FROM CLRCS_PRDCT_BASE_INFO
+        WHERE FILE_STRG_PATH_NM4 IS NOT NULL
+        GROUP BY FILE_STRG_PATH_NM1,FILE_STRG_PATH_NM2,FILE_STRG_PATH_NM3,FILE_STRG_PATH_NM4
+        )
+        SELECT
+        T01.CLRCS_ID AS CLRCS_ID
+        , T01.PRDCT_SN AS PRDCT_SN
+        , T01.PRDCT_TYPE_CD
+        , 'FL' AS FILE_TYPE
+        , T01.ORG_DIR_NM
+        , T01.FILE_NM AS PRDCT_NM
+        , T01.FILE_SZ
+        , T01.SN	AS SQ
+        , T02.SN	AS UP_SQ
+        , COALESCE(T02.LVL,0)+1 AS LVL
+        , T01.IMG_WDTH_LNG
+        , T01.IMG_HGHT_LNG
+        , T01.VDO_STRE_LNG
+        , T01.SND_STRE_LNG
+        , T01.BIT_LVL_CD
+        FROM (
+        SELECT
+        CLRCS_ID				/* 문화자원아이디 */
+        , PRDCT_SN				/* 산출물일련번호 */
+        , PRDCT_TYPE_CD /* 산출물분류코드 */
+        , FILE_NM				/* 파일명 */
+        , FILE_STRG_PATH_NM	/* 파일저장경로명 */
+        , FILE_SZ				/* 파일크기 */
+        , ORGNL_FILE_NM		/* 원본파일명 */
+        <choose>
+            <when test='prdctClsfCd != null and prdctClsfCd.equals("01")'>
+                , REPLACE(SUBSTR(FILE_STRG_PATH_NM,POSITION('FINAL/' IN FILE_STRG_PATH_NM)+6),'/'||FILE_NM,'') AS ORG_DIR_NM
+            </when>
+            <when test='prdctClsfCd != null and prdctClsfCd.equals("02")'>
+                , REPLACE(SUBSTR(FILE_STRG_PATH_NM,POSITION('STEP/' IN FILE_STRG_PATH_NM)+5),'/'||FILE_NM,'') AS ORG_DIR_NM
+            </when>
+            <otherwise>
+                , REPLACE(SUBSTR(FILE_STRG_PATH_NM,POSITION('FINAL/' IN FILE_STRG_PATH_NM)+6),'/'||FILE_NM,'') AS ORG_DIR_NM
+            </otherwise>
+        </choose>
+        , ROW_NUMBER() OVER (ORDER BY FILE_STRG_PATH_NM ASC)
+        + (SELECT COUNT(1)
+        FROM CLRCS_PRDCT_DIR_INFO
+        ) AS SN
+        , IMG_WDTH_LNG
+        , IMG_HGHT_LNG
+        , VDO_STRE_LNG
+        , SND_STRE_LNG
+        , BIT_LVL_CD
+        FROM TX_DGTL_CLRCS_PRDCT_INFO
+        WHERE CLRCS_ID = #{clrcsId}
+        AND PRDCT_CLSF_CD = #{prdctClsfCd}
+        AND FILE_STRG_PATH_NM LIKE #{fileSavePath}||'%'
+        AND RLS_YN = 'Y'
+        ) T01
+        LEFT JOIN (
+        SELECT DIR_NM
+        , UP_DIR_NM
+        , UP_ORG_DIR_NM
+        , ORG_DIR_NM
+        , LVL
+        , ROW_NUMBER() OVER (ORDER BY ORG_DIR_NM ASC) AS SN
+        FROM CLRCS_PRDCT_DIR_INFO T02
+        ) T02
+        ON T02.ORG_DIR_NM = T01.ORG_DIR_NM
+        UNION ALL
+        SELECT
+        #{clrcsId} AS CLRCS_ID
+        , NULL AS PRDCT_SN
+        , NULL AS PRDCT_TYPE_CD
+        , 'DR' AS FILE_TYPE
+        , T01.ORG_DIR_NM
+        , T01.DIR_NM AS PRDCT_NM
+        , 0 AS FILE_SZ
+        , T01.SN	AS SQ
+        , T02.SN	AS UP_SQ
+        , COALESCE(T01.LVL,1) AS LVL
+        , 0 AS IMG_WDTH_LNG
+        , 0 AS IMG_HGHT_LNG
+        , 0 AS VDO_STRE_LNG
+        , 0 AS SND_STRE_LNG
+        , '' AS BIT_LVL_CD
+        FROM (
+        SELECT DIR_NM
+        , UP_DIR_NM
+        , UP_ORG_DIR_NM
+        , ORG_DIR_NM
+        , LVL
+        , ROW_NUMBER() OVER (ORDER BY ORG_DIR_NM ASC) AS SN
+        FROM CLRCS_PRDCT_DIR_INFO T02
+        ) T01
+        LEFT JOIN (
+        SELECT DIR_NM
+        , UP_DIR_NM
+        , UP_ORG_DIR_NM
+        , ORG_DIR_NM
+        , LVL
+        , ROW_NUMBER() OVER (ORDER BY ORG_DIR_NM ASC) AS SN
+        FROM CLRCS_PRDCT_DIR_INFO T02
+        ) T02
+        ON T02.ORG_DIR_NM = T01.UP_ORG_DIR_NM
+        ORDER BY 5,7
+    </select>
+
+
+    <insert id="insertDgtlCltRscInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO" useGeneratedKeys="false" keyColumn="CLRCS_ID" keyProperty="clrcsId">
+        <selectKey keyProperty="clrcsId" resultType="String" order="BEFORE">
+            SELECT 'DCM' || LPAD(nextval('sq_tx_dgtl_clrcs_mtdt_info_01')::text, 17, '0') as CLRCS_ID;
+        </selectKey>
+
+        /* 디지털문화자원 메타정보 등록 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.insertDgtlCltRscInfo */
+        INSERT INTO TX_DGTL_CLRCS_MTDT_INFO(
+                 CLRCS_ID
+               , INST_ID
+               , CLRCS_NM
+               , CLRCS_ENG_NM
+               , CLRCS_CHN_NM
+               , CLRCS_AUT_NM
+               , CLRCS_NTN_CD
+               , CLRCS_TAGE_CD
+               , CLRCS_MTR_CD
+               , CLRCS_SBTTL_NM
+               , CLRCS_EXPLN_CN
+               , CLRCS_ANXT_EXPLN_CN
+               , CLTPTY_TYPE_CD
+               , CLCN_CD
+               , CLRCS_URL_ADDR
+               , CLCT_TYPE_CD
+               , INQ_CNT
+               , RLS_YN
+               , CPYR_TYPE_CD
+               , CLCT_SYS_APLCN_YN
+               , CLCT_RULE_MDFR_ID
+               , CLCT_RULE_MDFCN_DT
+               , DEL_WTNG_YN
+               , FRST_RGTR_ID
+               , FRST_REG_DT
+               , LAST_MDFR_ID
+               , LAST_MDFCN_DT
+               , INST_ITSL_MNG_NO
+               , RPRS_IMG_GROUP_ID
+               , WRI_NM
+               , FDSP_NM
+               , DSPY_NM
+               , DSPY_PLC_NM
+               , RCMDTN_CNT
+               , DWNLD_CNT
+               , MNGR_RCMDTN_YN
+               , CLRCS_SZ_CN
+               , DWNLD_APLCN_YN
+            )
+        VALUES (
+                #{clrcsId}                      /* 문화자원아이디 */
+               ,#{srchInstTypeCdVal}            /* 기관아이디 */
+               ,#{srchDgtlClrcsNmVal}           /* 문화자원명 */
+               ,#{srchDgtlClrcsEngNmVal}        /* 문화자원영문명 */
+               ,#{srchDgtlClrcsChnNmVal}        /* 문화자원중문명 */
+               ,#{srchDgtlClrcsAutNmVal}        /* 문화자원저자명 */
+               ,#{srchNationTypeCdVal}          /* 문화자원국가코드 */
+               ,#{srchNationDtlTypeCdVal}       /* 문화자원시대코드 */
+               ,#{srchMtrTypeCdVal}             /* 문화자원재질코드 */
+               ,#{srchDgtlClrcsSbttlVal}        /* 문화자원부제목 */
+               ,#{srchClrcsExplnVal}            /* 문화자원설명 */
+               ,#{srchDgtlClrcsAnxtExplnVal}    /* 문화자원부가설명 */
+               ,null                            /* 문화제유형코드 */
+               ,null                            /* 소장품코드 */
+               ,#{srchDgtlClrcsUrlAddrVal}      /* 문화자원URL */
+               ,null                            /* 수집유형코드 */
+               ,0                               /* 조회수 */
+               ,#{srchRlsYnVal}                 /* 공개여부 */
+               ,#{cpyrTypeCd}            		/* 저작권유형코드 */
+               ,'N'                             /* 수집시스템적용여부 */
+               ,null                            /* 수집규칙수정자아이디 */
+               ,LOCALTIMESTAMP                  /* 수집규칙수정일시 */
+               ,'N'                             /* 삭제대기여부 */
+               ,#{frstRgtrId}     				/* 최초등록자아이디 */
+               ,LOCALTIMESTAMP                  /* 최초등록일시 */
+               ,#{frstRgtrId}                   /* 최종수정자아이디 */
+               ,LOCALTIMESTAMP                  /* 최종수정일시 */
+               ,#{srchDgtlInstItslMngNoVal}     /* 기관자체관리번호 */
+               ,#{srchRprsImgGroupIdVal}        /* 대표이미지그룹아이디 추후 썸네일 등록 후 업데이트*/
+               ,#{srchDgtlWriNmVal}             /* 작가명 */
+               ,#{srchDgtlFdspNmVal}            /* 출토지명 */
+               ,#{srchDgtlDspyNmVal}            /* 전시명 */
+               ,#{srchDgtlDspyPlcNmVal}         /* 전시장소명 */
+               ,0                               /* 추천수 */
+               ,0                               /* 다운로드수 */
+               ,'N'                             /* 관리자추천여부 */
+               ,#{srchClrcsSzCnVal}             /* 문화자원 크기 */
+               ,#{dwnldAplcnYn}             	/* 다운로드 가능여부 */
+               )
+
+    </insert>
+
+
+    <insert id="insertClrcsClsfCtgryRelInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO">
+        INSERT INTO tx_clrcs_clsf_ctgry_rel_info(
+        ctgry_id
+        , clrcs_id
+        , frst_rgtr_id
+        , frst_reg_dt
+        , last_mdfr_id
+        , last_mdfcn_dt
+        )
+        VALUES
+        <foreach collection="clrcsClsfCtgryVoList" item="type" separator=",">
+            <if test="type.value != null and !type.value.isEmpty()">
+                (
+                <choose>
+                    <when test="type.detailValue != null and !type.detailValue.isEmpty()">
+                        #{type.detailValue}
+                    </when>
+                    <otherwise>
+                        #{type.value}
+                    </otherwise>
+                </choose>
+                , #{clrcsId}
+                , #{frstRgtrId}
+                , LOCALTIMESTAMP
+                , #{frstRgtrId}
+                , LOCALTIMESTAMP
+                )
+            </if>
+        </foreach>
+    </insert>
+
+    <update id="updateDgtlCltRscInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO">
+        /* 디지털문화자원 메타정보 수정 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.updateDgtlCltRscInfo */
+        UPDATE TX_DGTL_CLRCS_MTDT_INFO
+        SET
+          CLRCS_NM                  = #{srchDgtlClrcsNmVal}           /* 문화자원명 */
+        , CLRCS_EXPLN_CN               = #{srchClrcsExplnVal}            /* 문화자원 설명 */
+        , INST_ID                   = #{srchInstTypeCdVal}            /* 기관아이디 */
+        , INST_ITSL_MNG_NO          = #{srchDgtlInstItslMngNoVal}     /* 기관자체 관리번호 */
+        , RLS_YN                    = #{srchRlsYnVal}                 /* 공개여부 */
+        , CLRCS_SBTTL_NM            = #{srchDgtlClrcsSbttlVal}        /* 문화자원 부제목 */
+        , CLRCS_URL_ADDR            = #{srchDgtlClrcsUrlAddrVal}      /* 문화자원 URL */
+        , CLRCS_ENG_NM              = #{srchDgtlClrcsEngNmVal}        /* 문화자원 영문명 */
+        , CLRCS_CHN_NM              = #{srchDgtlClrcsChnNmVal}        /* 문화자원 중문명 */
+        , CLRCS_AUT_NM              = #{srchDgtlClrcsAutNmVal}        /* 문화자원 저자명 */
+        , WRI_NM                    = #{srchDgtlWriNmVal}             /* 문화자원 작가명*/
+        , FDSP_NM                   = #{srchDgtlFdspNmVal}            /* 문화자원 출토지명 */
+        , DSPY_NM                   = #{srchDgtlDspyNmVal}            /* 믄화자원 전시명 */
+        , dspy_plc_nm               = #{srchDgtlDspyPlcNmVal}         /* 문화자원 전시장소명 */
+        , CLRCS_NTN_CD              = #{srchNationTypeCdVal}          /* 문화자원 국가코드 */
+        , CLRCS_TAGE_CD             = #{srchNationDtlTypeCdVal}       /* 문화자원 시대코드 */
+        , CLRCS_MTR_CD              = #{srchMtrTypeCdVal}             /* 문화자원 재질코드 */
+        , CLRCS_ANXT_EXPLN_CN       = #{srchDgtlClrcsAnxtExplnVal}    /* 문화자원 부가설명 */
+        , CLTPTY_TYPE_CD            = null                            /* 문화제 유형코드 */
+        , CLCN_CD                   = null                            /* 소장품코드 */
+        , CLCT_TYPE_CD              = null                            /* 수집유형코드 */
+        , CPYR_TYPE_CD              = #{cpyrTypeCd}            		  /* 저작권유형코드 */
+        , RPRS_IMG_GROUP_ID         = #{srchRprsImgGroupIdVal}        /* 대표이미지그룹아이디 추후 썸네일 등록 후 업데이트*/
+        , CLRCS_SZ_CN               = #{srchClrcsSzCnVal}             /* 문화자원 크기 */
+        , DWNLD_APLCN_YN            = #{dwnldAplcnYn}             	  /* 다운로드 가능여부 */
+        , LAST_MDFR_ID              = #{lastMdfrId}
+        , LAST_MDFCN_DT             = NOW()
+        WHERE CLRCS_ID              = #{clrcsId}
+    </update>
+
+    <delete id="deleteClrcsClsfCtgryRelInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO">
+        /* 디지털문화자원 관계정보 삭제 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.deleteClrcsClsfCtgryRelInfo */
+        DELETE FROM tx_clrcs_clsf_ctgry_rel_info
+        WHERE clrcs_id = #{clrcsId}
+    </delete>
+
+    <select id="selectDgtlClrcsCtgryInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO" resultType="kr.go.culture.xr.admin.dgtlMgt.entity.DgtlClrcsCtgryInfo">
+                /* 디지털문화자원 분류체계 관계정보 조회 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.selectClsfCtgryInfo */
+                SELECT
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT003' THEN COALESCE(T10.up_ctgry_id, T10.ctgry_id) END) AS SRCH_CNT_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT003' THEN T10.ctgry_id END) AS SRCH_CNT_DTL_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT002' THEN COALESCE(T10.up_ctgry_id, T10.ctgry_id) END) AS SRCH_DATA_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT002' THEN T10.ctgry_id END) AS SRCH_DATA_DTL_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT004' THEN COALESCE(T10.up_ctgry_id, T10.ctgry_id) END) AS SRCH_SVC_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT004' THEN T10.ctgry_id END) AS SRCH_SVC_DTL_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT005' THEN COALESCE(T10.up_ctgry_id, T10.ctgry_id) END) AS SRCH_INDR_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT005' THEN T10.ctgry_id END) AS SRCH_INDR_DTL_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT006' THEN COALESCE(T10.up_ctgry_id, T10.ctgry_id) END) AS SRCH_NATION_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT006' THEN T10.ctgry_id END) AS SRCH_NATION_DTL_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT007' THEN COALESCE(T10.up_ctgry_id, T10.ctgry_id) END) AS SRCH_MTR_TYPE_CD_VAL,
+                    MAX(CASE WHEN T10.CTGRY_TYPE_CD = 'CLRCSCT007' THEN T10.ctgry_id END) AS SRCH_MTR_DTL_TYPE_CD_VAL
+                FROM TX_DGTL_CLRCS_MTDT_INFO A
+          INNER JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T09 ON A.clrcs_id = T09.clrcs_id
+          INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10 ON T10.CTGRY_ID = T09.CTGRY_ID
+                WHERE A.clrcs_id = #{clrcsId}
+                  AND T10.CTGRY_TYPE_CD IN ('CLRCSCT002', 'CLRCSCT003', 'CLRCSCT005', 'CLRCSCT006', 'CLRCSCT007', 'CLRCSCT004')
+                GROUP BY A.clrcs_id
+    </select>
+
+    <select id="selectInstCtgryList" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.ClrcsClsfCtgryDtlVo" resultType="kr.go.culture.xr.admin.dgtlMgt.vo.ClrcsClsfCtgryDtlVo">
+        SELECT /* 기관 분류 목록 조회 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.selectInstCtgryList */
+			   CTGRY_ID			/* 범주아이디 */
+			 , UP_CTGRY_ID		/* 상위범주아이디 */
+			 , CTGRY_NM			/* 범주명 */
+			 , CTGRY_TYPE_CD	/* 범주유형코드 */
+			 , CTGRY_STEP_NO	/* 범주단계번호 */
+			 , SORT_SN			/* 정렬일련번호 */
+			 , USE_YN			/* 사용여부 */
+			 , CTGRY_WHOL_NM	/* 범주전체명 */
+			 , INST_ID			/* 기관아이디 */
+          FROM TX_CLRCS_CLSF_CTGRY_INFO
+         WHERE 1 = 1
+           AND INST_ID = #{instId}
+           AND CTGRY_TYPE_CD = #{ctgryTypeCd}
+		<choose>
+			<when test='ctgryWholNm != null and !ctgryWholNm.equals("")'>
+           AND CTGRY_WHOL_NM = REPLACE(#{ctgryWholNm},' ','')
+			</when>
+			<otherwise>
+           AND CTGRY_STEP_NO = #{ctgryStepNo}
+           AND CTGRY_NM = #{ctgryNm}
+			</otherwise>
+		</choose>
+    </select>
+
+    <insert id="insertInstCtgryInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.ClrcsClsfCtgryDtlVo">
+        INSERT /* 기관 분류 정보 등록 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.insertInstCtgryInfo */
+          INTO TX_CLRCS_CLSF_CTGRY_INFO
+             (
+			   CTGRY_ID			/* 범주아이디 */
+			 , UP_CTGRY_ID		/* 상위범주아이디 */
+			 , CTGRY_NM			/* 범주명 */
+			 , CTGRY_TYPE_CD	/* 범주유형코드 */
+			 , CTGRY_STEP_NO	/* 범주단계번호 */
+			 , SORT_SN			/* 정렬일련번호 */
+			 , CTGRY_WHOL_NM	/* 범주전체명 */
+			 , INST_ID			/* 기관아이디 */
+			 , USE_YN			/* 사용여부 */
+			 , FRST_RGTR_ID		/* 최초등록자아이디 */
+			 , FRST_REG_DT		/* 최초등록일시 */
+			 , LAST_MDFR_ID		/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT	/* 최종수정일시 */
+             ) VALUES (
+			   TRIM(TO_CHAR(NEXTVAL('SQ_TX_CLRCS_CLSF_CTGRY_INFO_01'),'0000000009'))
+			 , #{upCtgryId}
+			 , #{ctgryNm}
+			 , #{ctgryTypeCd}
+			 , #{ctgryStepNo}
+			 , 
+			   (
+			 	SELECT COALESCE(MAX(SORT_SN),0) + 1
+			 	  FROM TX_CLRCS_CLSF_CTGRY_INFO
+			<choose>
+				<when test='upCtgryId != null and !upCtgryId.equals("") and ctgryStepNo != 1'>
+			 	 WHERE UP_CTGRY_ID = #{upCtgryId}
+				</when>
+				<otherwise>
+			 	 WHERE UP_CTGRY_ID IS NULL
+				</otherwise>
+			</choose>
+				   AND CTGRY_TYPE_CD = #{ctgryTypeCd}
+			   )
+			 , #{ctgryWholNm}
+			 , #{instId}
+			 , 'Y'
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+             )
+    </insert>
+
+    <delete id="deleteClrcsAtmcTagInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO">
+    	DELETE /* 문화자원자동태그 삭제 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.deleteClrcsAtmcTagInfo */
+    	  FROM TX_CLRCS_TAG_INFO
+    	 WHERE CLRCS_ID = #{clrcsId}
+    	   AND ATMC_CRT_YN = 'Y'
+    </delete>
+
+    <insert id="insertClrcsAtmcTagInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO">
+        INSERT /* 문화자원자동태그 등록 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.insertClrcsAtmcTagInfo */
+          INTO TX_CLRCS_TAG_INFO
+             (
+			   CLRCS_ID			/* 문화자원아이디 */
+			 , TAG_SN			/* 태그일련번호 */
+			 , TAG_NM			/* 태그명 */
+			 , ATMC_CRT_YN		/* 자동생성여부 */
+			 , DEL_YN			/* 삭제여부 */
+			 , FRST_RGTR_ID		/* 최초등록자아이디 */
+			 , FRST_REG_DT		/* 최초등록일시 */
+			 , LAST_MDFR_ID		/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT	/* 최종수정일시 */
+             )
+		SELECT T03.CLRCS_ID
+			 , COALESCE(T04.TAG_SN,0) + ROW_NUMBER() OVER (PARTITION BY T03.CLRCS_ID  ORDER BY T03.TAG_NM) AS TAG_SN
+			 , T03.TAG_NM
+			 , 'Y' AS ATMC_CRT_YN					/* 자동생성여부 */
+			 , 'N' AS DEL_YN						/* 삭제여부 */
+			 , 'SYSTEM' AS FRST_RGTR_ID				/* 최초등록자아이디 */
+			 , CURRENT_TIMESTAMP AS FRST_REG_DT		/* 최초등록일시 */
+			 , 'SYSTEM' AS LAST_MDFR_ID				/* 최종수정자아이디 */
+			 , CURRENT_TIMESTAMP AS LAST_MDFCN_DT	/* 최종수정일시 */
+		FROM (
+				SELECT DISTINCT CLRCS_ID
+				     , TAG_NM
+				  FROM (
+						SELECT T02.CLRCS_ID,UNNEST(STRING_TO_ARRAY(T01.CTGRY_WHOL_NM, '-')) AS TAG_NM
+						  FROM TX_CLRCS_CLSF_CTGRY_INFO T01
+						  JOIN TX_CLRCS_CLSF_CTGRY_REL_INFO T02
+						    ON T02.CTGRY_ID = T01.CTGRY_ID
+						 WHERE T02.CLRCS_ID = #{clrcsId}
+				       ) T01
+			 ) T03
+		LEFT JOIN (
+				SELECT CLRCS_ID
+				     , MAX(TAG_SN) AS TAG_SN
+				  FROM TX_CLRCS_TAG_INFO
+				 WHERE CLRCS_ID = #{clrcsId}
+				 GROUP BY CLRCS_ID
+		     ) T04
+		  ON T04.CLRCS_ID = T03.CLRCS_ID
+		WHERE NOT EXISTS (
+				SELECT 1
+				  FROM TX_CLRCS_TAG_INFO T05
+				 WHERE T05.CLRCS_ID = #{clrcsId}
+				   AND T05.CLRCS_ID = T03.CLRCS_ID
+				   AND T05.TAG_NM = T03.TAG_NM
+		      )
+    </insert>
+    
+    <!-- 문화자원분류범주정보 목록조회 - 대량업로드 공통코드 유효성 체크 -->
+    <select id="selectDgtlClrcsCtgryList" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.ClrcsClsfCtgryDtlVo" resultType="kr.go.culture.xr.admin.dgtlMgt.vo.ClrcsClsfCtgryDtlVo">
+		SELECT ctgry_id 
+		     , up_ctgry_id 
+		     , ctgry_nm 
+		     , ctgry_type_cd 
+		     , ctgry_step_no 
+		  FROM TX_CLRCS_CLSF_CTGRY_INFO T01
+		 WHERE T01.CTGRY_TYPE_CD = #{ctgryTypeCd}
+    </select>
+    
+    <insert id="insertPrdctQltInspInfo" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO">
+     INSERT /* 산출물품질검사정보 등록 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.insertPrdctQltInspInfo */ 
+       INTO TX_PRDCT_QLT_INSP_INFO (
+			     CLRCS_ID
+			   , PRDCT_SN
+			   , CRTR_ID
+			   , CRTR_CYCL
+			   , QLT_INSP_CYCL
+			   , QLT_INSP_RSLT_CD
+			   , PRDCT_USG_CD
+			   , FRST_RGTR_ID
+			   , FRST_REG_DT
+			   , LAST_MDFR_ID
+		       , LAST_MDFCN_DT
+	    )
+		SELECT T01.CLRCS_ID
+		     , T01.PRDCT_SN
+		     , T02.CRTR_ID 
+		     , T02.CRTR_CYCL
+		     , COALESCE((SELECT MAX(QLT_INSP_CYCL) 
+		                   FROM TX_PRDCT_QLT_INSP_INFO T03 
+		                  WHERE T03.CLRCS_ID = T01.CLRCS_ID 
+		                    AND T03.PRDCT_SN = T01.PRDCT_SN 
+		                    AND T03.CRTR_ID = T02.CRTR_ID 
+		                    AND T03.CRTR_CYCL = T02.CRTR_CYCL), 0) + 1 AS QLT_INSP_CYCL
+		     <choose>
+			 <when test='prdctUsgCd.equals("D01U01")'>
+		     , CASE WHEN CRTR_ID = 'QLI0000050' THEN /* AR,XR 모델크기 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[>]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[>=]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN T01.FILE_SZ = T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[<=]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[<]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN T01.FILE_SZ BETWEEN T02.STBLT_CRTR_SCR * 1048576 AND T02.STBLT_MAX_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END  
+				        ELSE '빈값'
+		            END )
+		       WHEN CRTR_ID = 'QLI0000052' THEN /* AR,XR 질감 파일수 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[>]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[>=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') = T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[<=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[<]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') BETWEEN T02.STBLT_CRTR_SCR AND T02.STBLT_MAX_CRTR_SCR THEN '적합' ELSE '부적합' END 
+				        ELSE '빈값'
+		            END )
+		       WHEN CRTR_ID = 'QLI0000051' THEN /* AR,XR 모델 폴리건 수 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[>]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[>=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT = T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[<=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[<]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT BETWEEN T02.STBLT_CRTR_SCR AND T02.STBLT_MAX_CRTR_SCR THEN '적합' ELSE '부적합' END     
+				        ELSE '빈값'
+		            END )
+		       END AS QLT_INSP_RSLT_CD
+		       </when>
+		       <when test='prdctUsgCd.equals("D01U02")'>
+		       , CASE WHEN CRTR_ID = 'QLI0000054' THEN /* 3D프린터 모델크기 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[>]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[>=]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN T01.FILE_SZ = T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[<=]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[<]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN T01.FILE_SZ BETWEEN T02.STBLT_CRTR_SCR * 1048576 AND T02.STBLT_MAX_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END  
+				        ELSE '빈값'
+		            END )
+		       WHEN CRTR_ID = 'QLI0000055' THEN /* 3D프린터 모델 폴리건 수 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[>]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[>=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT = T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[<=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[<]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT BETWEEN T02.STBLT_CRTR_SCR AND T02.STBLT_MAX_CRTR_SCR THEN '적합' ELSE '부적합' END     
+				        ELSE '빈값'
+		            END )
+		       END AS QLT_INSP_RSLT_CD
+		       </when>
+		       <when test='prdctUsgCd.equals("D01U03")'>
+		       , CASE WHEN CRTR_ID = 'QLI0000057' THEN /* 영화,CG 모델크기 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[>]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[>=]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN T01.FILE_SZ = T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[<=]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN T01.FILE_SZ <![CDATA[<]]> T02.STBLT_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN T01.FILE_SZ BETWEEN T02.STBLT_CRTR_SCR * 1048576 AND T02.STBLT_MAX_CRTR_SCR * 1048576 THEN '적합' ELSE '부적합' END  
+				        ELSE '빈값'
+		            END )
+		       WHEN CRTR_ID = 'QLI0000059' THEN /* 영화,CG 질감 파일수 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[>]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[>=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') = T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[<=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') <![CDATA[<]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN TO_NUMBER(T01.TXTRS_CN,'9999') BETWEEN T02.STBLT_CRTR_SCR AND T02.STBLT_MAX_CRTR_SCR THEN '적합' ELSE '부적합' END 
+				        ELSE '빈값'
+		            END )
+		       WHEN CRTR_ID = 'QLI0000058' THEN /* 영화,CG 모델 폴리건 수 */
+		           ( CASE 
+				        WHEN T02.SCR_CLSF_CD = 'SCR01' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[>]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR02' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[>=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR03' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT = T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR04' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[<=]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR05' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT <![CDATA[<]]> T02.STBLT_CRTR_SCR THEN '적합' ELSE '부적합' END
+				        WHEN T02.SCR_CLSF_CD = 'SCR08' THEN 
+				            CASE WHEN T01.GMTR_POLYGON_CNT BETWEEN T02.STBLT_CRTR_SCR AND T02.STBLT_MAX_CRTR_SCR THEN '적합' ELSE '부적합' END     
+				        ELSE '빈값'
+		            END )
+		       END AS QLT_INSP_RSLT_CD
+		       </when>
+		       </choose>
+		       , #{prdctUsgCd}
+		       , #{frstRgtrId}
+		       , NOW()
+		       , #{frstRgtrId}
+		       , NOW()  
+		    FROM 
+		      (SELECT * 
+		         FROM TX_DGTL_CLRCS_PRDCT_INFO 
+		        WHERE PRDCT_TYPE_CD = 'D01'
+		          AND FILE_TYPE_CD = '01'
+		          AND CLRCS_ID = #{clrcsId}) T01 /* 산출물 정보  */ 
+		    , (SELECT * 
+			     FROM TX_QLI_INSP_CRTR_INFO
+			    WHERE USE_YN = 'Y'
+			    <choose>
+			    <when test='prdctUsgCd.equals("D01U01")'>
+			    and CRTR_ID in ('QLI0000050','QLI0000051','QLI0000052')) T02  /* AR,XR 기준정보  */
+			    </when>
+			    <when test='prdctUsgCd.equals("D01U02")'>
+			    and CRTR_ID in ('QLI0000054','QLI0000055')) T02  /* 3D프린터 기준정보  */
+			    </when>
+			    <when test='prdctUsgCd.equals("D01U03")'>
+			    and CRTR_ID in ('QLI0000057','QLI0000058','QLI0000059')) T02  /* 영화,CG 기준정보  */
+			    </when>
+			    </choose>
+			      
+    </insert>
+    
+    <select id="selectPrdctQltInspInfoList" parameterType="kr.go.culture.xr.admin.dgtlMgt.vo.FrmDgtlClrcsSrchVO" resultType="kr.go.culture.xr.admin.dgtlMgt.vo.PrdctQltInspInfoVO">
+		SELECT /* 산출물품질검사정보 목록조회 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.selectPrdctQltInspInfo */ 
+			   T02.FILE_NM
+		     , T05.CD_NM AS FILE_EXTN
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000050' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL1    /** 적합여부값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000050' AND T02.FILE_SZ IS NOT NULL THEN ROUND(T02.FILE_SZ / (1024.0 * 1024.0), 2) ELSE 0 END) AS MSRMT_VAL1      /** 측정값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000050' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL1         /** 판정기준값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000050' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL1            /** 판정기준구분값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000052' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000052' THEN TO_NUMBER(T02.TXTRS_CN,'9999') ELSE 0 END) AS MSRMT_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000052' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000052' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000051' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000051' THEN T02.GMTR_POLYGON_CNT ELSE 0 END) AS MSRMT_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000051' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000051' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL3
+		FROM TX_PRDCT_QLT_INSP_INFO T01
+		INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO T02
+		   ON T02.CLRCS_ID = T01.CLRCS_ID 
+		  AND T02.PRDCT_SN = T01.PRDCT_SN 
+		INNER JOIN (SELECT * 
+			     FROM TX_QLI_INSP_CRTR_INFO
+			    WHERE USE_YN = 'Y'
+			      AND CRTR_ID IN ('QLI0000050','QLI0000051','QLI0000052')
+		      ) T03
+		   ON T03.CRTR_ID = T01.CRTR_ID 
+		  AND T03.CRTR_CYCL = T01.CRTR_CYCL 
+		INNER JOIN (SELECT CD_NM, CD_ID 
+		              FROM TX_CMMN_CD 
+		             WHERE CLSF_CD = 'CLSF000026' 
+		) T04
+		  ON T03.SCR_CLSF_CD = T04.CD_ID
+		INNER JOIN (SELECT CD_NM, CD_ID 
+		              FROM TX_CMMN_CD 
+		             WHERE CLSF_CD = 'CLSF000024' 
+		) T05
+		  ON T03.PRDCT_USG_CD = T05.CD_ID   
+		WHERE T01.QLT_INSP_CYCL = (SELECT MAX(T03.QLT_INSP_CYCL) FROM TX_PRDCT_QLT_INSP_INFO T03 WHERE T03.CLRCS_ID = #{clrcsId})
+		   AND T01.CLRCS_ID = #{clrcsId}
+		 GROUP BY T02.FILE_NM, T05.CD_NM
+	    UNION ALL
+	    SELECT /* 산출물품질검사정보 목록조회 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.selectPrdctQltInspInfo */ 
+			   T02.FILE_NM
+		     , T05.CD_NM AS FILE_EXTN
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000054' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL1    /** 적합여부값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000054' AND T02.FILE_SZ IS NOT NULL THEN ROUND(T02.FILE_SZ / (1024.0 * 1024.0), 2) ELSE 0 END) AS MSRMT_VAL1      /** 측정값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000054' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL1         /** 판정기준값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000054' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL1            /** 판정기준구분값 */
+		     , '기준X' AS ARTCL_STBLT_VAL2
+		     , MAX(TO_NUMBER(COALESCE(T02.TXTRS_CN, '0'),'9999')) AS MSRMT_VAL2
+		     , '-' AS JGMT_CRTR_VAL2
+		     , '' AS JGMT_CRTR_TYPE_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000055' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000055' THEN T02.GMTR_POLYGON_CNT ELSE 0 END) AS MSRMT_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000055' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000055' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL3
+		FROM TX_PRDCT_QLT_INSP_INFO T01
+		INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO T02
+		   ON T02.CLRCS_ID = T01.CLRCS_ID 
+		  AND T02.PRDCT_SN = T01.PRDCT_SN 
+		INNER JOIN (SELECT * 
+			     FROM TX_QLI_INSP_CRTR_INFO
+			    WHERE USE_YN = 'Y'
+			      AND CRTR_ID IN ('QLI0000054','QLI0000055')
+		      ) T03
+		   ON T03.CRTR_ID = T01.CRTR_ID 
+		  AND T03.CRTR_CYCL = T01.CRTR_CYCL 
+		INNER JOIN (SELECT CD_NM, CD_ID 
+		              FROM TX_CMMN_CD 
+		             WHERE CLSF_CD = 'CLSF000026' 
+		) T04
+		  ON T03.SCR_CLSF_CD = T04.CD_ID
+		INNER JOIN (SELECT CD_NM, CD_ID 
+		              FROM TX_CMMN_CD 
+		             WHERE CLSF_CD = 'CLSF000024' 
+		) T05
+		  ON T03.PRDCT_USG_CD = T05.CD_ID   
+		WHERE T01.QLT_INSP_CYCL = (SELECT MAX(T03.QLT_INSP_CYCL) FROM TX_PRDCT_QLT_INSP_INFO T03 WHERE T03.CLRCS_ID = #{clrcsId})
+		   AND T01.CLRCS_ID = #{clrcsId}
+		 GROUP BY T02.FILE_NM, T05.CD_NM
+		 UNION ALL
+		 SELECT /* 산출물품질검사정보 목록조회 kr.go.culture.xr.admin.dgtlMgt.mapper.DgtlMgtMapper.selectPrdctQltInspInfo */ 
+			   T02.FILE_NM
+		     , T05.CD_NM AS FILE_EXTN
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000057' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL1    /** 적합여부값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000057' AND T02.FILE_SZ IS NOT NULL THEN ROUND(T02.FILE_SZ / (1024.0 * 1024.0), 2) ELSE 0 END) AS MSRMT_VAL1      /** 측정값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000057' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL1         /** 판정기준값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000057' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL1            /** 판정기준구분값 */
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000059' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000059' THEN TO_NUMBER(T02.TXTRS_CN,'9999') ELSE 0 END) AS MSRMT_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000059' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000059' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL2
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000058' THEN T01.QLT_INSP_RSLT_CD ELSE '' END) AS ARTCL_STBLT_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000058' THEN T02.GMTR_POLYGON_CNT ELSE 0 END) AS MSRMT_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000058' THEN (CASE WHEN T03.SCR_CLSF_CD = 'SCR08' THEN CONCAT(T03.STBLT_CRTR_SCR,'~',T03.STBLT_MAX_CRTR_SCR) ELSE CAST(T03.STBLT_CRTR_SCR AS TEXT) END) ELSE '0' END) AS JGMT_CRTR_VAL3
+		     , MAX(CASE WHEN T01.CRTR_ID = 'QLI0000058' THEN T04.CD_NM ELSE '' END) AS JGMT_CRTR_TYPE_VAL3
+		FROM TX_PRDCT_QLT_INSP_INFO T01
+		INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO T02
+		   ON T02.CLRCS_ID = T01.CLRCS_ID 
+		  AND T02.PRDCT_SN = T01.PRDCT_SN 
+		INNER JOIN (SELECT * 
+			     FROM TX_QLI_INSP_CRTR_INFO
+			    WHERE USE_YN = 'Y'
+			      AND CRTR_ID IN ('QLI0000057','QLI0000058','QLI0000059')
+		      ) T03
+		   ON T03.CRTR_ID = T01.CRTR_ID 
+		  AND T03.CRTR_CYCL = T01.CRTR_CYCL 
+		INNER JOIN (SELECT CD_NM, CD_ID 
+		              FROM TX_CMMN_CD 
+		             WHERE CLSF_CD = 'CLSF000026' 
+		) T04
+		  ON T03.SCR_CLSF_CD = T04.CD_ID
+		INNER JOIN (SELECT CD_NM, CD_ID 
+		              FROM TX_CMMN_CD 
+		             WHERE CLSF_CD = 'CLSF000024' 
+		) T05
+		  ON T03.PRDCT_USG_CD = T05.CD_ID  
+		WHERE T01.QLT_INSP_CYCL = (SELECT MAX(T03.QLT_INSP_CYCL) FROM TX_PRDCT_QLT_INSP_INFO T03 WHERE T03.CLRCS_ID = #{clrcsId})
+		   AND T01.CLRCS_ID = #{clrcsId}
+		 GROUP BY T02.FILE_NM, T05.CD_NM	 
+    </select>
+    
+    <select id="selectAtmcCrtCtgryList" resultType="kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.vo.DgtlClrcsClsfCtgryVO">
+	WITH RECURSIVE CATE_LIST (CTGRY_ID,UP_CTGRY_ID,CTGRY_NM,CTGRY_TYPE_CD,CTGRY_STEP_NO,SORT_SN,USE_YN,LEVEL, PATH, PATH_NM, PATH_ID) AS
+      (
+       SELECT 
+           A.CTGRY_ID
+         , A.UP_CTGRY_ID
+         , A.CTGRY_NM
+         , A.CTGRY_TYPE_CD
+         , A.CTGRY_STEP_NO
+         , A.SORT_SN
+         , A.USE_YN
+         , 0
+         , ARRAY[LPAD(A.SORT_SN::VARCHAR,9,'0')||A.CTGRY_ID::text]
+         , ARRAY[A.CTGRY_NM::text]
+         , ARRAY[A.CTGRY_ID::text]
+         FROM TX_CLRCS_CLSF_CTGRY_INFO A
+        WHERE A.UP_CTGRY_ID IS NULL
+          AND A.CTGRY_TYPE_CD IN ('CLRCSCT002', 'CLRCSCT003', 'CLRCSCT006', 'CLRCSCT007')
+          AND A.USE_YN = 'Y'
+          AND A.INST_ID = 'KCIC08'
+        UNION ALL
+        SELECT A.CTGRY_ID
+             , A.UP_CTGRY_ID
+             , A.CTGRY_NM
+             , A.CTGRY_TYPE_CD
+             , A.CTGRY_STEP_NO
+             , A.SORT_SN
+             , A.USE_YN
+             , LEVEL + 1
+             , PATH || (LPAD(A.SORT_SN::VARCHAR,9,'0')||A.CTGRY_ID)
+             , PATH_NM || A.CTGRY_NM
+             , PATH_ID || A.CTGRY_ID
+          FROM TX_CLRCS_CLSF_CTGRY_INFO A 
+    INNER JOIN CATE_LIST DC
+            ON A.UP_CTGRY_ID = DC.CTGRY_ID
+         WHERE A.USE_YN = 'Y'
+        )  
+        SELECT CTGRY_TYPE_CD
+             , ARRAY_TO_STRING(PATH_NM, ' - ') AS CTGRY_NM
+             , ARRAY_TO_STRING(PATH_ID, '-') AS CTGRY_ID
+          FROM CATE_LIST
+         WHERE LEVEL = 1
+      ORDER BY CTGRY_TYPE_CD, PATH
+    </select>
+    
+</mapper>

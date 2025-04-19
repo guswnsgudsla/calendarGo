@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="kr.go.culture.xr.admin.portalQna.mapper.PortalQnaMapper">
+	
+	
+<sql id="qnaList">
+SELECT 
+	T01.PST_ID   /*게시물아이디*/
+	,T01.CLSF_CD /*분류코드*/
+	,T01.PST_TTL_NM /*게시물제목*/
+	,T01.PST_CN/*게시물내용*/
+	,T01.WRTR_ID /*작성자 아이디*/
+	,T01.WRTR_NM /*작성자명*/
+	,T01.LNKG_CONTS_ID/*연결콘텐츠 아이디*/
+	,T01.FRST_RGTR_ID/*최초등록자아이디*/
+	,T01.LAST_MDFCN_DT/*최종수정일시*/
+	,T01.LAST_MDFR_ID /*최종수자 아이디*/
+	,T02.ANS_CN /*답변내용*/
+	,T02.ANSWR_NM/*답변자명*/
+	,TO_CHAR(T01.FRST_REG_DT, 'YYYY-MM-DD HH24:MI') AS FRST_REG_DT/*최초등록일시*/
+	<!-- ,T01.PST_ORD_NO -->		/*게시물 순번*/
+FROM 
+    TX_BBS_INFO T01 
+LEFT JOIN 
+    TX_PST_ANS_INFO T02 ON T01.PST_ID = T02.PST_ID
+WHERE 1 = 1
+	AND T01.DEL_YN = 'N'
+    AND T01.PST_ID LIKE '%SQNA%'
+    ORDER BY PST_ORD_NO DESC
+</sql>
+	
+
+<select id="getUserNm" parameterType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo" resultType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo">
+SELECT 
+USER_NM 
+FROM TX_USER_INFO 
+WHERE 1 = 1
+AND USER_ID = #{userId}
+</select>
+	
+<select id="portalQnaList" parameterType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo" resultType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo">
+SELECT /* 포털 문의글 리스트 kr.go.culture.xr.admin.portalQna.mapper.PortalQnaMapper.portalQnaList */
+ROW_NUMBER() OVER () AS PST_ORD_NO
+	,
+      A.*   
+      <include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+      FROM (
+<include refid="qnaList"></include>
+) A 
+WHERE 1 = 1
+ <if test="aCode != null and 'SVC' == aCode or aCode != null and 'ETC' == aCode"  >
+ AND UPPER(CLSF_CD) LIKE CONCAT('%', UPPER(#{aCode}), '%')
+</if>
+<if test="bCode != null and 'TTL' == bCode ">
+AND UPPER(PST_TTL_NM) LIKE CONCAT('%', UPPER(#{srchText}), '%')
+</if> 
+<if test="bCode != null and 'CN' == bCode ">
+AND UPPER(PST_CN) LIKE CONCAT('%', UPPER(#{srchText}), '%')
+</if>   
+<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+</select>
+
+<select id="portalQnaview" parameterType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo" resultType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo">
+SELECT /* 포털 문의글 상세보기 kr.go.culture.xr.admin.portalQna.mapper.PortalQnaMapper.portalQnaview */
+      A.*   FROM (
+<include refid="qnaList"></include>
+) A
+WHERE 1 = 1
+AND PST_ID = #{pstId}
+</select>
+
+<insert id="portalQnaInsert" parameterType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo" >
+	INSERT INTO /*kr.go.culture.xr.admin.portalQna.mapper.PortalQnaMapper.portalQnaInsert */
+		   TX_PST_ANS_INFO
+		   (
+		   PST_ID
+		 , ANS_ID
+		 , ANS_CN
+		 , ANSWR_ID
+		 , ANSWR_NM
+		 , ANS_INST_ID
+		 , FRST_RGTR_ID
+		 , FRST_REG_DT
+		 , LAST_MDFR_ID
+		 , LAST_MDFCN_DT
+		   )
+	VALUES (
+		   #{pstId}
+		 , (SELECT 'ANS'||TRIM(TO_CHAR(COALESCE(CAST(REGEXP_REPLACE(MAX(ans_id), '[^0-9]', '', 'g') AS INT),0) + 1,'0000009')) FROM TX_PST_ANS_INFO)
+		 , #{ansCn}
+		 , #{answrId}
+		 , #{answrNm}
+		 , #{ansInstId}
+		 , #{frstRgtrId}
+		 , NOW()
+		 , #{lastMdfrId}
+		 , NOW()
+		   )
+</insert>
+
+<update id="portalQnaUpdate" parameterType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo">
+UPDATE TX_PST_ANS_INFO
+SET
+    ANS_CN = #{ansCn},
+    ANSWR_ID = #{answrId},
+    ANSWR_NM = #{answrNm},
+    ANS_INST_ID = #{ansInstId},
+    LAST_MDFR_ID = #{lastMdfrId},
+    LAST_MDFCN_DT = NOW()
+WHERE
+    PST_ID = #{pstId}
+</update>
+
+<select id="portalQnaCnt" resultType="Integer"  parameterType="kr.go.culture.xr.admin.portalQna.vo.PortalQnaVo">
+SELECT 
+	COUNT(1) AS TOT_LIST_CNT
+FROM 
+    TX_BBS_INFO T01 
+LEFT JOIN 
+    TX_PST_ANS_INFO T02 ON T01.PST_ID = T02.PST_ID
+WHERE 1 = 1
+AND T01.DEL_YN = 'N'
+AND T01.PST_ID LIKE '%SQNA%'
+<if test="aCode != null and 'SVC' == aCode or aCode != null and 'ETC' == aCode"  >
+ AND UPPER(T01.CLSF_CD) LIKE CONCAT('%', UPPER(#{aCode}), '%')
+</if>
+<if test="bCode != null and 'TTL' == bCode ">
+AND UPPER(T01.PST_TTL_NM) LIKE CONCAT('%', UPPER(#{srchText}), '%')
+</if> 
+<if test="bCode != null and 'CN' == bCode ">
+AND UPPER(T01.PST_CN) LIKE CONCAT('%', UPPER(#{srchText}), '%')
+</if>
+	
+</select>
+
+	
+	
+</mapper>

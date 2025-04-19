@@ -1,0 +1,34 @@
+1744681303893	Move folder
+1744681313084	Rename resource 'NewFile.jsp'
+1744693438223	Rename resource 'jsp'
+1744693555641	Rename resource 'views'
+1744694948494	Rename resource 'callendarGo.jsp'
+1744694961451	Rename type 'CallendarGoController'
+1744694974069	Rename package 'com.proj.callendar'
+1744695534172	Move folder
+1744695669523	Copy file
+1744701764402	Move compilation unit
+1744701837493	Rename package 'com.proj.calendar.controller'
+1744701840761	Copy package
+1744701843624	Delete element
+1744701861551	Delete element
+1744701881763	Rename package 'com.proj.calendar.dd'
+1744701886150	Move compilation unit
+1744701889478	Delete element
+1744701916107	Copy package
+1744702028681	Rename type 'CalendarGoController'
+1744705864796	Copy file
+1744706886043	Move 'servlet-context.xml' to 'xml'
+1744762887715	Move folder
+1744762891523	Move file
+1744762917409	Move file
+1744762928085	Rename resource 'NewFile.xml'
+1744763415575	Rename type 'CalendarGoDAO'
+1744763420122	Rename package 'com.proj.calendar.dao'
+1744779521387	Delete element
+1744779529681	Delete element
+1744780763136	Delete element
+1744780836224	Rename package 'com.proj.calendar.mapper'
+1744780861069	Rename compilation unit 'CalendarGoMapper.java'
+1744785245153	Delete element
+1745056222385	Delete element

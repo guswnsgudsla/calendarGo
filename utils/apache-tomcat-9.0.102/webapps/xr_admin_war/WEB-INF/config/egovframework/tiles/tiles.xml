@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	<definition name="layout-tiles" template="/WEB-INF/view/include/layout.jsp">
+		<put-attribute name="side" value="/WEB-INF/view/include/side.jsp"/>
+		<put-attribute name="header" value="/WEB-INF/view/include/header.jsp"/>
+		<put-attribute name="body" value=""/>
+	</definition>
+	<!--
+		<definition name="main/*" extends="layout-tiles">
+			<put-attribute name="body" value="/WEB-INF/view/main/{1}.jsp"/>
+		</definition>
+		<definition name="*" extends="layout-tiles">
+			<put-attribute name="body" value="/WEB-INF/view/{1}.jsp"/>
+		</definition>
+	-->
+
+	<definition name="*/*" extends="layout-tiles">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}.jsp"/>
+	</definition>
+	<definition name="*/*/*" extends="layout-tiles">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}/{3}.jsp"/>
+	</definition>
+	<definition name="*/*/*/*" extends="layout-tiles">
+		<put-attribute name="body" value="/WEB-INF/view/{1}/{2}/{3}/{4}.jsp"/>
+	</definition>
+
+	<definition name="loginPage" template="/WEB-INF/view/loginMgt/login.jsp">
+	</definition>
+
+	<definition name="cultureLoginPage" template="/WEB-INF/view/loginMgt/cultureLoginPage.jsp">
+	</definition>
+
+	<definition name="cultureFailAuthPage" template="/WEB-INF/view/loginMgt/cultureFailAuth.jsp">
+	</definition>
+
+
+
+	<!-- 전시관리 팝업 -->
+	<definition name="exhPopClrcsList" template="/WEB-INF/view/popupMgt/exhMgt/popDgtlClrcsList.jsp">
+	</definition>
+	<definition name="exhPopDgtlClcList" template="/WEB-INF/view/popupMgt/exhMgt/popDgtlClcList.jsp">
+	</definition>
+	<definition name="exhPopInstList" template="/WEB-INF/view/popupMgt/exhMgt/popInstList.jsp">
+	</definition>
+	
+	<!-- 문화정보백서 연도별 현황 팝업 -->
+	<definition name="yrInfrmNmprPrssInfoPop" template="/WEB-INF/view/cltInfoWhtprMgt/yrInfrmNmprPrssInfoPop.jsp"></definition>
+	<!-- 문화정보백서 정보화 및 정보보호 인력 현황 팝업 -->
+	<definition name="infrmInfscrNmprPrssInfoPop" template="/WEB-INF/view/cltInfoWhtprMgt/infrmInfscrNmprPrssInfoPop.jsp"></definition>
+	<!-- 문화정보백서 기관별 현황 팝업 -->
+	<definition name="instInfrmNmprPrssInfoPop" template="/WEB-INF/view/cltInfoWhtprMgt/instInfrmNmprPrssInfoPop.jsp"></definition>
+	<!-- 문화정보백서 재원별 정보화 예산 팝업 -->
+	<definition name="fircsInfrmBgtPrssInfoPop" template="/WEB-INF/view/cltInfoWhtprMgt/fircsInfrmBgtPrssInfoPop.jsp"></definition>
+	<!-- 문화정보백서 유형별 정보화 예산 팝업 -->
+	<definition name="typeInfrmBgtPrssInfoPop" template="/WEB-INF/view/cltInfoWhtprMgt/typeInfrmBgtPrssInfoPop.jsp"></definition>
+	
+	
+	<!-- 컬렉션 관련자원 팝업 -->
+	<definition name="dgtlClcRelPopList" template="/WEB-INF/view/dgtlClcMgt/dgtlClcRelPopList.jsp">
+	</definition>
+	<!-- 문화자원 추가 팝업 -->
+	<definition name="clrcsPopList" template="/WEB-INF/view/dgtlClcMgt/clrcsPopList.jsp">
+	</definition>
+	
+	<!-- 사용자관리 중 포털사용자 추적이력 -->
+	<definition name="mbrPopTrckInfo" template="/WEB-INF/view/popupMgt/mbrMgt/popMbrTrckInfo.jsp">
+	</definition>
+	
+	<!-- 사용자관리 중 기관사용자/관리자 승인 팝업 -->
+	<definition name="userPopAprvInfo" template="/WEB-INF/view/popupMgt/userMgt/popUsrAprvInfo.jsp">
+	</definition>
+	
+	<!-- 메뉴 이력 팝업 -->
+	<definition name="selectHstryMenuList" template="/WEB-INF/view/menuMgt/selectHstryMenuList.jsp">
+	</definition>
+	<!-- 메뉴 이력 상세 팝업 -->
+	<definition name="selectHstryMenuDtl" template="/WEB-INF/view/menuMgt/selectHstryMenuDtl.jsp">
+	</definition>
+	
+	<!-- 설정관리 중 게시판분류 팝업 -->
+	<definition name="bbsStngPopClsfList" template="/WEB-INF/view/popupMgt/bbsStngMgt/popBbsClsfList.jsp">
+	</definition>
+	
+	
+	<!-- 문화정보 환경조사 중 정보화 및 정보보호 인력 현황 팝업  -->
+	<definition name="rcsexmnPopInfrmNmprInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popInfrmNmprInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 정보화 예산 현황 팝업  -->
+	<definition name="rcsexmnPopInfrmBgtInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popInfrmBgtInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 정보화 예산 세부 내역 팝업  -->
+	<definition name="rcsexmnPopInfrmBgtDtlInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popInfrmBgtDtlInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 정보화사업 추진 현황 팝업  -->
+	<definition name="rcsexmnPopInfrmBizPrgrsInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popInfrmBizPrgrsInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 문화정보(DB)/디지털 콘텐츠 현황 팝업  -->
+	<definition name="rcsexmnPopCltContsInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popCltContsInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 모바일 웹/앱 현황 팝업  -->
+	<definition name="rcsexmnPopMbAplInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popMbAplInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 기관별 SNS 홍보채널 운영 현황 팝업  -->
+	<definition name="rcsexmnPopInstPrChnlInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popInstPrChnlInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 클라우드 구축 현황 팝업  -->
+	<definition name="rcsexmnPopCludEqpmntInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popCludEqpmntInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 서버 장비 현황 팝업  -->
+	<definition name="rcsexmnPopEqpmntSrvrInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popEqpmntSrvrInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 서버 외부위탁 현황 팝업  -->
+	<definition name="rcsexmnPopEqpmntSrvrEntsInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popEqpmntSrvrEntsInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 서버 보안장비 및 보안서비스 현황 팝업  -->
+	<definition name="rcsexmnPopEqpmntSecuInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popEqpmntSecuInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 문화정보 자원 품질관리 수준 진단 팝업  -->
+	<definition name="rcsexmnPopQltMngLvlInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popQltMngLvlInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 중 조사자 입력 팝업  -->
+	<definition name="rcsexmnPopExmnrInfo" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popExmnrInfo.jsp">
+	</definition>
+	<!-- 문화정보 환경조사 기관 입력 데이터 다운로드 팝업  -->
+	<definition name="rcsexmnPopInstRawData" template="/WEB-INF/view/popupMgt/cltInfoRcsExmnMgt/popInstRcsExmnRawDataInfo.jsp">
+	</definition>
+	
+	
+	<!-- 코드 이력 팝업 -->
+	<definition name="selectHstryCodeList" template="/WEB-INF/view/popupMgt/crtrInfoMgt/popCrtrInfo.jsp">
+	</definition>
+	<!-- 문화자원관리 상세 리뷰탭 -->
+	<definition name="dgtlDtlRvList" template="/WEB-INF/view/dgtlMgt/dgtlDtlRvList.jsp">
+	</definition>
+	<!-- 문화자원관리 상세 리뷰탭 -->
+	<definition name="dgtlDtlQnaList" template="/WEB-INF/view/dgtlMgt/dgtlDtlQnaList.jsp">
+	</definition>
+	
+	<!-- 설정관리 권한관리 중 메뉴 팝업 -->
+	<definition name="authrtPopMenuInfoList" template="/WEB-INF/view/popupMgt/authMgt/popMenuInfo.jsp">
+	</definition>
+	<!-- 설정관리 권한관리 중 권한변경이력 팝업 -->
+	<definition name="authrtPopChgHstry" template="/WEB-INF/view/popupMgt/authMgt/popAuthrtHstry.jsp">
+	</definition>
+	<!-- 설정관리 권한관리 중 메뉴권한변경이력 팝업 -->
+	<definition name="authrtPopMenuChgHstry" template="/WEB-INF/view/popupMgt/authMgt/popAuthrtMenuHstry.jsp">
+	</definition>
+	
+</tiles-definitions>

@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: local
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  cms:
+    datasource:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      jdbc-url: jdbc:log4jdbc:postgresql://192.168.0.161:5003/xr
+      username: xradmin
+      password: "!xr12#"
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 60000
+      connection-timeout: 60000
+      max-lifetime: 1800000
+  ci:
+    datasource:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      jdbc-url: jdbc:log4jdbc:postgresql://192.168.0.161:5003/xr
+      username: xradmin
+      password: "!xr12#"
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 60000
+      connection-timeout: 60000
+      max-lifetime: 1800000
+  mvc:
+    view:
+      prefix: /WEB-INF/view/
+      suffix: .jsp
+  main:
+    allow-bean-definition-overriding: true
+tus:
+  server:
+    data:
+      savePath: /home/tus/save/
+    url: http://14.63.58.81:5005/api/tus/file
+Globals:
+  fileUpload:
+    RootPath: "C:\\xr\\FileUpn"
+  sso:
+    login:
+      url: "https://www.culture.go.kr/sso/login.do?agentId=11"
+    authorization:
+      url: "http://175.125.91.160:8080/"
+      agentId: "11"

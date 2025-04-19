@@ -1,0 +1,121 @@
+
+document.addEventListener('DOMContentLoaded', function() {
+	var calendarEl = document.getElementById('calendar');
+	var calendar = new FullCalendar.Calendar(calendarEl, {
+		initialView: 'dayGridMonth',
+		selectable: true, //선택가능
+		
+		headerToolbar: { //header 디자인
+			start: 'prev',
+			center: 'title',
+			end: 'next'
+		},
+		footerToolbar: { //footer 디자인
+			start: 'today',
+			end: 'addCalButton'
+		},
+		select: function(info) { //선택 시 기능
+			var selDate = info.startStr; //선택한날짜
+			
+			$('#calendar_str_date').val(selDate);
+			$('#calendar_str_date').addClass('disableGo');
+			$('#calendar_end_date').val(selDate);
+			$('#calendar_end_date').addClass('disableGo');
+			
+			$('#calendarModal').modal('show');
+		},
+		customButtons: { //일정추가버튼 기능
+			addCalButton: {
+				text: '일정추가',
+				click: function() {
+					$('#calendar_str_date').val('');
+					$('#calendar_str_date').removeClass('disableGo');
+					$('#calendar_end_date').val('');
+					$('#calendar_end_date').removeClass('disableGo');
+					$('#calendar_cont').val('');
+					
+					$('#calendarModal').modal('show');
+				}
+			}
+		}
+	});
+	
+	$('#addCalendar').click( function(){
+		var vStrDt = $('#calendar_str_date').val();
+		var vEndDt = $('#calendar_end_date').val();
+		var vCont  = $('#calendar_cont').val();
+
+		//내용 입력 여부 확인
+		if (vStrDt == '' || vStrDt == null) {
+			alert('시작 날짜를 입력하세요.');
+			return false;
+		}else if (vEndDt == '' || vEndDt == null) {
+			alert('종료 날짜를 입력하세요.');
+			return false;
+		}else if (vCont == '' || vCont == null) {
+			alert('일정 내용을 입력하세요.');
+			return false;
+		}
+		
+		//validation
+		if (new Date(vEndDt) - new Date(vStrDt) < 0) {
+			alert('일정 종료일이 일정 시작일보다 먼저입니다.');
+			return false;
+		}
+		
+		//성공시 전송
+		$.ajax({
+			type: "POST",
+			url: "/calendarAdd.do",
+			data: {
+				vStrDt: vStrDt,
+				vEndDt: vEndDt,
+				vCont: vCont
+			},
+			dataType: 'json',
+			async: false,
+			processData: false,
+			contentType: false,
+			cache: false,
+			success: function(returnData) {
+				alert(returnData);
+				alert(returnData.result);
+				if (returnData.result == 'success') {
+					alert("성공");
+				} else {
+					alert("실패");
+				}
+			},
+			error: function(e) { alert("저장에 실패하였습니다."); console.log("ERROR : ", e); }
+		});
+	});
+
+	
+	
+	
+	
+	
+	
+	$('#addCalendar1111').on('click', function() {  // modal의 추가 버튼 클릭 시
+		
+		
+		if (vCont == null || vCont == '') {
+			
+		} else if (start_date == '' || end_date == '') {
+			alert('날짜를 입력하세요.');
+		} else if (new Date(end_date) - new Date(start_date) < 0) { // date 타입으로 변경 후 확인
+			alert('종료일이 시작일보다 먼저입니다.');
+		} else { // 정상적인 입력 시
+			var obj = {
+				'title': content,
+				'start': start_date,
+				'end': end_date
+			}//전송할 객체 생성
+
+			console.log(obj); //서버로 해당 객체를 전달해서 DB 연동 가능
+		}
+	})
+	
+	calendar.render();
+});
+

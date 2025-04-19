@@ -1,0 +1,13 @@
+package com.proj.calendar.service.impl;
+
+import org.springframework.stereotype.Service;
+
+import com.proj.calendar.service.CalendarGoService;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class CalendarGoServiceImpl implements CalendarGoService {
+	private final DgtlCltRscMapper dgtlCltRscMapper;
+}

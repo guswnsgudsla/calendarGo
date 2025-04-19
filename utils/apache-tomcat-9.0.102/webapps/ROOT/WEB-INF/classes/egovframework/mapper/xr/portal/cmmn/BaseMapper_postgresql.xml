@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper">
+
+	<sql id="sqlPagingHeader">
+		 <if test='pagingYn != null and pagingYn.equals("Y")'>
+			 , #{recordCountPerPage}	AS RECORD_COUNT_PER_PAGE
+			 , #{pagePerBlock}			AS PAGE_PER_BLOCK
+			 , #{currentPage}			AS CURRENT_PAGE
+			 , #{calculPage}			AS CALCUL_PAGE
+			 , #{totalRecord}			AS TOTAL_RECORD
+			 , #{totalPage}				AS TOTAL_PAGE
+		 </if>
+	</sql>
+
+	<sql id="sqlPagingFooter">
+		 <if test='pagingYn != null and pagingYn.equals("Y")'>
+			OFFSET #{calculPage} ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+		</if>
+	</sql>
+
+	<select id="selectSeqNo" parameterType="kr.go.culture.xr.portal.cmmn.vo.SeqVo" resultType="kr.go.culture.xr.portal.cmmn.vo.SeqVo">
+		SELECT /* 테이블 시퀀스 조회 kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.selectSeqNo */
+			   #{tableNm}	AS TABLE_NM
+		     , NEXTVAL('SQ_'||#{tableNm}||'_01') AS TABLE_SQ
+	</select>
+
+</mapper>

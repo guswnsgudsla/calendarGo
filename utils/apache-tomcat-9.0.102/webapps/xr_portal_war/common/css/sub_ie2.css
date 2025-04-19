@@ -1,0 +1,29 @@
+@charset "UTF-8";
+
+ /* IE10+ */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+	/* 활용사례 리스트*/
+	.data_box .box .box_cnt.cnt01 > div.img_w img {
+		margin: 50% auto;
+	}
+	/* 활용사례 상세 , 공모전 상세 */
+	.data_box .box .box_cnt.cnt01 > div.img_w .detail {
+		margin: 77% auto;
+	}
+	/* 공모전 리스트 제목 */
+	.gallery_list .tit_w .tit span {
+		line-height: 1.2em;
+		 max-height: 1.2em;
+	}
+	/* 공모전 리스트 내용*/
+	.gallery_list.st02 .txt span {
+		 line-height: 1.2em;
+		 max-height: 2.4em;
+	 }
+	 
+}
+@media screen and (-ms-high-contrast: active), (max-width:768px) {
+ 	.data_box .box .box_cnt.cnt01 > div.img_w img {
+		margin: 0%;
+	}
+}

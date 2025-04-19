@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper">
+
+	<sql id="sqlBbsInfo">
+		SELECT
+			   T01.PST_ID				/* 게시물아이디 */
+			 , T01.BBS_ID				/* 게시판아이디 */
+			 , T01.CLSF_CD				/* 분류코드 */
+			 , (
+			 	SELECT T08.CLSF_NM
+			 	  FROM TX_BBS_CLSF_CD T08
+			 	 WHERE T08.CLSF_CD = T01.CLSF_CD 
+			   ) AS CLSF_NM				/* 분류명 */
+			 , T01.UP_PST_ID			/* 상위게시물아이디 */
+			 , T01.PST_STEP_NO			/* 게시물단계번호 */
+			 , T01.PST_ORD_NO AS PST_ORD				/* 게시물순서 */
+			 , T01.PST_TTL_NM AS PST_TTL				/* 게시물제목 */
+			 , T01.PST_CN				/* 게시물내용 */
+			 , T01.WRT_INST_ID			/* 작성기관아이디 */
+			 , T01.WRTR_ID				/* 작성자아이디 */
+			 , T01.WRTR_NM				/* 작성자명 */
+			 , T01.PRVT_YN				/* 비공개여부 */
+			 , T01.ATCH_FILE_GROUP_ID	/* 첨부파일그룹아이디 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.NTC_PSTG_YN			/* 공지게시여부 */
+			 , T01.LNKG_CONTS_ID		/* 연결콘텐츠아이디 */
+			 , T01.NTFC_TRGT_INST_ID	/* 알림대상기관아이디 */
+			 , T01.NTFC_RGTR_ID			/* 알림등록자아이디 */
+			 , T01.NTFC_YN				/* 알림여부 */
+			 , T01.NTFC_DT				/* 알림일시 */
+			 , T01.IDNTY_YN				/* 확인여부 */
+			 , T01.IDFR_ID				/* 확인자아이디 */
+			 , T01.IDNTY_DT				/* 확인일시 */
+			 , T01.PRGRS_STTS_CD		/* 진행상태코드 */
+			 , T01.PRGRS_AUTZR_ID		/* 진행승인자아이디 */
+			 , T01.PRGRS_DCSN_DT		/* 진행결정일시 */
+			 , T01.PRGRS_DCSN_CN		/* 진행결정내용 */
+			 , T01.RTNG_SCR				/* 평점점수 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.OPSE_CNT				/* 반대수 */
+			 , T01.FRST_RGTR_ID			/* 최초등록자아이디 */
+			 , T01.FRST_REG_DT			/* 최초등록일시 */
+			 , T01.LAST_MDFR_ID			/* 최종수정자아이디 */
+			 /*, T01.SECR_YN				/* 비밀여부 */*/
+			 , NULL AS SECR_NO			/* 비밀번호 */
+			 , TO_CHAR(T01.LAST_MDFCN_DT, 'YYYY-MM-DD HH24:MI') AS LAST_MDFCN_DT /* 최종수정일시 */
+			 , ROW_NUMBER() OVER (ORDER BY T01.FRST_REG_DT) AS PST_SN
+			 <if test='bbsId != null and (bbsId.equals("QNA") or bbsId.equals("SQNA")or bbsId.equals("JOIN"))'>
+			 , T02.ANSWR_NM
+             , T02.ANS_CN 
+             , TO_CHAR(T02.LAST_MDFCN_DT, 'YYYY-MM-DD HH24:MI') AS ANS_LAST_MDFCN_DT /* 최종수정일시 */
+             </if>
+		  FROM TX_BBS_INFO T01
+		  <if test='bbsId != null and (bbsId.equals("QNA") or bbsId.equals("SQNA")or bbsId.equals("JOIN"))'>
+		  LEFT OUTER JOIN TX_PST_ANS_INFO T02
+          ON T01.PST_ID = T02.PST_ID
+		  </if>
+		 WHERE T01.DEL_YN != 'Y'
+		 <if test='bbsId != null and !bbsId.equals("")'>
+		   AND T01.BBS_ID = #{bbsId} 
+		 </if> 
+		 <if test='srchKey != null and srchKey.equals("A")'>
+		   AND UPPER(T01.PST_TTL_NM) LIKE '%'||UPPER(#{srchValue})||'%' 
+		 </if>
+		 <if test='srchKey != null and srchKey.equals("B")'>
+		   AND UPPER(T01.PST_CN) LIKE '%'||UPPER(#{srchValue})||'%' 
+		 </if>
+		 <if test='srchKey != null and srchKey.equals("C")'>
+		   AND UPPER(T01.FRST_RGTR_ID) LIKE '%'||UPPER(#{srchValue})||'%' 
+		 </if>
+		<if test='bbsId.equals("NTC") or bbsId.equals("SQNA")or bbsId.equals("JOIN")'>
+		 	<if test='srchValue != null and !srchValue.equals("") and !bbsId.equals("JOIN")'>
+	      	   AND (
+	      	   		UPPER(T01.PST_TTL_NM) LIKE '%'||UPPER(#{srchValue})||'%' 
+	      	   		OR UPPER(T01.PST_CN) LIKE '%'||UPPER(#{srchValue})||'%'
+	      			)
+      		</if>
+      		<if test='srchValue != null and !srchValue.equals("") and bbsId.equals("JOIN")'>
+	      	   AND (
+	      	   		UPPER(T01.PST_TTL_NM) LIKE '%'||UPPER(#{srchValue})||'%' 
+	      	   		OR UPPER(T01.FRST_RGTR_ID) LIKE '%'||UPPER(#{srchValue})||'%'
+	      			)
+      		</if>
+		</if>
+		 <if test='pstId != null and !pstId.equals("")'>
+		   AND T01.PST_ID = #{pstId} 
+		 </if> 
+		 <if test='lnkgContsId != null and !lnkgContsId.equals("")'>
+		   AND T01.LNKG_CONTS_ID = #{lnkgContsId} 
+		 </if>
+		 <if test='clsfCd != null and !clsfCd.equals("")'>
+		   AND T01.CLSF_CD = #{clsfCd}
+         </if>  
+		ORDER BY
+			<choose>
+				<when test='orderByKey != null and orderByKey.equals("B")'>
+					T01.INQ_CNT DESC, T01.FRST_REG_DT DESC
+				</when>
+				<otherwise>
+					T01.FRST_REG_DT DESC, T01.INQ_CNT DESC
+				</otherwise>
+			</choose>
+	</sql>
+
+	<select id="selectBbsInfoCnt" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo" resultType="java.lang.Integer" >
+		SELECT /* 게시판 카운트 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectBbsInfoCnt */
+			   COUNT(1) AS CNT
+		  FROM (
+			<include refid="sqlBbsInfo" />
+		 	   ) A
+	</select>
+
+	<select id="selectBbsInfoList" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo" resultType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo">
+		SELECT /* 게시판 목록 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectBbsInfoList */
+		       A.* 
+		     , CASE WHEN A.FRST_REG_DT <![CDATA[>=]]> DATE_TRUNC('DAY', NOW()) THEN 'Y'
+		            ELSE 'N'
+		       END AS NEW_YN
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		  FROM (
+			<include refid="sqlBbsInfo" />
+			   ) A
+			<include refid="kr.go.culture.xr.portal.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<select id="selectBbsInfoDtl" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo" resultType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo">
+		SELECT /* 게시판 상세 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectBbsInfoDtl */
+		       A.* 
+		  FROM (
+			<include refid="sqlBbsInfo" />
+			   ) A
+	</select>
+
+	<select id="selectMaxPstId" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo" resultType="java.lang.Integer" >
+		SELECT /* 게시판 ID Max 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectMaxPstId */
+			   COALESCE(CAST(REGEXP_REPLACE(MAX(PST_ID), '[^0-9]', '', 'g') AS INT),0) + 1 AS ID
+		  FROM TX_BBS_INFO
+		 WHERE PST_ID LIKE #{bbsId}||'%'
+	</select>
+	
+	<insert id="regBbsInfo" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo">
+		INSERT /* 게시판 등록 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.regBbsInfo */
+		  INTO TX_BBS_INFO
+		     (
+			   PST_ID				/* 게시물아이디 */
+			 , BBS_ID				/* 게시판아이디 */
+			 , CLSF_CD				/* 분류코드 */
+			 , UP_PST_ID			/* 상위게시물아이디 */
+			 , PST_STEP_NO			/* 게시물단계번호 */
+			 , PST_ORD_NO			/* 게시물순서 */
+			 , PST_TTL_NM			/* 게시물제목 */
+			 , PST_CN				/* 게시물내용 */
+			 , WRT_INST_ID			/* 작성기관아이디 */
+			 , WRTR_ID				/* 작성자아이디 */
+			 , WRTR_NM				/* 작성자명 */
+			 , PRVT_YN				/* 비공개여부 */
+			 , ATCH_FILE_GROUP_ID	/* 첨부파일그룹아이디 */
+			 , INQ_CNT				/* 조회수 */
+			 , NTC_PSTG_YN			/* 공지게시여부 */
+			 , LNKG_CONTS_ID		/* 연결콘텐츠아이디 */
+			 , NTFC_TRGT_INST_ID	/* 알림대상기관아이디 */
+			 , NTFC_RGTR_ID			/* 알림등록자아이디 */
+			 , NTFC_YN				/* 알림여부 */
+			 , NTFC_DT				/* 알림일시 */
+			 , IDNTY_YN				/* 확인여부 */
+			 , IDFR_ID				/* 확인자아이디 */
+			 , IDNTY_DT				/* 확인일시 */
+			 , PRGRS_STTS_CD		/* 진행상태코드 */
+			 , PRGRS_AUTZR_ID		/* 진행승인자아이디 */
+			 , PRGRS_DCSN_DT		/* 진행결정일시 */
+			 , PRGRS_DCSN_CN		/* 진행결정내용 */
+			 , RTNG_SCR				/* 평점점수 */
+			 , RCMDTN_CNT			/* 추천수 */
+			 , OPSE_CNT				/* 반대수 */
+			 , FRST_RGTR_ID			/* 최초등록자아이디 */
+			 , FRST_REG_DT			/* 최초등록일시 */
+			 , LAST_MDFR_ID			/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT		/* 최종수정일시 */
+			 /*, SECR_YN				/* 비밀여부 */*/
+		     ) VALUES (
+			 CASE
+              WHEN LENGTH(#{bbsId}) = 4 THEN #{bbsId}||TRIM(TO_CHAR(#{pstIdIntVal},'000009'))
+              ELSE #{bbsId}||TRIM(TO_CHAR(#{pstIdIntVal},'0000009'))
+             END
+			 , #{bbsId}
+			 , #{clsfCd}
+			 , #{upPstId}
+			 , #{pstStepNo}
+			 , (SELECT COALESCE(MAX(PST_ORD_NO),0) + 1
+				  FROM TX_BBS_INFO
+				 WHERE BBS_ID = #{bbsId})
+			 , #{pstTtl}
+			 , #{pstCn}
+			 , #{wrtInstId}
+			 , #{wrtrId}
+			 , #{wrtrNm}
+			 , #{prvtYn}
+			 , #{atchFileGroupId}
+			 , #{inqCnt}
+			 , #{ntcPstgYn}
+			 , #{lnkgContsId}
+			 , #{ntfcTrgtInstId}
+			 , #{ntfcRgtrId}
+			 , #{ntfcYn}
+			 , #{ntfcDt}
+			 , #{idntyYn}
+			 , #{idfrId}
+			 , #{idntyDt}
+			 , #{prgrsSttsCd}
+			 , #{prgrsAutzrId}
+			 , #{prgrsDcsnDt}
+			 , #{prgrsDcsnCn}
+			 , #{rtngScr}
+			 , #{rcmdtnCnt}
+			 , #{opseCnt}
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+			 , #{secrYn}
+		     )
+	</insert>
+	
+	<update id="saveBbsInfo" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo">
+		UPDATE /* 게시판 저장 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.saveBbsInfo */
+		       TX_BBS_INFO
+		   SET LAST_MDFCN_DT = CURRENT_TIMESTAMP
+			     <if test='clsfCd != null and !clsfCd.equals("")'>
+			     , CLSF_CD = #{clsfCd}
+			     </if>
+				 <if test='upPstId != null and !upPstId.equals("")'>
+				 , UP_PST_ID = #{upPstId}
+				 </if>
+				 <if test='pstStepNo != null and !pstStepNo.equals("")'>
+				 , PST_STEP_NO = #{pstStepNo}
+				 </if>
+				 <if test='pstOrd != null and !pstOrd.equals("")'>
+				 , PST_ORD_NO = #{pstOrd}
+				 </if>
+				 <if test='pstTtl != null and !pstTtl.equals("")'>
+				 , PST_TTL_NM = #{pstTtl}
+				 </if>
+				 <if test='pstCn != null and !pstCn.equals("")'>
+				 , PST_CN = #{pstCn}
+				 </if>
+				 <if test='wrtInstId != null and !wrtInstId.equals("")'>
+				 , WRT_INST_ID = #{wrtInstId}
+				 </if>
+				 <if test='wrtrId != null and !wrtrId.equals("")'>
+				 , WRTR_ID = #{wrtrId}
+				 </if>
+				 <if test='wrtrNm != null and !wrtrNm.equals("")'>
+				 , WRTR_NM = #{wrtrNm}
+				 </if>
+				 <if test='prvtYn != null and !prvtYn.equals("")'>
+				 , PRVT_YN = #{prvtYn}
+				 </if>
+				 <if test='atchFileGroupId != null and !atchFileGroupId.equals("")'>
+				 , ATCH_FILE_GROUP_ID = #{atchFileGroupId}
+				 </if>
+				 <if test='ntcPstgYn != null and !ntcPstgYn.equals("")'>
+				 , NTC_PSTG_YN = #{ntcPstgYn}
+				 </if>
+				 <if test='lnkgContsId != null and !lnkgContsId.equals("")'>
+				 , LNKG_CONTS_ID = #{lnkgContsId}
+				 </if>
+				 <if test='ntfcTrgtInstId != null and !ntfcTrgtInstId.equals("")'>
+				 , NTFC_TRGT_INST_ID = #{ntfcTrgtInstId}
+				 </if>
+				 <if test='ntfcRgtrId != null and !ntfcRgtrId.equals("")'>
+				 , NTFC_RGTR_ID = #{ntfcRgtrId}
+				 </if>
+				 <if test='ntfcYn != null and !ntfcYn.equals("")'>
+				 , NTFC_YN = #{ntfcYn}
+				 </if>
+				 <if test='ntfcDt != null and !ntfcDt.equals("")'>
+				 , NTFC_DT = #{ntfcDt}
+				 </if>
+				 <if test='idntyYn != null and !idntyYn.equals("")'>
+				 , IDNTY_YN = #{idntyYn}
+				 </if>
+				 <if test='idfrId != null and !idfrId.equals("")'>
+				 , IDFR_ID = #{idfrId}
+				 </if>
+				 <if test='idntyDt != null and !idntyDt.equals("")'>
+				 , IDNTY_DT = #{idntyDt}
+				 </if>
+				 <if test='prgrsSttsCd != null and !prgrsSttsCd.equals("")'>
+				 , PRGRS_STTS_CD = #{prgrsSttsCd}
+				 </if>
+				 <if test='prgrsAutzrId != null and !prgrsAutzrId.equals("")'>
+				 , PRGRS_AUTZR_ID = #{prgrsAutzrId}
+				 </if>
+				 <if test='prgrsDcsnDt != null and !prgrsDcsnDt.equals("")'>
+				 , PRGRS_DCSN_DT = #{prgrsDcsnDt}
+				 </if>
+				 <if test='prgrsDcsnCn != null and !prgrsDcsnCn.equals("")'>
+				 , PRGRS_DCSN_CN = #{prgrsDcsnCn}
+				 </if>
+				 <if test='rtngScr != null and !rtngScr.equals("")'>
+				 , RTNG_SCR = #{rtngScr}
+				 </if>
+				 <if test='rcmdtnCnt != null and !rcmdtnCnt.equals("")'>
+				 , RCMDTN_CNT = #{rcmdtnCnt}
+				 </if>
+				 <if test='opseCnt != null and !opseCnt.equals("")'>
+				 , OPSE_CNT = #{opseCnt}
+				 </if>
+				 <if test='secrYn != null and !secrYn.equals("")'>
+				 /*, SECR_YN = #{secrYn}*/
+				 </if>
+			 <if test='delYn != null and !delYn.equals("")'>
+			 , DEL_YN = #{delYn}
+			 </if>
+			 <if test='frstRgtrId != null and !frstRgtrId.equals("")'>
+			 , LAST_MDFR_ID = #{frstRgtrId}
+			 </if>
+		 WHERE PST_ID = #{pstId}
+		   <if test='bbsId != null and (bbsId.equals("QNA") or bbsId.equals("RVW") or bbsId.equals("SQNA")or bbsId.equals("JOIN"))'>
+		   AND FRST_RGTR_ID = #{frstRgtrId}
+		   </if>
+	</update>
+	
+	<update id="saveBbsInfoInqCnt" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo">
+		UPDATE /* 게시판 조회수 저장 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.saveBbsInfoInqCnt */
+		       TX_BBS_INFO
+		   SET INQ_CNT = INQ_CNT + 1
+		 WHERE PST_ID = #{pstId}
+	</update>
+
+	<select id="selectAtchFileDtl" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo" resultType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo">
+		SELECT /* 첨부파일상세 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectAtchFileDtl */
+		       A.* 
+		  FROM (
+				SELECT 
+					   ATCH_FILE_GROUP_ID	/* 첨부파일그룹아이디 */
+					 , ATCH_FILE_SN			/* 첨부파일일련번호 */
+					 , ATCH_FILE_ID			/* 첨부파일아이디 */
+					 , FILE_TYPE_CD			/* 파일유형코드 */
+					 , FILE_STRG_PATH_NM	/* 파일저장경로 */
+					 , STRG_FILE_NM			/* 저장파일명 */
+					 , ORGNL_ATCH_FILE_NM	/* 원본첨부파일명 */
+					 , FILE_EXTN_CD			/* 파일확장자코드 */
+					 , FILE_CN				/* 파일내용 */
+					 , FILE_SZ				/* 파일크기 */
+					 , FRST_RGTR_ID			/* 최초등록자아이디 */
+					 , FRST_REG_DT			/* 최초등록일시 */
+					 , LAST_MDFR_ID			/* 최종수정자아이디 */
+					 , LAST_MDFCN_DT		/* 최종수정일시 */
+				  FROM TX_ATCH_FILE_DTL_INFO
+				 WHERE 1 = 1
+				 <if test='atchFileGroupId != null and !atchFileGroupId.equals("")'>
+				   AND ATCH_FILE_GROUP_ID = #{atchFileGroupId} 
+				 </if> 
+				 <if test='atchFileId != null and !atchFileId.equals("")'>
+				   AND ATCH_FILE_ID = #{atchFileId} 
+				 </if>
+				 ORDER BY ATCH_FILE_SN 
+			   ) A
+		OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+	</select>
+	
+	<select id="selectAtchFileList" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo" resultType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo">
+		SELECT /* 첨부파일목록 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectAtchFilelist */
+		       A.* 
+		  FROM (
+				SELECT 
+					   ATCH_FILE_GROUP_ID	/* 첨부파일그룹아이디 */
+					 , ATCH_FILE_SN			/* 첨부파일일련번호 */
+					 , ATCH_FILE_ID			/* 첨부파일아이디 */
+					 , FILE_TYPE_CD			/* 파일유형코드 */
+					 , FILE_STRG_PATH_NM	/* 파일저장경로 */
+					 , STRG_FILE_NM			/* 저장파일명 */
+					 , ORGNL_ATCH_FILE_NM	/* 원본첨부파일명 */
+					 , FILE_EXTN_CD			/* 파일확장자코드 */
+					 , FILE_CN				/* 파일내용 */
+					 , FILE_SZ				/* 파일크기 */
+					 , FRST_RGTR_ID			/* 최초등록자아이디 */
+					 , FRST_REG_DT			/* 최초등록일시 */
+					 , LAST_MDFR_ID			/* 최종수정자아이디 */
+					 , LAST_MDFCN_DT		/* 최종수정일시 */
+				  FROM TX_ATCH_FILE_DTL_INFO
+				 WHERE 1 = 1
+				 <if test='atchFileGroupId != null and !atchFileGroupId.equals("")'>
+				   AND ATCH_FILE_GROUP_ID = #{atchFileGroupId} 
+				 </if> 
+				 <if test='atchFileId != null and !atchFileId.equals("")'>
+				   AND ATCH_FILE_ID = #{atchFileId} 
+				 </if>
+				 ORDER BY ATCH_FILE_SN 
+			   ) A
+	</select>
+
+	<select id="selectCmmnCdList" parameterType="kr.go.culture.xr.portal.cmmn.vo.CmmnCdInfoVo" resultType="kr.go.culture.xr.portal.cmmn.vo.CmmnCdInfoVo">
+		SELECT /* 공통코드 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectCmmnCdList */
+			   T02.CD_ID			/* 코드아이디 */
+			 , T02.CLSF_CD			/* 분류코드 */
+			 , T01.CLSF_NM			/* 분류명 */
+			 , T02.CD_NM			/* 코드명 */
+			 , T02.CD_EXPLN_CN AS CD_EXPLN			/* 코드설명 */
+			 , T02.USE_YN			/* 사용여부 */
+			 , T02.APRV_YN			/* 승인여부 */
+			 , T02.AUTZR_ID			/* 승인자아이디 */
+			 , T02.APRV_DT			/* 승인일시 */
+			 , T02.SORT_SN			/* 정렬일련번호 */
+			 , T02.ANXT_CN1			/* 부가내용1 */
+			 , T02.ANXT_CN2			/* 부가내용2 */
+			 , T02.ANXT_CN3			/* 부가내용3 */
+			 , T02.ANXT_CN4			/* 부가내용4 */
+			 , T02.ANXT_CN5			/* 부가내용5 */
+			 , T02.FRST_RGTR_ID		/* 최초등록자아이디 */
+			 , T02.FRST_REG_DT		/* 최초등록일시 */
+			 , T02.LAST_MDFR_ID		/* 최종수정자아이디 */
+			 , T02.LAST_MDFCN_DT	/* 최종수정일시 */
+		  FROM TX_CMMN_CLSF_CD T01
+		 INNER JOIN TX_CMMN_CD T02
+		    ON T02.CLSF_CD = T01.CLSF_CD
+		   AND T02.USE_YN = 'Y' 
+		   AND T02.APRV_YN = 'Y' 
+		 WHERE 1 = 1
+		   AND T01.USE_YN = 'Y' 
+		   AND T01.APRV_YN = 'Y' 
+		 <if test='clsfCd != null and !clsfCd.equals("")'>
+		   AND T01.CLSF_CD = #{clsfCd} 
+		 </if>
+		 <if test='clsfCd != null and clsfCd.equals("CLSF000009")'>
+		   AND T02.CD_ID IN (
+		   		SELECT RGN_CD
+		   		  FROM TX_INST_INFO
+		   		 WHERE RLS_YN = 'Y'
+		   		   AND INST_ID IN (
+		   		   		SELECT INST_ID
+		   		   		  FROM TX_DGTL_CLRCS_MTDT_INFO
+		   		   		 WHERE RLS_YN = 'Y'
+		   		       )
+		       ) 
+		 </if>  
+		 <if test='cdId != null and !cdId.equals("")'>
+		   AND T02.CD_ID = #{cdId} 
+		 </if>
+		 ORDER BY T02.SORT_SN 
+	</select>
+	
+	<select id="selectAtchFileGroupId" resultType="java.lang.String">
+		SELECT /* 첨부파일그룹아이디 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectAtchFileGroupId */
+			   TRIM(TO_CHAR(COALESCE(CAST(REGEXP_REPLACE(MAX(ATCH_FILE_GROUP_ID), '[^0-9]', '', 'g') AS INT),0) + 1,'0000000009')) AS ATCH_FILE_GROUP_ID
+		  FROM TX_ATCH_FILE_GROUP_INFO
+	</select>
+	
+	<insert id="regAtchFileGroupInfo" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo">
+		INSERT /* 첨부파일그룹정보 등록 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.regAtchFileGroupInfo */
+		  INTO TX_ATCH_FILE_GROUP_INFO
+		     (
+			   ATCH_FILE_GROUP_ID	/* 첨부파일그룹아이디 */
+			 , USE_YN				/* 사용여부 */
+			 , FRST_RGTR_ID			/* 최초등록자아이디 */
+			 , FRST_REG_DT			/* 최초등록일시 */
+			 , LAST_MDFR_ID			/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT		/* 최종수정일시 */
+		     ) VALUES (
+			   #{atchFileGroupId}
+			 , 'Y'
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+		     )
+	</insert>
+	
+	<delete id="delAtchFileGroupInfo" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo">
+		DELETE /* 첨부파일그룹정보 삭제 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.delAtchFileGroupInfo */
+		  FROM TX_ATCH_FILE_GROUP_INFO
+		 WHERE ATCH_FILE_GROUP_ID = #{atchFileGroupId}
+	</delete>
+	
+	<insert id="regAtchFileDtlInfo" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo">
+		INSERT /* 첨부파일상세 등록 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.regAtchFileDtlInfo */
+		  INTO TX_ATCH_FILE_DTL_INFO
+		     (
+			   ATCH_FILE_GROUP_ID	/* 첨부파일그룹아이디 */
+			 , ATCH_FILE_SN			/* 첨부파일일련번호 */
+			 , ATCH_FILE_ID			/* 첨부파일아이디 */
+			 , FILE_TYPE_CD			/* 파일유형코드 */
+			 , FILE_STRG_PATH_NM	/* 파일저장경로 */
+			 , STRG_FILE_NM			/* 저장파일명 */
+			 , ORGNL_ATCH_FILE_NM	/* 원본첨부파일명 */
+			 , FILE_EXTN_CD			/* 파일확장자코드 */
+			 , FILE_CN				/* 파일내용 */
+			 , FILE_SZ				/* 파일크기 */
+			 , FRST_RGTR_ID			/* 최초등록자아이디 */
+			 , FRST_REG_DT			/* 최초등록일시 */
+			 , LAST_MDFR_ID			/* 최종수정자아이디 */
+			 , LAST_MDFCN_DT		/* 최종수정일시 */
+		     ) VALUES (
+			   #{atchFileGroupId}
+			 , (SELECT COALESCE(MAX(ATCH_FILE_SN),0) + 1 
+			 	  FROM TX_ATCH_FILE_DTL_INFO 
+			 	 WHERE ATCH_FILE_GROUP_ID = #{atchFileGroupId} )
+			 , #{atchFileId}
+			 , #{fileTypeCd}
+			 , #{fileStrgPathNm}
+			 , #{strgFileNm}
+			 , #{orgnlAtchFileNm}
+			 , #{fileExtnCd}
+			 , #{fileCn}
+			 , #{fileSz}::NUMERIC
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+			 , #{frstRgtrId}
+			 , CURRENT_TIMESTAMP
+		     )
+	</insert>
+
+	<update id="saveAtchFileDtlInfo" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo">
+		UPDATE /* 첨부파일상세 저장 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.saveAtchFileDtlInfo */
+		  	   TX_ATCH_FILE_DTL_INFO
+		   SET    
+			   FILE_STRG_PATH_NM	= #{fileStrgPathNm}
+			 , STRG_FILE_NM			= #{strgFileNm}
+			 , ORGNL_ATCH_FILE_NM	= #{orgnlAtchFileNm}
+			 , FILE_SZ				= #{fileSz}::NUMERIC
+			 , LAST_MDFR_ID			= #{frstRgtrId}
+			 , LAST_MDFCN_DT		= CURRENT_TIMESTAMP
+		 WHERE ATCH_FILE_GROUP_ID = #{atchFileGroupId}
+		   AND ATCH_FILE_SN = #{atchFileSn}::NUMERIC 
+	</update>
+
+	<delete id="delAtchFileDtlInfo" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo">
+		DELETE /* 첨부파일상세 삭제 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.delAtchFileDtlInfo */
+		  FROM TX_ATCH_FILE_DTL_INFO
+		 WHERE ATCH_FILE_GROUP_ID = #{atchFileGroupId}
+		 <if test='atchFileSn != null and !atchFileSn.equals("")'>
+		   AND ATCH_FILE_SN = #{atchFileSn}::NUMERIC 
+		 </if> 
+	</delete>
+	
+	
+	<select id="selectAtchFileInfoCnt" parameterType="kr.go.culture.xr.portal.cmmn.vo.AtchFileDtlInfoVo" resultType="java.lang.Integer" >
+		SELECT /* 첨부파일 카운트 조회 kr.go.culture.xr.portal.cmmn.mapper.CmmnMapper.selectAtchFileInfoCnt */
+		 	  COUNT(1) AS CNT
+   		 FROM TX_ATCH_FILE_DTL_INFO
+   		WHERE 1 = 1
+      	  AND ATCH_FILE_GROUP_ID = #{atchFileGroupId} 
+	</select>
+	
+  	<select id="selectBbsClsfCdList" parameterType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo" resultType="kr.go.culture.xr.portal.cmmn.vo.BbsInfoVo">
+ 		SELECT /* 게시판 분류코드 범주 조회 kr.go.culture.xr.portal.utztngdnc.mapper.selectBbsClsfCdList */
+		      BBS_ID             /* 게시판아이디 */
+		    , CLSF_CD            /* 분류코드 */
+		    , CLSF_NM            /* 범주명 */
+		    , SORT_SN            /* 정렬일련번호 */
+		    , USE_YN             /* 사용여부 */
+		    , FRST_RGTR_ID       /* 최초등록자아이디 */
+		    , FRST_REG_DT        /* 최초등록일시 */
+		    , LAST_MDFR_ID       /* 최종수정자아이디 */
+		    , LAST_MDFCN_DT      /* 최종수정일시 */
+		    FROM TX_BBS_CLSF_CD
+		 WHERE 1 = 1
+		   AND USE_YN = 'Y'
+		   AND BBS_ID = #{bbsId} 
+		 ORDER BY SORT_SN ASC 
+	</select>      
+	
+	
+     
+</mapper>

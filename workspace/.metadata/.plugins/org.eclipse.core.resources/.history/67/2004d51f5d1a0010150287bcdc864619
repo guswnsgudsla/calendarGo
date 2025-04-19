@@ -1,0 +1,10 @@
+package com.proj.calendar.mapper;
+
+import java.util.List;
+
+import com.proj.calendar.vo.CalendarGoVO;
+
+public interface CalendarGoMapper {
+
+	public List<CalendarGoVO> selectCalendarGoList(CalendarGoVO calendarGoVO);
+}

@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper">
+
+	<!-- 회원목록 조회 -->
+	<select id="selectMbrList" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrList */
+			   XTMI.MBR_LIST_NO AS MBR_LIST_NO
+			 , XTMI.MBR_ID AS MBR_ID
+			 , XTMI.AUTHRT_ID AS AUTHRT_ID
+			 , XTMI.MBR_NCM AS MBR_NCM
+			 , XTMI.ITRST_CLSF_REG_NTFC_YN
+			 , XTMI.NTFC_STNG_DT AS NTFC_STNG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.NTFC_STNG_DT"/>
+				</include>) AS NTFC_STNG_DT_V19
+			 , XTMI.LAST_CNTN_DT AS LAST_CNTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.LAST_CNTN_DT"/>
+				</include>) AS LAST_CNTN_DT_V19
+			 , XTMI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTMI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTMI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTMI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TMI.FRST_REG_DT ASC) AS MBR_LIST_NO
+					 , TMI.MBR_ID
+					 , TMI.AUTHRT_ID
+					 , TMI.MBR_NCM_NM AS MBR_NCM
+					 , TMI.ITRST_CLSF_REG_NTFC_YN
+					 , TMI.NTFC_STNG_DT
+					 , (SELECT
+							   MAX(CNTN_DT)
+						  FROM TX_MBR_CNTN_HSTRY TMCH
+						 WHERE TMCH.MBR_ID = TMI.MBR_ID
+						) AS LAST_CNTN_DT
+					 , TMI.FRST_RGTR_ID
+					 , TMI.FRST_REG_DT
+					 , TMI.LAST_MDFR_ID
+					 , TMI.LAST_MDFCN_DT
+				  FROM TX_MBR_INFO TMI
+				 WHERE 1 = 1
+		<if test="paramSrchDiv != null and paramSrchDiv != '' and paramSrchString != null and paramSrchString != ''">
+			<if test="paramSrchDiv == 'ID'">
+				   AND TMI.MBR_ID LIKE CONCAT('%', TRIM(#{paramSrchString}), '%')
+			</if>
+			<if test="paramSrchDiv == 'NCM'">
+				   AND TMI.MBR_NCM_NM LIKE CONCAT('%', TRIM(#{paramSrchString}), '%')
+			</if>
+		</if>
+		<if test="paramSrchDateDiv != null and paramSrchDateDiv != '' and paramSrchBgngDay != null and paramSrchBgngDay != ''">
+			<if test="paramSrchDateDiv == 'REG'">
+				   AND TO_CHAR(TMI.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[>=]]> #{paramSrchBgngDay}
+			</if>
+			<if test="paramSrchDateDiv == 'CNTN'">
+				   AND TMI.MBR_ID IN (SELECT
+											 TMCH1.MBR_ID
+										FROM TX_MBR_CNTN_HSTRY TMCH1
+									   WHERE TO_CHAR(TMCH1.CNTN_DT, 'YYYY-MM-DD') <![CDATA[>=]]> #{paramSrchBgngDay})
+			</if>
+		</if>
+		<if test="paramSrchDateDiv != null and paramSrchDateDiv != '' and paramSrchEndDay != null and paramSrchEndDay != ''">
+			<if test="paramSrchDateDiv == 'REG'">
+				   AND TO_CHAR(TMI.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[<=]]> #{paramSrchEndDay}
+			</if>
+			<if test="paramSrchDateDiv == 'CNTN'">
+				   AND TMI.MBR_ID IN (SELECT
+											 TMCH1.MBR_ID
+										FROM TX_MBR_CNTN_HSTRY TMCH1
+									   WHERE TO_CHAR(TMI.LAST_CNTN_DT, 'YYYY-MM-DD') <![CDATA[<=]]> #{paramSrchEndDay})
+			</if>
+		</if>
+			   ) XTMI
+		 ORDER BY XTMI.MBR_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}
+	</select>
+	
+	
+	<!-- 회원수 조회 -->
+	<select id="selectMbrTotListCnt"  parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrTotListCnt */
+			   COUNT(TMI.MBR_ID) AS TOT_LIST_CNT
+		  FROM TX_MBR_INFO TMI
+		 WHERE 1 = 1
+		<if test="paramSrchDiv != null and paramSrchDiv != '' and paramSrchString != null and paramSrchString != ''">
+			<if test="paramSrchDiv == 'ID'">
+		   AND TMI.MBR_ID LIKE CONCAT('%', TRIM(#{paramSrchString}), '%')
+			</if>
+			<if test="paramSrchDiv == 'NCM'">
+		   AND TMI.MBR_NCM_NM LIKE CONCAT('%', TRIM(#{paramSrchString}), '%')
+			</if>
+		</if>
+		<if test="paramSrchDateDiv != null and paramSrchDateDiv != '' and paramSrchBgngDay != null and paramSrchBgngDay != ''">
+			<if test="paramSrchDateDiv == 'REG'">
+		   AND TO_CHAR(TMI.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[>=]]> #{paramSrchBgngDay}
+			</if>
+			<if test="paramSrchDateDiv == 'CNTN'">
+		   AND TMI.MBR_ID IN (SELECT
+									 TMCH1.MBR_ID
+								FROM TX_MBR_CNTN_HSTRY TMCH1
+							   WHERE TO_CHAR(TMCH1.CNTN_DT, 'YYYY-MM-DD') <![CDATA[>=]]> #{paramSrchBgngDay})
+			</if>
+		</if>
+		<if test="paramSrchDateDiv != null and paramSrchDateDiv != '' and paramSrchEndDay != null and paramSrchEndDay != ''">
+			<if test="paramSrchDateDiv == 'REG'">
+		   AND TO_CHAR(TMI.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[<=]]> #{paramSrchEndDay}
+			</if>
+			<if test="paramSrchDateDiv == 'CNTN'">
+		   AND TMI.MBR_ID IN (SELECT
+									 TMCH1.MBR_ID
+								FROM TX_MBR_CNTN_HSTRY TMCH1
+							   WHERE TO_CHAR(TMI.LAST_CNTN_DT, 'YYYY-MM-DD') <![CDATA[<=]]> #{paramSrchEndDay})
+			</if>
+		</if>
+	</select>
+
+
+	<!-- 회원정보 상세보기 -->
+	<select id="selectMbrInfo" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrInfo */
+			   XTMI.MBR_ID AS MBR_ID
+			 , XTMI.AUTHRT_ID AS AUTHRT_ID
+			 , XTMI.MBR_NCM_NM AS MBR_NCM
+			 , XTMI.ITRST_CLSF_REG_NTFC_YN
+			 , XTMI.NTFC_STNG_DT AS NTFC_STNG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.NTFC_STNG_DT"/>
+				</include>) AS NTFC_STNG_DT_V19
+			 , XTMI.LAST_CNTN_DT AS LAST_CNTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.LAST_CNTN_DT"/>
+				</include>) AS LAST_CNTN_DT_V19
+			 , XTMI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTMI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTMI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTMI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT 
+					   TMI.MBR_ID AS MBR_ID
+					 , TMI.AUTHRT_ID AS AUTHRT_ID
+					 , TMI.MBR_NCM_NM AS MBR_NCM_NM
+					 , TMI.ITRST_CLSF_REG_NTFC_YN
+					 , TMI.NTFC_STNG_DT AS NTFC_STNG_DT
+					 , (SELECT
+							   MAX(CNTN_DT)
+						  FROM TX_MBR_CNTN_HSTRY TMCH
+						 WHERE TMCH.MBR_ID = TMI.MBR_ID
+						) AS LAST_CNTN_DT
+					 , TMI.FRST_RGTR_ID AS FRST_RGTR_ID
+					 , TMI.FRST_REG_DT AS FRST_REG_DT
+					 , TMI.LAST_MDFR_ID AS LAST_MDFR_ID
+					 , TMI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+				  FROM TX_MBR_INFO TMI
+				 WHERE TMI.MBR_ID = #{paramMbrId}
+			   ) XTMI	
+	</select>
+
+
+	<!-- 다운로드 신청내역 목록 조회 -->
+	<select id="selectMbrDwnldHstryList" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.MbrDwnldHstryVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrDwnldHstryList */
+			   XTMDH.DWNLD_LIST_NO AS DWNLD_LIST_NO
+			 , XTMDH.DWNLD_SN AS DWNLD_SN
+			 , XTMDH.CLRCS_ID AS CLRCS_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getDgtlClrcsNm">
+					<property name="paramColNm" value="'KOR'"/>
+					<property name="paramClrcsId" value="XTMDH.CLRCS_ID"/>
+				</include>) AS CLRCS_NM
+			 , XTMDH.PRDCT_SN AS PRDCT_SN
+			 , XTMDH.CONTS_USE_TYPE_CD AS CONTS_USE_TYPE_CD
+			 , XTMDH.CONTS_PVSN_TYPE_CD AS CONTS_PVSN_TYPE_CD
+			 , XTMDH.CONTS_CNJT_TYPE_CD AS CONTS_CNJT_TYPE_CD
+			 , XTMDH.CONTS_CNJT_EFCT_EXPLN AS CONTS_CNJT_EFCT_EXPLN
+			 , XTMDH.PRVC_CLCT_AGRE_YN AS PRVC_CLCT_AGRE_YN
+			 , XTMDH.CONTS_USE_AGRE_YN AS CONTS_USE_AGRE_YN
+			 , XTMDH.CONTS_USE_URL_ADDR AS CONTS_USE_URL_ADDR
+			 , XTMDH.DEL_YN AS DEL_YN
+			 , XTMDH.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMDH.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTMDH.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMDH.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTMDH.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMDH.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTMDH.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMDH.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TMDH.DWNLD_SN ASC) AS DWNLD_LIST_NO
+					 , TMDH.MBR_ID AS MBR_ID
+					 , TMDH.DWNLD_SN AS DWNLD_SN
+					 , TMDH.CLRCS_ID AS CLRCS_ID
+					 , TMDH.PRDCT_SN AS PRDCT_SN
+					 , TMDH.CONTS_USE_TYPE_CD AS CONTS_USE_TYPE_CD
+					 , TMDH.CONTS_PVSN_TYPE_CD AS CONTS_PVSN_TYPE_CD
+					 , TMDH.CONTS_CNJT_TYPE_CD AS CONTS_CNJT_TYPE_CD
+					 , TMDH.CONTS_CNJT_EFCT_EXPLN_CN AS CONTS_CNJT_EFCT_EXPLN
+					 , TMDH.PRVC_CLCT_AGRE_YN AS PRVC_CLCT_AGRE_YN
+					 , TMDH.CONTS_USE_AGRE_YN AS CONTS_USE_AGRE_YN
+					 , TMDH.PRDCT_TRCK_ID AS PRDCT_TRCK_ID
+					 , TMDH.CONTS_USE_URL_ADDR AS CONTS_USE_URL_ADDR
+					 , TMDH.DEL_YN AS DEL_YN
+					 , TMDH.FRST_RGTR_ID AS FRST_RGTR_ID
+					 , TMDH.FRST_REG_DT AS FRST_REG_DT
+					 , TMDH.LAST_MDFR_ID AS LAST_MDFR_ID
+					 , TMDH.LAST_MDFCN_DT AS LAST_MDFCN_DT
+				  FROM TX_MBR_DWNLD_HSTRY TMDH
+				 WHERE TMDH.MBR_ID = #{paramMbrId}
+			   ) XTMDH
+		 ORDER BY XTMDH.DWNLD_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramTabDwnldListPageNo} - 1) * #{paramRecordCnt}
+	</select>
+
+
+	<!-- 다운로드 신청 내역 수 조회 -->
+	<select id="selectMbrDwnldHstryTotListCnt"  parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrDwnldHstryList */
+			   COUNT(TMDH.DWNLD_SN) AS TOT_LIST_CNT
+		  FROM TX_MBR_DWNLD_HSTRY TMDH
+		 WHERE TMDH.MBR_ID = #{paramMbrId}
+	</select>
+
+
+	<!-- Q&A 문의내역 목록 조회-->
+	<select id="selectMbrQnaList" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.MbrQnaHstryVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrQnaList */
+			   XTBI.LIST_PST_NO AS LIST_PST_NO
+			 , XTBI.BBS_ID AS BBS_ID
+			 , XTBI.PST_ID AS PST_ID
+			 , XTBI.PST_TTL_NM AS PST_TTL
+			 , XTBI.LNKG_CONTS_ID AS LNKG_CONTS_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getDgtlClrcsNm">
+					<property name="paramColNm" value="'KOR'"/>
+					<property name="paramClrcsId" value="XTBI.LNKG_CONTS_ID"/>
+				</include>) AS CLRCS_NM
+			 , XTBI.INST_ID AS INST_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+					<property name="paramColNm" value="'instNm'"/>
+					<property name="paramInstId" value="XTBI.INST_ID"/>
+				</include>) AS INST_NM
+			 , XTBI.FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTBI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTBI.FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTBI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , (CASE WHEN XTBI.ANS_CNT <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS QNA_ANS_YN_NM 
+		  FROM (SELECT
+					   ROW_NUMBER()OVER(ORDER BY PST_ID ASC) AS LIST_PST_NO
+					 , TBI.BBS_ID
+					 , TBI.PST_ID
+					 , TBI.PST_TTL_NM
+					 , TBI.LNKG_CONTS_ID
+					 , (SELECT INST_ID
+						  FROM TX_DGTL_CLRCS_MTDT_INFO TDCMI
+						 WHERE TDCMI.CLRCS_ID = TBI.LNKG_CONTS_ID) AS INST_ID
+					 , TBI.FRST_RGTR_ID
+					 , TBI.FRST_REG_DT
+					 , (SELECT COUNT(ANS_ID)
+						  FROM TX_PST_ANS_INFO TPAI
+						 WHERE TPAI.PST_ID = TBI.PST_ID) AS ANS_CNT
+				  FROM TX_BBS_INFO TBI
+				 WHERE TBI.BBS_ID = #{paramBbsId}
+				   AND TBI.WRTR_ID = #{paramMbrId}
+			   ) XTBI
+		 ORDER BY XTBI.LIST_PST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramTabQnaListPageNo} - 1) * #{paramRecordCnt}
+	</select>
+	
+
+	<!-- Q&A 믄의내역 수 조회 -->
+	<select id="selectMbrQnaTotListCnt"  parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrQnaTotListCnt */
+			   COUNT(TBI.PST_ID) AS TOT_LIST_CNT
+		  FROM TX_BBS_INFO TBI
+		 WHERE TBI.BBS_ID = #{paramBbsId}
+		   AND TBI.WRTR_ID = #{paramMbrId}
+	</select>
+
+
+	<!-- 검색이력 목록 조회-->
+	<select id="selectMbrSrchHstryList" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.MbrSrchHstryVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrSrchHstryList */
+			   XTMSH.SRCH_LIST_NO AS SRCH_LIST_NO
+			 , XTMSH.SRCH_DT AS SRCH_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMSH.SRCH_DT"/>
+				</include>) AS SRCH_DT_V19
+			 , XTMSH.SRWD_NM AS SRWD_NM
+			 , XTMSH.MENU_ID AS MENU_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMenuInfo">
+					<property name="paramInfoCd" value="'MENUNM'"/>
+					<property name="paramMenuId" value="XTMSH.MENU_ID"/>
+				</include>) AS MENU_NM
+			 , XTMSH.DEL_YN AS DEL_YN
+			 , (CASE WHEN XTMSH.DEL_YN = 'Y'
+						  THEN '삭제'
+					 ELSE ''
+				 END) AS DEL_YN_NM
+			 , XTMSH.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMSH.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTMSH.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMSH.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTMSH.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMSH.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTMSH.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMSH.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY SRCH_DT ASC) AS SRCH_LIST_NO
+					 , TMSH.SRCH_DT
+					 , TMSH.SRWD_NM
+					 , TMSH.MENU_ID
+					 , TMSH.DEL_YN
+					 , TMSH.FRST_RGTR_ID
+					 , TMSH.FRST_REG_DT
+					 , TMSH.LAST_MDFR_ID
+					 , TMSH.LAST_MDFCN_DT
+				  FROM TX_MBR_SRCH_HSTRY TMSH
+				 WHERE TMSH.MBR_ID = #{paramMbrId}
+			   ) XTMSH 
+		 ORDER BY XTMSH.SRCH_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramTabSrchListPageNo} - 1) * #{paramRecordCnt}
+	</select>
+
+
+	<!-- 검색이력 수 조회 -->
+	<select id="selectMbrSrchHstryTotListCnt"  parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrSrchHstryTotListCnt */
+			   COUNT(TMSH.SRCH_DT) AS TOT_LIST_CNT
+		  FROM TX_MBR_SRCH_HSTRY TMSH
+		 WHERE TMSH.MBR_ID = #{paramMbrId}
+	</select>
+
+
+	<!-- 접속이력 목록 조회-->
+	<select id="selectMbrCntnHstryList" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.MbrCntnHstryVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrCntnHstryList */
+			   XTMCH.CNTN_LIST_NO AS CNTN_LIST_NO
+			 , XTMCH.HSTRY_SN AS HSTRY_SN
+			 , XTMCH.CNTN_DT AS CNTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMCH.CNTN_DT"/>
+				</include>) AS CNTN_DT_V19
+			 , XTMCH.CNTN_TKN_NM AS CNTN_TKN_NM
+			 , XTMCH.LINK_TKN_CN AS LINK_TKN_CN
+			 , XTMCH.CNTN_IP_ADDR AS CNTN_IP_ADDR
+			 , XTMCH.DEL_YN AS DEL_YN
+			 , (CASE WHEN XTMCH.DEL_YN = 'Y'
+			 			  THEN '삭제'
+			 		 ELSE ''
+			 	 END) AS DEL_YN_NM
+			 , XTMCH.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMCH.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTMCH.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMCH.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTMCH.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMCH.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTMCH.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMCH.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TMCH.HSTRY_SN ASC) AS CNTN_LIST_NO
+					 , TMCH.HSTRY_SN
+					 , TMCH.CNTN_DT
+					 , TMCH.CNTN_TKN_NM
+					 , TMCH.LINK_TKN_CN
+					 , TMCH.CNTN_IP_ADDR
+					 , TMCH.DEL_YN
+					 , TMCH.FRST_RGTR_ID
+					 , TMCH.FRST_REG_DT
+					 , TMCH.LAST_MDFR_ID
+					 , TMCH.LAST_MDFCN_DT
+				  FROM TX_MBR_CNTN_HSTRY TMCH
+				 WHERE TMCH.MBR_ID = #{paramMbrId}
+			   ) XTMCH
+		 ORDER BY XTMCH.CNTN_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramTabCntnListPageNo} - 1) * #{paramRecordCnt}
+	</select>
+
+
+	<!-- 접속이력 수 조회 -->
+	<select id="selectMbrCntnHstryTotListCnt"  parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrCntnHstryTotListCnt */
+			   COUNT(TMCH.HSTRY_SN) AS TOT_LIST_CNT
+		  FROM TX_MBR_CNTN_HSTRY TMCH
+		 WHERE TMCH.MBR_ID = #{paramMbrId}
+	</select>
+
+
+	<!-- 관심문화자원 목록 조회-->
+	<select id="selectMbrItrstClrcsList" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.MbrItrstClrcsInfoVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrItrstClrcsList */
+			   XTMICI.ITRST_LIST_NO AS ITRST_LIST_NO
+			 , XTMICI.CLRCS_ID AS CLRCS_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getDgtlClrcsNm">
+					<property name="paramColNm" value="'KOR'"/>
+					<property name="paramClrcsId" value="XTMICI.CLRCS_ID"/>
+				</include>) AS CLRCS_NM
+			 , XTMICI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMICI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTMICI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMICI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTMICI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getMbrInfo">
+					<property name="paramMbrId" value="XTMICI.LAST_MDFR_ID"/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTMICI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTMICI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TMICI.FRST_REG_DT ASC) AS ITRST_LIST_NO
+					 , TMICI.CLRCS_ID
+					 , TMICI.FRST_RGTR_ID
+					 , TMICI.FRST_REG_DT
+					 , TMICI.LAST_MDFR_ID
+					 , TMICI.LAST_MDFCN_DT
+				  FROM TX_MBR_ITRST_CLRCS_INFO TMICI
+				 WHERE TMICI.MBR_ID = #{paramMbrId}
+			   ) XTMICI
+		 ORDER BY XTMICI.ITRST_LIST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramTabItrstClrcsListPageNo} - 1) * #{paramRecordCnt}
+	</select>
+
+
+	<!-- 관심문화자원 목록 수 조회 -->
+	<select id="selectMbrItrstClrcsTotListCnt"  parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="Integer">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectMbrItrstClrcsList */
+			   COUNT(TMICI.CLRCS_ID) AS TOT_LIST_CNT
+		  FROM TX_MBR_ITRST_CLRCS_INFO TMICI
+		 WHERE TMICI.MBR_ID = #{paramMbrId}
+	</select>
+	
+	
+	<!-- 산출물추적아이디 상세 보기 -->
+	<select id="selectPrdctUseTrackInfo" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.PrdctUseTrckInfoVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectPrdctUseTrackInfo */
+			   TPUTI.CLRCS_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getDgtlClrcsNm">
+					<property name="paramColNm" value="'KOR'"/>
+					<property name="paramClrcsId" value="TPUTI.CLRCS_ID"/>
+				</include>) AS CLRCS_NM
+			 , TPUTI.NML_YN AS NML_YN
+			 , TPUTI.TRCK_SPND_YN AS TRCK_SPND_YN
+			 , (SELECT CONTS_USE_URL_ADDR
+				  FROM TX_MBR_DWNLD_HSTRY TMDH
+				 WHERE TMDH.MBR_ID = TPUTI.MBR_ID
+				   AND TMDH.DWNLD_SN = TPUTI.DWNLD_SN) AS CONTS_USE_URL_ADDR
+		  FROM TX_PRDCT_USE_TRCK_INFO TPUTI
+		 WHERE TPUTI.PRDCT_TRCK_ID = #{paramPrdctTrckId}
+	</select>
+	
+	
+	<!-- 산출물추적이력 상세보기 -->
+	<select id="selectPrdctUseTrckHstryList" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="kr.go.culture.xr.admin.mbrMgt.vo.PrdctUseTrckHstryVO">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectPrdctUseTrckHstryList */
+			   XTPUTH.LIST_TRCK_NO AS LIST_TRCK_NO
+			 , XTPUTH.TRCK_SN AS TRCK_SN
+			 , XTPUTH.NML_YN AS NML_YN
+			 , (CASE WHEN XTPUTH.NML_YN = 'Y'
+						  THEN '정상'
+					 ELSE '정상아님'
+				END) AS NML_YN_NM
+			 , XTPUTH.TRCK_DT AS TRCK_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTPUTH.TRCK_DT"/>
+				</include>) AS TRCK_DT_V19
+		  FROM (
+				SELECT 
+					   ROW_NUMBER()OVER(ORDER BY TPUTH.TRCK_SN ASC) AS LIST_TRCK_NO
+					 , TPUTH.TRCK_SN AS TRCK_SN 
+					 , TPUTH.NML_YN AS NML_YN
+					 , TPUTH.TRCK_DT AS TRCK_DT
+				  FROM TX_PRDCT_USE_TRCK_HSTRY TPUTH
+				 WHERE TPUTH.PRDCT_TRCK_ID = #{paramPrdctTrckId}
+			   ) XTPUTH
+		 ORDER BY XTPUTH.LIST_TRCK_NO DESC
+		 LIMIT #{paramPopPageRecordCnt}
+		OFFSET (#{paramPopPageNo} - 1) * #{paramPopPageRecordCnt} 
+	</select>
+	
+	
+	<!-- -->
+	<select id="selectPrdctUseTrckHstryTotCnt" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.MbrInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.selectPrdctUseTrckHstryTotCnt */
+			   COUNT(TPUTH.TRCK_SN) AS TOT_LIST_CNT
+		  FROM TX_PRDCT_USE_TRCK_HSTRY TPUTH
+		 WHERE TPUTH.PRDCT_TRCK_ID = #{paramPrdctTrckId}
+	</select>
+	
+	
+	<!-- 산출물추적여부 설정 변경 -->
+	<update id="updateTrckSpndInfo" parameterType="kr.go.culture.xr.admin.mbrMgt.vo.PrdctUseTrckInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.mbrMgt.mapper.MbrMgtMapper.updateTrckSpndInfo */
+			   TX_PRDCT_USE_TRCK_INFO
+		   SET TRCK_SPND_YN = #{trckSpndYn}
+			 , SPND_STNG_ID = #{spndStngId}
+			 , SPND_STNG_DT = NOW()
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE PRDCT_TRCK_ID = #{paramTrckId}
+	</update>
+
+</mapper>

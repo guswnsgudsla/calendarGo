@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.proj.calendar.mapper.CalendarGoMapper">
+	<select id="selectDgtlCltRscInfoList" parameterType="com.proj.calendar.vo.CalendarGoVO" resultType="com.proj.calendar.vo.CalendarGoVO">
+	/* 캘린더 정보 조회calendarGoMapper.selectCalendarGoList */
+		SELECT
+			CAL_ID as cId,
+			CAL_Name as cName,
+			CAL_STR_DATE as cStrDate,
+			CAL_END_DATE as cEndDate,
+			CAL_CONT as cCalCont,
+			CAL_REG_DATE as cRegDate,
+			CAL_DEL_YN as cDelYn
+		FROM
+			TB_CALLENDAR
+		WHERE
+			1 = 1
+			AND cDelYn = 'N'
+	</select>
+</mapper>
+

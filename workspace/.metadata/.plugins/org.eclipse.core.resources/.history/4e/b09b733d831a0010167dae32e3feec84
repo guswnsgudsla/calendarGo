@@ -1,0 +1,22 @@
+package com.proj.calendar.service.impl;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.proj.calendar.dao.CalendarGoMapper;
+import com.proj.calendar.service.CalendarGoService;
+import com.proj.calendar.vo.CalendarGoVO;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class CalendarGoServiceImpl  implements CalendarGoService {
+	private final CalendarGoDAO calendarGoDAO;
+
+	@Override
+	public List<CalendarGoVO> selectCalendarGoList(CalendarGoVO calendarGoVO) {
+		return calendarGoMapper.selectCalendarGoList(calendarGoVO);
+	}
+}

@@ -1,0 +1,234 @@
+package com.proj.calendar.controller;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import com.proj.calendar.service.CalendarGoService;
+import com.proj.calendar.vo.CalendarGoVO;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
+@Controller
+@RequiredArgsConstructor
+public class CalendarGoController {
+
+	private final CalendarGoService calendarGoService;
+
+	@GetMapping("/calendarGo.do")
+	public String calendarList(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			ModelMap model
+	) throws Exception {
+		// 일정불러오기
+		List<CalendarGoVO> calList = calendarGoService.selectCalendarGoList(calendarGoVO);
+		model.addAttribute("calList", calList);
+
+		// 년도 for 공휴일추가
+		int iYear = 2020;
+		CalendarGoVO selAnvYnList = calendarGoService.selectAnvYnList(calendarGoVO);
+		List<CalendarGoVO> yearList = new ArrayList<CalendarGoVO>();
+		for (int i = 0; i <= 10; i++) {
+			CalendarGoVO calVo = new CalendarGoVO();
+			calVo.setYearList(iYear+i);
+			
+			if(selAnvYnList.getCalAnvYear().contains((iYear+i)+"")) {
+				calVo.setYearYn("Y");
+			}else {
+				calVo.setYearYn("N");
+			}
+			
+			yearList.add(calVo);
+		}
+		model.addAttribute("yearList", yearList);
+
+		return "jsp/calendarGo";
+	}
+
+	@PostMapping("/calendarAdd.do")
+	@ResponseBody
+	public String calendarAdd(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO,
+			HttpServletRequest request,
+			ModelMap model
+	) throws Exception {
+//		System.out.println("=======");
+//		System.out.println(calendarGoVO.getVStrDt());
+//		System.out.println(calendarGoVO.getVEndDt());
+//		System.out.println(calendarGoVO.getVCont());
+//		System.out.println("=======");
+		
+		//일반일정N, 공휴일Y
+		calendarGoVO.setCalAnvYn("N");
+		
+		// 성공YN
+		int cnt = calendarGoService.insertCalendarGo(calendarGoVO);
+		if (cnt > 0) {
+			return "success";
+		} else {
+			return "fail";
+		}
+	}
+
+	@PostMapping("/calendarEdit.do")
+	@ResponseBody
+	public String calendarEdit(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			HttpServletRequest request,
+			ModelMap model
+	) throws Exception {
+//		System.out.println("=======");
+//		System.out.println(calendarGoVO.getVCalId());
+//		System.out.println(calendarGoVO.getVStrDt());
+//		System.out.println(calendarGoVO.getVEndDt());
+//		System.out.println(calendarGoVO.getVCont());
+//		System.out.println("=======");
+
+		// 성공YN
+		int cnt = calendarGoService.editCalendarGo(calendarGoVO);
+		if (cnt > 0) {
+			return "success";
+		} else {
+			return "fail";
+		}
+	}
+
+	@PostMapping("/calendarDel.do")
+	@ResponseBody
+	public String calendarDel(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			HttpServletRequest request,
+			ModelMap model
+	) throws Exception {
+//		System.out.println("=======");
+//		System.out.println(calendarGoVO.getVCalId());
+//		System.out.println("=======");
+
+		// 성공YN
+		int cnt = calendarGoService.deleteCalendarGo(calendarGoVO);
+		if (cnt > 0) {
+			return "success";
+		} else {
+			return "fail";
+		}
+	}
+
+	// 대한민국 공휴일 뽑기
+	@SuppressWarnings("unused")
+	// api는 2년마다 갱신
+	// 매년 조회해서 디비업데이트하기
+//	@SuppressWarnings({ "rawtypes", "unused" })
+	@PostMapping("/addAnivers.do")
+	@ResponseBody
+	public String apiAnniversary(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO,
+			HttpServletRequest request,
+			ModelMap model
+	) throws Exception {
+//		System.out.println("=======");
+//		System.out.println("들어옴");
+//		System.out.println(calendarGoVO.getYearData());
+//		System.out.println("=======");
+		
+		CalendarGoVO selAnvYn = calendarGoService.selectAnvYn(calendarGoVO);
+		if (selAnvYn == null) {
+			String strRow = "100"; // 갯수
+			String strYear = calendarGoVO.getYearData(); // 연도
+			String strMonth = ""; // 월 (안쓰면 전체)
+
+			// url, 서비스키, 갯수, 연도, 월
+			StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo");
+			urlBuilder.append("?" + URLEncoder.encode("serviceKey", "UTF-8")+ "=4AkRlCH5%2BNXQAgL8Fd%2FVyy1Am5QVDPguo3q569orfi6lUuFtDuNlF9TBrMujDshrVpO2qSsHWpBFZ4N%2BFmmgvQ%3D%3D");
+			urlBuilder.append("&" + URLEncoder.encode("numOfRows", "UTF-8") + "=" + URLEncoder.encode(strRow, "UTF-8"));
+			urlBuilder.append("&" + URLEncoder.encode("solYear", "UTF-8") + "=" + URLEncoder.encode(strYear, "UTF-8"));
+			urlBuilder.append("&" + URLEncoder.encode("solMonth", "UTF-8") + "=" + URLEncoder.encode(strMonth, "UTF-8"));
+
+			URL url = new URL(urlBuilder.toString());
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("Content-type", "application/json");
+
+			BufferedReader rd;
+			if (conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+				rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			} else {
+				rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+			}
+			StringBuilder sb = new StringBuilder();
+			String line;
+			while ((line = rd.readLine()) != null) {
+				sb.append(line);
+			}
+			rd.close();
+			conn.disconnect();
+			String resultSb = sb.toString();
+
+			// 결과
+//			System.out.println("=======");
+//			System.out.println(resultSb);
+//			System.out.println("=======");
+
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			Document doc = builder.parse(new InputSource(new StringReader(resultSb)));
+			
+			String s = null;
+			boolean ok = false; // <resultCode>00</resultCode> 획득 여부
+			Element e;
+			NodeList ns = doc.getElementsByTagName("header");
+			
+			if (ns.getLength() > 0) {
+				e = (Element) ns.item(0);
+				if (e.getElementsByTagName("resultCode").item(0).getTextContent().equals("00"))
+					ok = true; // 성공 여부
+				else // 에러 메시지
+					s = e.getElementsByTagName("resultMsg").item(0).getTextContent();
+			}
+
+			int cnt = 0;
+			if (ok) {
+				ns = doc.getElementsByTagName("item");
+				for (int i = 0; i < ns.getLength(); i++) {
+					e = (Element) ns.item(i);
+					
+					calendarGoVO.setCalAnvYn("Y");
+					calendarGoVO.setCalAnvYear(calendarGoVO.getYearData());
+					calendarGoVO.setVCont(e.getElementsByTagName("dateName").item(0).getTextContent());
+					calendarGoVO.setVStrDt(e.getElementsByTagName("locdate").item(0).getTextContent());
+					calendarGoVO.setVEndDt(e.getElementsByTagName("locdate").item(0).getTextContent());
+					
+					calendarGoService.insertCalendarGo(calendarGoVO);
+					cnt++;
+				}
+			}
+			
+			if (cnt > 0) {
+				return "success";
+			} else {
+				return "fail";
+			}
+		}else {
+			return "duplicate";
+		}
+	}
+}

@@ -1,0 +1,3792 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper">
+
+	<!-- 자원조사 목록 -->
+	<select id="selectRcsExmnList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnList */
+			   XTREI.LIST_RCSEXMN_NO AS LIST_RCSEXMN_NO
+			 , XTREI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , XTREI.RCS_EXMN_NM AS RCSEXMN_NM
+			 , XTREI.RCS_EXMN_CN AS RCSEXMN_CN
+			 , XTREI.RCS_EXMN_YR AS RCSEXMN_YR
+			 , XTREI.RCS_EXMN_BGNG_YMD AS RCSEXMN_BGNG_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+					<property name="paramSeparator" value="'-'"/>
+					<property name="paramYmd" value="XTREI.RCS_EXMN_BGNG_YMD"/>
+				</include>) AS RCSEXMN_BGNG_YMD_V10
+			 , XTREI.RCS_EXMN_END_YMD AS RCSEXMN_END_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+					<property name="paramSeparator" value="'-'"/>
+					<property name="paramYmd" value="XTREI.RCS_EXMN_END_YMD"/>
+				</include>) AS RCSEXMN_END_YMD_V10
+			 , XTREI.USE_YN AS USE_YN
+			 , XTREI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTREI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTREI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTREI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTREI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTREI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTREI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTREI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTREI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTREI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+			 , (SELECT COUNT(RCS_EXMN_ID) 
+			 	  FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII 
+			 	 WHERE TRETII.RCS_EXMN_ID = XTREI.RCS_EXMN_ID) AS RCSEXMN_TRGT_INST_CNT
+			 , (SELECT COUNT(RCS_EXMN_ID) 
+			 	  FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII 
+			 	 WHERE TRETII.RCS_EXMN_ID = XTREI.RCS_EXMN_ID
+			 	   AND TRETII.EXMN_CMPTN_YN = 'Y') AS RCSEXMN_CMPTN_INST_CNT
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY RCS_EXMN_ID ASC) AS LIST_RCSEXMN_NO
+					 , TREI.RCS_EXMN_ID AS RCS_EXMN_ID
+					 , TREI.RCS_EXMN_NM AS RCS_EXMN_NM
+					 , TREI.RCS_EXMN_CN AS RCS_EXMN_CN
+					 , TREI.RCS_EXMN_YR AS RCS_EXMN_YR
+					 , TREI.RCS_EXMN_BGNG_YMD AS RCS_EXMN_BGNG_YMD
+					 , TREI.RCS_EXMN_END_YMD AS RCS_EXMN_END_YMD
+					 , TREI.USE_YN AS USE_YN
+					 , TREI.FRST_RGTR_ID AS FRST_RGTR_ID
+					 , TREI.FRST_REG_DT AS FRST_REG_DT
+					 , TREI.LAST_MDFR_ID AS LAST_MDFR_ID
+					 , TREI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+				  FROM TX_RCS_EXMN_INFO TREI
+				 WHERE 1 = 1
+		<if test="paramRcsexmnYr != null and paramRcsexmnYr != ''">
+				   AND TREI.RCS_EXMN_YR = #{paramRcsexmnYr}
+		</if>
+		<if test="paramSrchRcsexmnDiv != null and paramSrchRcsexmnDiv != '' and paramSrchRcsexmnString != null and paramSrchRcsexmnString != ''">
+			<if test="paramSrchRcsexmnDiv == 'ID'">
+				   AND TREI.RCS_EXMN_ID LIKE CONCAT('%', TRIM(#{paramSrchRcsexmnString}), '%')
+			</if>
+			<if test="paramSrchRcsexmnDiv == 'NM'">
+				   AND TREI.RCS_EXMN_NM LIKE CONCAT('%', TRIM(#{paramSrchRcsexmnString}), '%')
+			</if>
+		</if>
+		
+		<if test="paramInstId != null and paramInstId != ''">
+				   AND TREI.RCS_EXMN_ID IN (SELECT TRETII.RCS_EXMN_ID
+											 FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII
+											WHERE TRETII.INST_ID = #{paramInstId}
+										  )
+		</if>
+			   ) XTREI
+		 ORDER BY XTREI.LIST_RCSEXMN_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}
+	</select>
+	
+	
+	<!-- 자원조사 목록수 -->
+	<select id="selectRcsExmnTotListCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnTotListCnt */
+			   COUNT(TREI.RCS_EXMN_ID)
+		  FROM TX_RCS_EXMN_INFO TREI
+		 WHERE 1 = 1
+		<if test="paramRcsexmnYr != null and paramRcsexmnYr != ''">
+		   AND TREI.RCS_EXMN_YR = #{paramRcsexmnYr}
+		</if>
+		<if test="paramSrchRcsexmnDiv != null and paramSrchRcsexmnDiv != '' and paramSrchRcsexmnString != null and paramSrchRcsexmnString != ''">
+			<if test="paramSrchRcsexmnDiv == 'ID'">
+		   AND TREI.RCS_EXMN_ID LIKE CONCAT('%', TRIM(#{paramSrchRcsexmnString}), '%')
+			</if>
+			<if test="paramSrchRcsexmnDiv == 'NM'">
+		   AND TREI.RCS_EXMN_NM LIKE CONCAT('%', TRIM(#{paramSrchRcsexmnString}), '%')
+			</if>
+		</if>
+		<if test="paramInstId != null and paramInstId != ''">
+		   AND TREI.RCS_EXMN_ID IN (SELECT TRETII.RCS_EXMN_ID
+									 FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII
+									WHERE TRETII.INST_ID = #{paramInstId}
+								  )
+		</if>
+	</select>
+	
+	
+	<!-- 자원조사 상세보기 -->
+	<select id="selectRcsExmnInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfo */
+			   TREI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREI.RCS_EXMN_NM AS RCSEXMN_NM
+			 , TREI.RCS_EXMN_CN AS RCSEXMN_CN
+			 , TREI.RCS_EXMN_YR AS RCSEXMN_YR
+			 , TREI.RCS_EXMN_BGNG_YMD AS RCSEXMN_BGNG_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+					<property name="paramSeparator" value="'-'"/>
+					<property name="paramYmd" value="TREI.RCS_EXMN_BGNG_YMD"/>
+				</include>) AS RCSEXMN_BGNG_YMD_V10
+			 , TREI.RCS_EXMN_END_YMD AS RCSEXMN_END_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+					<property name="paramSeparator" value="'-'"/>
+					<property name="paramYmd" value="TREI.RCS_EXMN_END_YMD"/>
+				</include>) AS RCSEXMN_END_YMD_V10
+			 , TREI.USE_YN AS USE_YN
+			 , TREI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+			 , (CASE WHEN TREI.RCS_EXMN_BGNG_YMD <![CDATA[<=]]> TO_CHAR(NOW(), 'YYYYMMDD')
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS RCSEXMN_START_YN
+			 , (CASE WHEN TREI.RCS_EXMN_END_YMD <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDD')
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS RCSEXMN_END_YN
+		  FROM TX_RCS_EXMN_INFO TREI
+		 WHERE TREI.RCS_EXMN_ID = #{paramRcsexmnId}
+	</select>
+	
+	
+	<!-- 자원조사아이디 가져오기 -->
+	<select id="selectRcsExmnId" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		SELECT
+			   CONCAT('RCSEX', RIGHT(CONCAT('00000', NEXTVAL('SQ_TX_RCS_EXMN_INFO_01') ), 5)) AS RCSEXMN_ID	
+	</select>
+	
+	<!-- 자원조사 조회년도(시작/종료) 가져오기 -->
+	<select id="selectRcsExmnYr" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		SELECT
+			   CAST(
+			   	CASE WHEN MIN(TREI.RCS_EXMN_YR) IS NULL OR MIN(TREI.RCS_EXMN_YR) <![CDATA[>]]> TO_CHAR(NOW() - INTERVAL'4 YEARS', 'YYYY') THEN TO_CHAR(NOW() - INTERVAL'4 YEARS', 'YYYY')
+			   	     ELSE MIN(TREI.RCS_EXMN_YR) 
+			   	END AS INT) AS PARAM_BGNG_YR
+			 , CAST(TO_CHAR(NOW(), 'YYYY') AS INT) AS PARAM_END_YR
+		FROM TX_RCS_EXMN_INFO TREI	 
+	</select> 
+	
+	<!-- 자원조사 등록 -->
+	<insert id="insertRcsExmnInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnInfo */
+					TX_RCS_EXMN_INFO
+			   (
+			   RCS_EXMN_ID
+			 , RCS_EXMN_NM
+			 , RCS_EXMN_CN
+			 , RCS_EXMN_YR
+			 , RCS_EXMN_BGNG_YMD
+			 , RCS_EXMN_END_YMD
+			 , USE_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{rcsexmnNm}
+			 , #{rcsexmnCn}
+			 , #{rcsexmnYr}
+			 , REPLACE(#{rcsexmnBgngYmd}, '-', '')
+			 , REPLACE(#{rcsexmnEndYmd}, '-', '')
+			 , COALESCE(#{useYn}, 'N')
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 자원조사 수정 -->
+	<update id="updateRcsExmnInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnInfo */
+			   TX_RCS_EXMN_INFO
+		   SET RCS_EXMN_NM = #{rcsexmnNm}
+			 , RCS_EXMN_CN = #{rcsexmnCn}
+			 , RCS_EXMN_YR = #{rcsexmnYr}
+			 , RCS_EXMN_BGNG_YMD = REPLACE(#{rcsexmnBgngYmd}, '-', '')
+			 , RCS_EXMN_END_YMD = REPLACE(#{rcsexmnEndYmd}, '-', '')
+			 , USE_YN = COALESCE(#{useYn}, 'N')
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+	</update>
+	
+	
+	<!-- 자원조사 삭제 -->
+	<delete id="deleteRcsExmnInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnInfo */
+		  FROM TX_RCS_EXMN_INFO
+		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+	</delete>
+	
+	
+	<!-- 자원조사 대상기관정보 -->
+	<select id="selectRcsExmnTrgtInstList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnTrgtInstList */
+			   XTRETII.LIST_TRGT_INST_NO AS LIST_TRGT_INST_NO
+			 , XTRETII.RCS_EXMN_ID AS RCSEXMN_ID
+			 , XTRETII.INST_ID AS INST_ID
+			 , TII.INST_NM AS INST_NM
+			 , TII.INST_CD AS INST_CD
+			 , TII.INST_TYPE_CD AS INST_TYPE_CD
+			 , TII.FILD_TYPE_CD AS FILD_TYPE_CD
+			 , XTRETII.EXMN_BGNG_YN AS EXMN_BGNG_YN
+			 , XTRETII.EXMN_BGNG_DT AS EXMN_BGNG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTRETII.EXMN_BGNG_DT"/>
+				</include>) AS EXMN_BGNG_DT_V19
+			 , XTRETII.EXMN_CMPTN_YN AS EXMN_CMPTN_YN
+			 , XTRETII.EXMN_CMPTN_DT AS EXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTRETII.EXMN_CMPTN_DT"/>
+				</include>) AS EXMN_CMPTN_DT_V19
+			 , XTRETII.DEPT_NM AS DEPT_NM
+			 , XTRETII.EXMNR_NM AS EXMNR_NM
+			 , XTRETII.EXMNR_TELNO AS EXMNR_TELNO
+			 , XTRETII.EXMNR_EML_ADDR AS EXMNR_EML_ADDR
+			 , XTRETII.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTRETII.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTRETII.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , XTRETII.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTRETII.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , XTRETII.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="XTRETII.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="XTRETII.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , XTRETII.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="XTRETII.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+			 , (CASE WHEN XTRETII.EXMN_BGNG_YN = 'Y' 
+						  THEN (CASE WHEN XTRETII.EXMN_CMPTN_YN = 'Y'
+										  THEN '완료'
+									 ELSE '진행중'
+								END)
+					 ELSE '미진행'
+				END) AS EXMN_STT_NM
+		  FROM (
+				SELECT
+					   ROW_NUMBER()OVER(ORDER BY TRETII.FRST_REG_DT ASC) AS LIST_TRGT_INST_NO 
+					 , TRETII.RCS_EXMN_ID AS RCS_EXMN_ID
+					 , TRETII.INST_ID AS INST_ID
+					 , TRETII.EXMN_BGNG_YN
+					 , TRETII.EXMN_BGNG_DT
+					 , TRETII.EXMN_CMPTN_YN
+					 , TRETII.EXMN_CMPTN_DT
+					 , TRETII.DEPT_NM
+					 , TRETII.EXMNR_NM
+					 , TRETII.EXMNR_TELNO
+					 , TRETII.EXMNR_EML_ADDR
+					 , TRETII.FRST_RGTR_ID AS FRST_RGTR_ID
+					 , TRETII.FRST_REG_DT AS FRST_REG_DT
+					 , TRETII.LAST_MDFR_ID AS LAST_MDFR_ID
+					 , TRETII.LAST_MDFCN_DT AS LAST_MDFCN_DT
+				  FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII
+				 WHERE TRETII.RCS_EXMN_ID = #{paramRcsexmnId}
+			   ) XTRETII
+		 INNER JOIN TX_INST_INFO TII
+			ON (   XTRETII.INST_ID = TII.INST_ID
+			   AND TII.DEL_YN = 'N')
+		 ORDER BY XTRETII.LIST_INST_NO DESC
+		 LIMIT #{paramRecordCnt}
+		OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}	
+	</select>
+	
+	
+	<select id="selectRcsExmnTrgtInstAllList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnTrgtInstAllList */
+			   ROW_NUMBER()OVER(ORDER BY TRETII.FRST_REG_DT DESC) AS LIST_TRGT_INST_NO 
+			 , TRETII.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TRETII.INST_ID AS INST_ID
+			 , TII.INST_NM AS INST_NM
+			 , TII.INST_CD AS INST_CD
+			 , TII.INST_TYPE_CD AS INST_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000002'"/>
+					<property name="paramCdId" value="TII.INST_TYPE_CD"/>
+				</include>) AS INST_TYPE_NM
+			 , TII.FILD_TYPE_CD AS FILD_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000003'"/>
+					<property name="paramCdId" value="TII.FILD_TYPE_CD"/>
+				</include>) AS FILD_TYPE_NM
+			 , TRETII.EXMN_BGNG_YN
+			 , TRETII.EXMN_BGNG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.EXMN_BGNG_DT"/>
+				</include>) AS EXMN_BGNG_DT_V19
+			 , TRETII.EXMN_CMPTN_YN
+			 , TRETII.EXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.EXMN_CMPTN_DT"/>
+				</include>) AS EXMN_CMPTN_DT_V19
+			 , TRETII.DEPT_NM
+			 , TRETII.EXMNR_NM
+			 , TRETII.EXMNR_TELNO
+			 , TRETII.EXMNR_EML_ADDR
+			 , TRETII.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRETII.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRETII.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TRETII.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TRETII.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRETII.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRETII.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TRETII.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+			 , (CASE WHEN TRETII.EXMN_BGNG_YN = 'Y' 
+						  THEN (CASE WHEN TRETII.EXMN_CMPTN_YN = 'Y'
+										  THEN '완료'
+									 ELSE '진행중'
+								END)
+					 ELSE '미진행'
+				END) AS EXMN_STT_NM
+		  FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII
+		 INNER JOIN TX_INST_INFO TII
+			ON (   TRETII.INST_ID = TII.INST_ID
+			   AND TII.DEL_YN = 'N')
+		 WHERE TRETII.RCS_EXMN_ID = #{paramRcsexmnId}
+	</select>
+	
+	<!-- 자원조사 대상기관 총수 -->
+	<select id="selectRcsExmnTrgtInstTotListCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnTrgtInstTotListCnt */
+			   COUNT(INST_ID) AS TOT_LIST_CNT
+		  FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII
+		 WHERE TRETII.RCS_EXMN_ID = #{paramRcsexmnId}
+	</select>
+	
+	
+	<!-- 자원조사대상 기관정보 상세보기 -->
+	<select id="selectRcsExmnTrgtInstInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.selectRcsExmnTrgtInstInfo */
+			   TRETII.RCS_EXMN_ID AS RCSEXMN_ID
+			 , (SELECT TREI.RCS_EXMN_NM
+				  FROM TX_RCS_EXMN_INFO TREI
+				 WHERE TREI.RCS_EXMN_ID = TRETII.RCS_EXMN_ID) AS RCSEXMN_NM
+			 , TRETII.INST_ID AS INST_ID
+			 , TII.INST_NM AS INST_NM
+			 , TII.INST_CD AS INST_CD
+			 , TII.INST_TYPE_CD AS INST_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000002'"/>
+					<property name="paramCdId" value="TII.INST_TYPE_CD"/>
+				</include>) AS INST_TYPE_NM
+			 , TII.FILD_TYPE_CD AS FILD_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000003'"/>
+					<property name="paramCdId" value="TII.FILD_TYPE_CD"/>
+				</include>) AS FILD_TYPE_NM
+			 , TRETII.EXMN_BGNG_YN
+			 , TRETII.EXMN_BGNG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.EXMN_BGNG_DT"/>
+				</include>) AS EXMN_BGNG_DT_V19
+			 , TRETII.EXMN_CMPTN_YN
+			 , TRETII.EXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.EXMN_CMPTN_DT"/>
+				</include>) AS EXMN_CMPTN_DT_V19
+			 , TRETII.DEPT_NM
+			 , TRETII.EXMNR_NM
+			 , TRETII.EXMNR_TELNO
+			 , TRETII.EXMNR_EML_ADDR
+			 , TRETII.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRETII.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRETII.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TRETII.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TRETII.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRETII.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRETII.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TRETII.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRETII.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII
+		 INNER JOIN TX_INST_INFO TII
+			ON (   TRETII.INST_ID = TII.INST_ID
+			   AND TII.DEL_YN = 'N')
+		 WHERE TRETII.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TRETII.INST_ID = #{paramInstId}
+	</select>
+	
+	<!-- 자원조사 대상기관 등록 -->
+	<insert id="insertRcsExmnTrgtInstInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnTrgtInstInfo */
+					TX_RCS_EXMN_TRGT_INST_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , EXMN_BGNG_YN
+			 , EXMN_CMPTN_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , COALESCE(#{exmnBgngYn}, 'N')
+			 , COALESCE(#{exmnCmptnYn}, 'N')
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 자원조사 대상기관 삭제 -->
+	<delete id="deleteRcsExmnTrgtInstInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnTrgtInstInfo */
+		  FROM TX_RCS_EXMN_TRGT_INST_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</delete>
+	
+	
+	<select id="selectInstRcsExmnPrgrsRsltInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnPrgrsRsltVO">
+		WITH INST_RCSEXMN_PRGRS_RSLT (
+			  INFRMNMPR_RCSEXMN_CMPTN_DT, INFRMBGT_RCSEXMN_CMPTN_DT, INFRMBGTDTL_RCSEXMN_CMPTN_DT, INFRMBIZPRGRS_RCSEXMN_CMPTN_DT, CLTCONTS_RCSEXMN_CMPTN_DT
+			, MBAPL_RCSEXMN_CMPTN_DT, INSTPRCHNL_RCSEXMN_CMPTN_DT, EQPMNTCLUD_RCSEXMN_CMPTN_DT, EQPMNTSRVR_RCSEXMN_CMPTN_DT, EQPMNTSRVRENTS_RCSEXMN_CMPTN_DT
+			, EQPMNTSECU_RCSEXMN_CMPTN_DT, QLTMNGLVL_RCSEXMN_CMPTN_DT, EXMNRINFO_RCSEXMN_CMPTN_DT, EXMN_START_YN, EXMN_END_YN
+		) AS (
+		SELECT
+			   (SELECT MAX(TREINI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_INFRM_NMPR_INFO TREINI 
+				 WHERE TREINI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREINI.INST_ID = #{paramInstId}) AS INFRMNMPR_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREIBI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_INFRM_BGT_INFO TREIBI 
+				 WHERE TREIBI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREIBI.INST_ID = #{paramInstId}) AS INFRMBGT_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREBDI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_BGT_DTL_INFO TREBDI 
+				 WHERE TREBDI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREBDI.INST_ID = #{paramInstId}) AS INFRMBGTDTL_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREIBPI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO TREIBPI 
+				 WHERE TREIBPI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREIBPI.INST_ID = #{paramInstId}) AS INFRMBIZPRGRS_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TRECCI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_CLT_CONTS_INFO TRECCI 
+				 WHERE TRECCI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TRECCI.INST_ID = #{paramInstId}) AS CLTCONTS_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREMA.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_MB_APL_INFO TREMA 
+				 WHERE TREMA.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREMA.INST_ID = #{paramInstId}) AS MBAPL_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREIPCI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_INST_PR_CHNL_INFO TREIPCI 
+				 WHERE TREIPCI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREIPCI.INST_ID = #{paramInstId}) AS INSTPRCHNL_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TRECCI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_CLUD_CNST_INFO TRECCI 
+				 WHERE TRECCI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TRECCI.INST_ID = #{paramInstId}) AS EQPMNTCLUD_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREESI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_EQPMNT_SRVR_INFO TREESI 
+				 WHERE TREESI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREESI.INST_ID = #{paramInstId}) AS EQPMNTSRVR_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREESEI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO TREESEI 
+				 WHERE TREESEI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREESEI.INST_ID = #{paramInstId}) AS EQPMNTSRVRENTS_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREESI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_EQPMNT_SECU_INFO TREESI 
+				 WHERE TREESI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREESI.INST_ID = #{paramInstId}) AS EQPMNTSECU_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TREQMLI.LAST_MDFCN_DT) 
+				  FROM TX_RCS_EXMN_QLT_MNG_LVL_INFO TREQMLI 
+				 WHERE TREQMLI.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TREQMLI.INST_ID = #{paramInstId}) AS QLTMNGLVL_RCSEXMN_CMPTN_DT
+			 , (SELECT MAX(TRETII.EXMN_CMPTN_DT) 
+				  FROM TX_RCS_EXMN_TRGT_INST_INFO TRETII 
+				 WHERE TRETII.RCS_EXMN_ID = #{paramRcsexmnId}
+				   AND TRETII.INST_ID = #{paramInstId}) AS EXMNRINFO_RCSEXMN_CMPTN_DT
+			 , (SELECT CASE WHEN TREI.RCS_EXMN_BGNG_YMD <![CDATA[<=]]> TO_CHAR(NOW(), 'YYYYMMDD')
+								 THEN 'Y'
+							ELSE 'N'
+					   END
+			 	  FROM TX_RCS_EXMN_INFO TREI
+			 	 WHERE TREI.RCS_EXMN_ID = #{paramRcsexmnId}) AS EXMN_START_YN
+			 , (SELECT CASE WHEN TREI.RCS_EXMN_END_YMD <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDD')
+								 THEN 'Y'
+							ELSE 'N'
+					   END
+			 	  FROM TX_RCS_EXMN_INFO TREI
+			 	 WHERE TREI.RCS_EXMN_ID = #{paramRcsexmnId}) AS EXMN_END_YN
+		)
+		SELECT
+			   IRPR.INFRMNMPR_RCSEXMN_CMPTN_DT AS INFRMNMPR_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.INFRMNMPR_RCSEXMN_CMPTN_DT"/>
+				</include>) AS INFRMNMPR_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.INFRMBGT_RCSEXMN_CMPTN_DT AS INFRMBGT_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.INFRMBGT_RCSEXMN_CMPTN_DT"/>
+				</include>) AS INFRMBGT_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.INFRMBGTDTL_RCSEXMN_CMPTN_DT AS INFRMBGTDTL_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.INFRMBGTDTL_RCSEXMN_CMPTN_DT"/>
+				</include>) AS INFRMBGTDTL_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.INFRMBIZPRGRS_RCSEXMN_CMPTN_DT AS INFRMBIZPRGRS_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.INFRMBIZPRGRS_RCSEXMN_CMPTN_DT"/>
+				</include>) AS INFRMBIZPRGRS_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.CLTCONTS_RCSEXMN_CMPTN_DT AS CLTCONTS_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.CLTCONTS_RCSEXMN_CMPTN_DT"/>
+				</include>) AS CLTCONTS_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.MBAPL_RCSEXMN_CMPTN_DT AS MBAPL_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.MBAPL_RCSEXMN_CMPTN_DT"/>
+				</include>) AS MBAPL_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.INSTPRCHNL_RCSEXMN_CMPTN_DT AS INSTPRCHNL_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.INSTPRCHNL_RCSEXMN_CMPTN_DT"/>
+				</include>) AS INSTPRCHNL_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.EQPMNTCLUD_RCSEXMN_CMPTN_DT AS EQPMNTCLUD_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.EQPMNTCLUD_RCSEXMN_CMPTN_DT"/>
+				</include>) AS EQPMNTCLUD_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.EQPMNTSRVR_RCSEXMN_CMPTN_DT AS EQPMNTSRVR_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.EQPMNTSRVR_RCSEXMN_CMPTN_DT"/>
+				</include>) AS EQPMNTSRVR_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.EQPMNTSRVRENTS_RCSEXMN_CMPTN_DT AS EQPMNTSRVRENTS_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.EQPMNTSRVRENTS_RCSEXMN_CMPTN_DT"/>
+				</include>) AS EQPMNTSRVRENTS_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.EQPMNTSECU_RCSEXMN_CMPTN_DT AS EQPMNTSECU_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.EQPMNTSECU_RCSEXMN_CMPTN_DT"/>
+				</include>) AS EQPMNTSECU_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.QLTMNGLVL_RCSEXMN_CMPTN_DT AS QLTMNGLVL_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.QLTMNGLVL_RCSEXMN_CMPTN_DT"/>
+				</include>) AS QLTMNGLVL_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.EXMNRINFO_RCSEXMN_CMPTN_DT AS EXMNRINFO_RCSEXMN_CMPTN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="IRPR.EXMNRINFO_RCSEXMN_CMPTN_DT"/>
+				</include>) AS EXMNRINFO_RCSEXMN_CMPTN_DT_V19
+			 , IRPR.EXMN_START_YN AS EXMN_START_YN
+			 , IRPR.EXMN_END_YN AS EXMN_END_YN
+		  FROM INST_RCSEXMN_PRGRS_RSLT IRPR
+	</select>
+	
+	
+	<!-- 자원조사 조사자정보 반영 -->
+	<update id="updateRcsExmnTrgtInstExmnrInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnTrgtInstExmnrInfo */
+			   TX_RCS_EXMN_TRGT_INST_INFO
+		   SET DEPT_NM = #{deptNm}
+			 , EXMNR_NM = #{exmnrNm}
+			 , EXMNR_TELNO = #{exmnrTelno}
+			 , EXMNR_EML_ADDR = #{exmnrEmlAddr}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</update>
+	
+	
+	<update id="updateRcsExmnBgngInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnBgngInfo */
+			   TX_RCS_EXMN_TRGT_INST_INFO
+		   SET EXMN_BGNG_YN = #{exmnBgngYn}
+			 , EXMN_BGNG_DT = NOW()
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</update>
+	
+	
+	<update id="updateRcsExmnCmptnInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnTrgtInstInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnCmptnInfo */
+			   TX_RCS_EXMN_TRGT_INST_INFO
+		   SET EXMN_CMPTN_YN = #{exmnCmptnYn}
+			 , EXMN_CMPTN_DT = NOW()
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</update>
+	
+	
+	<!-- 이전 최종 자원조사 아이디 가져오기 -->
+	<select id="selectLastRcsExmnId" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO"  resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		SELECT 
+			   MAX(TREI.RCS_EXMN_ID) AS PARAM_RCSEXMN_ID
+		  FROM TX_RCS_EXMN_INFO TREI
+		 WHERE TREI.RCS_EXMN_ID <![CDATA[<>]]> #{paramRcsexmnId}
+		   AND TREI.RCS_EXMN_ID <![CDATA[<]]> #{paramRcsexmnId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화인원정보 목록 가져오기 -->
+	<select id="selectRcsExmnInfrmNmprList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmNmprInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfrmNmprList */
+			   TREINI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREINI.INST_ID AS INST_ID
+			 , TREINI.TYPE_CD AS TYPE_CD
+			 , TREINI.WHOL_CPT_CNT AS WHOL_CPCT_CNT
+			 , TREINI.INFRM_NOPE AS INFRM_NOPE
+			 , TREINI.INFSCR_NOPE AS INFSCR_NOPE
+			 , TREINI.INFRM_INFSCR_SUM_NOPE AS INFRM_INFSCR_SUM_NOPE
+			 , TREINI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREINI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREINI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREINI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREINI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREINI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREINI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREINI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREINI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREINI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_INFRM_NMPR_INFO TREINI
+		 WHERE TREINI.RCS_EXMN_ID = #{paramRcsexmnId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화인원정보 -->
+	<select id="selectRcsExmnInfrmNmprInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmNmprInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfrmNmprInfo */
+			   TREINI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREINI.INST_ID AS INST_ID
+			 , TREINI.TYPE_CD AS TYPE_CD
+			 , TREINI.WHOL_CPT_CNT AS WHOL_CPCT_CNT
+			 , TREINI.INFRM_NOPE AS INFRM_NOPE
+			 , TREINI.INFSCR_NOPE AS INFSCR_NOPE
+			 , TREINI.INFRM_INFSCR_SUM_NOPE AS INFRM_INFSCR_SUM_NOPE
+			 , TREINI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREINI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREINI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREINI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREINI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREINI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREINI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREINI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREINI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREINI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_INFRM_NMPR_INFO TREINI
+		 WHERE TREINI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREINI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화인원 등력 여부 확인 -->
+	<select id="selectRcsExmnInfrmNmprCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmNmprInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfrmNmprCnt */
+			   COUNT(*) AS INFRM_NMPR_CNT
+		  FROM TX_RCS_EXMN_INFRM_NMPR_INFO TREINI
+		 WHERE TREINI.RCS_EXMN_ID = #{rcsexmnId}
+		   AND TREINI.INST_ID = #{instId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화인원 등록 -->
+	<insert id="insertRcsExmnInfrmNmprInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmNmprInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnInfrmNmprInfo */
+					TX_RCS_EXMN_INFRM_NMPR_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , TYPE_CD
+			 , WHOL_CPT_CNT
+			 , INFRM_NOPE
+			 , INFSCR_NOPE
+			 , INFRM_INFSCR_SUM_NOPE
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{typeCd}
+			 , #{wholCpctCnt}
+			 , #{infrmNope}
+			 , #{infscrNope}
+			 , #{infrmInfscrSumNope}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 자원조사 정보화인원 수정 -->
+	<update id="updateRcsExmnInfrmNmprInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmNmprInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnInfrmNmprInfo */
+			   TX_RCS_EXMN_INFRM_NMPR_INFO
+		   SET TYPE_CD = #{typeCd}
+			 , WHOL_CPT_CNT = #{wholCpctCnt}
+			 , INFRM_NOPE = #{infrmNope}
+			 , INFSCR_NOPE = #{infscrNope}
+			 , INFRM_INFSCR_SUM_NOPE = #{infrmInfscrSumNope}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</update>
+	
+	
+	<!-- 자원조사 정보화인원 삭제 -->
+	<delete id="deleteRcsExmnInfrmNmprInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmNmprInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnInfrmNmprInfo */
+		  FROM TX_RCS_EXMN_INFRM_NMPR_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</delete>
+	
+	
+	<!-- 자원조사 정보화예산정보 -->
+	<select id="selectRcsExmnInfrmBgtList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBgtInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfrmBgtList */
+			   TREIBI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREIBI.INST_ID AS INST_ID
+			 , TREIBI.BGT_YR AS BGT_YR
+			 , TREIBI.STCF_GNRL_BGT_AMT AS STCF_GNRL_BGT_AMT
+			 , TREIBI.STCF_INFRM_BGT_AMT AS STCF_INFRM_BGT_AMT
+			 , TREIBI.FUND_GNRL_BGT_AMT AS FUND_GNRL_BGT_AMT
+			 , TREIBI.FUND_INFRM_BGT_AMT AS FUND_INFRM_BGT_AMT
+			 , TREIBI.ETC_BGT_AMT AS ETC_BGT_AMT
+			 , TREIBI.BGT_SUM_AMT AS BGT_SUM_AMT
+			 , TREIBI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIBI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIBI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREIBI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIBI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREIBI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIBI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIBI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREIBI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIBI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_INFRM_BGT_INFO TREIBI
+		 WHERE TREIBI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREIBI.INST_ID = #{paramInstId}
+		 ORDER BY TREIBI.BGT_YR ASC
+	</select>
+	
+	
+	<!-- 자원조사 정보화예산정보 -->
+	<select id="selectRcsExmnInfrmBgtInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBgtInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfrmBgtInfo */
+			   TREIBI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREIBI.INST_ID AS INST_ID
+			 , TREIBI.BGT_YR AS BGT_YR
+			 , TREIBI.STCF_GNRL_BGT_AMT AS STCF_GNRL_BGT_AMT
+			 , TREIBI.STCF_INFRM_BGT_AMT AS STCF_INFRM_BGT_AMT
+			 , TREIBI.FUND_GNRL_BGT_AMT AS FUND_GNRL_BGT_AMT
+			 , TREIBI.FUND_INFRM_BGT_AMT AS FUND_INFRM_BGT_AMT
+			 , TREIBI.ETC_BGT_AMT AS ETC_BGT_AMT
+			 , TREIBI.BGT_SUM_AMT AS BGT_SUM_AMT
+			 , TREIBI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIBI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIBI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREIBI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIBI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREIBI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIBI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIBI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREIBI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIBI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_INFRM_BGT_INFO TREIBI
+		 WHERE TREIBI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREIBI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화 예산정보 등록 여부 -->
+	<select id="selectRcsExmnInfrmBgtCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBgtInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfrmBgtCnt */
+			   COUNT(RCS_EXMN_ID) AS EXIST_INFRM_BGT_CNT
+		  FROM TX_RCS_EXMN_INFRM_BGT_INFO TREIBI
+		 WHERE TREIBI.RCS_EXMN_ID = #{rcsexmnId}
+		   AND TREIBI.INST_ID = #{instId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화 예산정보 등록 -->
+	<insert id="insertRcsExmnInfrmBgtInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBgtInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnInfrmBgtInfo */
+					TX_RCS_EXMN_INFRM_BGT_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , BGT_YR
+			 , STCF_GNRL_BGT_AMT
+			 , STCF_INFRM_BGT_AMT
+			 , FUND_GNRL_BGT_AMT
+			 , FUND_INFRM_BGT_AMT
+			 , ETC_BGT_AMT
+			 , BGT_SUM_AMT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{bgtYr}
+			 , #{stcfGnrlBgtAmt}
+			 , #{stcfInfrmBgtAmt}
+			 , #{fundGnrlBgtAmt}
+			 , #{fundInfrmBgtAmt}
+			 , #{etcBgtAmt}
+			 , #{bgtSumAmt}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 자원조사 정보화 예산정보 수정 -->
+	<update id="updateRcsExmnInfrmBgtInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBgtInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnInfrmBgtInfo */
+			   TX_RCS_EXMN_INFRM_BGT_INFO
+		   SET STCF_GNRL_BGT_AMT = #{stcfGnrlBgtAmt}
+			 , STCF_INFRM_BGT_AMT = #{stcfInfrmBgtAmt}
+			 , FUND_GNRL_BGT_AMT = #{fundGnrlBgtAmt}
+			 , FUND_INFRM_BGT_AMT = #{fundInfrmBgtAmt}
+			 , ETC_BGT_AMT = #{etcBgtAmt}
+			 , BGT_SUM_AMT = #{bgtSumAmt}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND BGT_YR = #{bgtYr}
+	</update>
+	
+	
+	<!-- 자원조사 정보화 예산정보 삭제 -->
+	<delete id="deleteRcsExmnInfrmBgtInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBgtInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnInfrmBgtInfo */
+		  FROM TX_RCS_EXMN_INFRM_BGT_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND BGT_YR = #{bgtYr}
+	</delete>
+	
+	
+	<select id="selectRcsExmnBgtDtlInfoList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnBgtDtlInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnBgtDtlInfoList */
+			   TREBDI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREBDI.INST_ID AS INST_ID
+			 , TREBDI.BGT_YR AS BGT_YR
+			 , TREBDI.PLNG_BGT_AMT AS PLNG_BGT_AMT
+			 , TREBDI.PLNG_FIRCS_SE_CD AS PLNG_FIRCS_SE_CD
+			 , TREBDI.DEV_CNST_BGT_AMT AS DEV_CNST_BGT_AMT
+			 , TREBDI.DEV_CNST_FIRCS_SE_CD AS DEV_CNST_FIRCS_SE_CD
+			 , TREBDI.OPER_MNG_BGT_AMT AS OPER_MNG_BGT_AMT
+			 , TREBDI.OPER_MNG_FIRCS_SE_CD AS OPER_MNG_FIRCS_SE_CD
+			 , TREBDI.AST_ACQS_BGT_AMT AS AST_ACQS_BGT_AMT
+			 , TREBDI.AST_ACQS_FIRCS_SE_CD AS AST_ACQS_FIRCS_SE_CD
+			 , TREBDI.ETC_BGT_AMT AS ETC_BGT_AMT
+			 , TREBDI.ETC_FIRCS_SE_CD AS ETC_FIRCS_SE_CD
+			 , TREBDI.BGT_SUM_AMT AS SUM_BGT_AMT
+			 , TREBDI.SUM_FIRCS_SE_CD AS SUM_FIRCS_SE_CD
+			 , TREBDI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREBDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREBDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREBDI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREBDI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREBDI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREBDI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREBDI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREBDI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREBDI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_BGT_DTL_INFO TREBDI
+		 WHERE TREBDI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREBDI.INST_ID = #{paramInstId}
+		 ORDER BY TREBDI.BGT_YR ASC
+	</select>
+	
+	
+	<select id="selectRcsExmnBgtDtlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnBgtDtlInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnBgtDtlInfo */
+			   TREBDI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREBDI.INST_ID AS INST_ID
+			 , TREBDI.BGT_YR AS BGT_YR
+			 , TREBDI.PLNG_BGT_AMT AS PLNG_BGT_AMT
+			 , TREBDI.PLNG_FIRCS_SE_CD AS PLNG_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.PLNG_FIRCS_SE_CD"/>
+				</include>) AS PLNG_FIRCS_SE_NM
+			 , TREBDI.DEV_CNST_BGT_AMT AS DEV_CNST_BGT_AMT
+			 , TREBDI.DEV_CNST_FIRCS_SE_CD AS DEV_CNST_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.DEV_CNST_FIRCS_SE_CD"/>
+				</include>) AS DEV_CNST_FIRCS_SE_NM
+			 , TREBDI.OPER_MNG_BGT_AMT AS OPER_MNG_BGT_AMT
+			 , TREBDI.OPER_MNG_FIRCS_SE_CD AS OPER_MNG_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.OPER_MNG_FIRCS_SE_CD"/>
+				</include>) AS OPER_MNG_FIRCS_SE_NM
+			 , TREBDI.AST_ACQS_BGT_AMT AS AST_ACQS_BGT_AMT
+			 , TREBDI.AST_ACQS_FIRCS_SE_CD AS AST_ACQS_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.AST_ACQS_FIRCS_SE_CD"/>
+				</include>) AS AST_ACQS_FIRCS_SE_NM
+			 , TREBDI.ETC_BGT_AMT AS ETC_BGT_AMT
+			 , TREBDI.ETC_FIRCS_SE_CD AS ETC_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.ETC_FIRCS_SE_CD"/>
+				</include>) AS ETC_FIRCS_SE_NM
+			 , TREBDI.BGT_SUM_AMT AS SUM_BGT_AMT
+			 , TREBDI.SUM_FIRCS_SE_CD AS SUM_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.SUM_FIRCS_SE_CD"/>
+				</include>) AS SUM_FIRCS_SE_NM
+			 , TREBDI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREBDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREBDI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREBDI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREBDI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREBDI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREBDI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREBDI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREBDI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREBDI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_BGT_DTL_INFO TREBDI
+		 WHERE TREBDI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREBDI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화 예산 세부 내역 등록 여부 -->
+	<select id="selectRcsExmnBgtDtlCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnBgtDtlInfoVO" resultType="java.lang.Integer">
+		SELECT 
+			   COUNT(RCS_EXMN_ID) AS EXIST_BGT_DTL_CNT
+		  FROM TX_RCS_EXMN_BGT_DTL_INFO TREBDI
+		 WHERE TREBDI.RCS_EXMN_ID = #{rcsexmnId}
+		   AND TREBDI.INST_ID = #{instId}
+	</select>
+	
+	<!-- 자원조사 정보화 예산 세부 등록 -->
+	<insert id="insertRcsExmnBgtDtlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnBgtDtlInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnBgtDtlInfo */
+					TX_RCS_EXMN_BGT_DTL_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , BGT_YR
+			 , PLNG_BGT_AMT
+			 , PLNG_FIRCS_SE_CD
+			 , DEV_CNST_BGT_AMT
+			 , DEV_CNST_FIRCS_SE_CD
+			 , OPER_MNG_BGT_AMT
+			 , OPER_MNG_FIRCS_SE_CD
+			 , AST_ACQS_BGT_AMT
+			 , AST_ACQS_FIRCS_SE_CD
+			 , ETC_BGT_AMT
+			 , ETC_FIRCS_SE_CD
+			 , BGT_SUM_AMT
+			 , SUM_FIRCS_SE_CD
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{bgtYr}
+			 , #{plngBgtAmt}
+			 , #{plngFircsSeCd}
+			 , #{devCnstBgtAmt}
+			 , #{devCnstFircsSeCd}
+			 , #{operMngBgtAmt}
+			 , #{operMngFircsSeCd}
+			 , #{astAcqsBgtAmt}
+			 , #{astAcqsFircsSeCd}
+			 , #{etcBgtAmt}
+			 , #{etcFircsSeCd}
+			 , #{sumBgtAmt}
+			 , #{sumFircsSeCd}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 자원조사 정보화 예산 세부 수정 -->
+	<update id="updateRcsExmnBgtDtlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnBgtDtlInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnBgtDtlInfo */
+			   TX_RCS_EXMN_BGT_DTL_INFO
+		   SET PLNG_BGT_AMT = COALESCE(#{plngBgtAmt}, 0)
+			 , PLNG_FIRCS_SE_CD = COALESCE(#{plngFircsSeCd}, '')
+			 , DEV_CNST_BGT_AMT = COALESCE(#{devCnstBgtAmt}, 0)
+			 , DEV_CNST_FIRCS_SE_CD = COALESCE(#{devCnstFircsSeCd}, '')
+			 , OPER_MNG_BGT_AMT = COALESCE(#{operMngBgtAmt}, 0)
+			 , OPER_MNG_FIRCS_SE_CD = COALESCE(#{operMngFircsSeCd}, '')
+			 , AST_ACQS_BGT_AMT = COALESCE(#{astAcqsBgtAmt}, 0)
+			 , AST_ACQS_FIRCS_SE_CD = COALESCE(#{astAcqsFircsSeCd}, '')
+			 , ETC_BGT_AMT = COALESCE(#{etcBgtAmt}, 0)
+			 , ETC_FIRCS_SE_CD = COALESCE(#{etcFircsSeCd}, '')
+			 , BGT_SUM_AMT = COALESCE(#{sumBgtAmt}, 0)
+			 , SUM_FIRCS_SE_CD = COALESCE(#{sumFircsSeCd}, '')
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND BGT_YR = #{bgtYr}
+	</update>
+	
+	<!-- 자원조사 정보화 예산 세부 삭제 -->
+	<delete id="deleteRcsExmnBgtDtlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnBgtDtlInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnBgtDtlInfo */
+		  FROM TX_RCS_EXMN_BGT_DTL_INFO
+		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND INST_ID = #{paramInstId}
+		   AND BGT_YR = #{paramBgtYr}
+	</delete>
+	
+	
+	<!-- 자원조사 정보화사업 추진현황 보기 -->
+	<select id="selectRcsExmnInfrmBizPrgrsList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBizPrgrsInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInfrmBizPrgrsList */
+			   TREIBPI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREIBPI.INST_ID AS INST_ID
+			 , TREIBPI.BIZ_SN AS BIZ_SN
+			 , TREIBPI.BGT_BIZ_NM AS BGT_BIZ_NM
+			 , TREIBPI.DTL_BIZ_NM AS DTL_BIZ_NM
+			 , TREIBPI.BIZ_TYPE_CD_CN AS BIZ_TYPE_CD_CN
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000028'"/>
+					<property name="paramCdId" value="TREIBPI.BIZ_TYPE_CD_CN"/>
+				</include>) AS BIZ_TYPE_CD_CN_NM
+			 , TREIBPI.BIZ_BGNG_YMD AS BIZ_BGNG_YMD
+			 , CASE WHEN LENGTH(TREIBPI.BIZ_BGNG_YMD) = 8
+						 THEN CONCAT(SUBSTRING(TREIBPI.BIZ_BGNG_YMD, 1, 4), '-', SUBSTRING(TREIBPI.BIZ_BGNG_YMD, 5, 2), '-', SUBSTRING(TREIBPI.BIZ_BGNG_YMD, 7, 2))
+					WHEN LENGTH(TREIBPI.BIZ_BGNG_YMD) = 6
+						 THEN CONCAT(SUBSTRING(TREIBPI.BIZ_BGNG_YMD, 1, 4), '-', SUBSTRING(TREIBPI.BIZ_BGNG_YMD, 5, 2), '-01' )
+					WHEN LENGTH(TREIBPI.BIZ_BGNG_YMD) = 4
+						 THEN CONCAT(SUBSTRING(TREIBPI.BIZ_BGNG_YMD, 1, 4),'-01-01')
+					ELSE TREIBPI.BIZ_BGNG_YMD
+			   END AS BIZ_BGNG_YMD_V10
+			 , TREIBPI.BIZ_END_YMD AS BIZ_END_YMD
+			 , CASE WHEN LENGTH(TREIBPI.BIZ_END_YMD) = 8
+						 THEN CONCAT(SUBSTRING(TREIBPI.BIZ_END_YMD, 1, 4), '-', SUBSTRING(TREIBPI.BIZ_END_YMD, 5, 2), '-', SUBSTRING(TREIBPI.BIZ_END_YMD, 7, 2))
+					WHEN LENGTH(TREIBPI.BIZ_END_YMD) = 6
+						 THEN CONCAT(SUBSTRING(TREIBPI.BIZ_END_YMD, 1, 4), '-', SUBSTRING(TREIBPI.BIZ_END_YMD, 5, 2), '-01' )
+					WHEN LENGTH(TREIBPI.BIZ_END_YMD) = 4
+						 THEN CONCAT(SUBSTRING(TREIBPI.BIZ_END_YMD, 1, 4),'-12-31')
+					ELSE TREIBPI.BIZ_END_YMD
+			   END AS BIZ_END_YMD_V10
+			 , TREIBPI.FIRCS_SE_CD AS FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREIBPI.FIRCS_SE_CD"/>
+				</include>) AS FIRCS_SE_NM
+			 , TREIBPI.BGT_AMT AS BGT_AMT
+			 , TREIBPI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIBPI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIBPI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREIBPI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIBPI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREIBPI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIBPI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIBPI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREIBPI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIBPI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO TREIBPI
+		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 자원조사 정보화사업 추진현황 등록 -->
+	<insert id="insertRcsExmnInfrmBizPrgrsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBizPrgrsInfoVO">
+		<selectKey order="BEFORE" keyProperty="bizSn" resultType="String">
+			SELECT
+				   COALESCE((SELECT
+									MAX(TREIBPI.BIZ_SN) 
+							  FROM TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO TREIBPI
+							 WHERE TREIBPI.RCS_EXMN_ID = #{rcsexmnId}
+							   AND TREIBPI.INST_ID = #{instId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnInfrmBizPrgrsInfo */
+					TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , BIZ_SN
+			 , BGT_BIZ_NM
+			 , DTL_BIZ_NM
+			 , BIZ_TYPE_CD_CN
+			 , BIZ_BGNG_YMD
+			 , BIZ_END_YMD
+			 , FIRCS_SE_CD
+			 , BGT_AMT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{bizSn}::NUMERIC
+			 , #{bgtBizNm}
+			 , #{dtlBizNm}
+			 , #{bizTypeCdCn}
+			 , #{bizBgngYmd}
+			 , #{bizEndYmd}
+			 , #{fircsSeCd}
+			 , #{bgtAmt}::NUMERIC
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 자원조사 정보화사업 추진현황 수정 -->
+	<update id="updateRcsExmnInfrmBizPrgrsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBizPrgrsInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnInfrmBizPrgrsInfo */
+			   TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO
+		   SET BGT_BIZ_NM = #{bgtBizNm}
+			 , DTL_BIZ_NM = #{dtlBizNm}
+			 , BIZ_TYPE_CD_CN = #{bizTypeCdCn}
+			 , BIZ_BGNG_YMD = #{bizBgngYmd}
+			 , BIZ_END_YMD = #{bizEndYmd}
+			 , FIRCS_SE_CD = #{fircsSeCd}
+			 , BGT_AMT = #{bgtAmt}::NUMERIC
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND BIZ_SN = #{bizSn}::NUMERIC
+	</update>
+	
+	
+	<!-- 자원조사 정보화사업 추진현황 삭제 -->
+	<delete id="deleteRcsExmnInfrmBizPrgrsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfrmBizPrgrsInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnInfrmBizPrgrsInfo */
+		  FROM TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND BIZ_SN = #{bizSn}::NUMERIC
+	</delete>
+	
+	
+	<!-- 문화정보(DB) & 디지털콘텐츠 현황 -->
+	<select id="selectRcsExmnCltContsList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCltContsInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnCltContsList */
+			   TRECCI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TRECCI.INST_ID AS INST_ID
+			 , TRECCI.CONTS_SN AS CONTS_SN
+			 , TRECCI.SITE_NM AS SITE_NM
+			 , TRECCI.SITE_URL_ADDR AS SITE_URL_ADDR
+			 , TRECCI.CONTS_INFO_NM AS CONTS_INFO_NM
+			 , TRECCI.CNST_TRGT_SUM_NOCS AS CNST_TRGT_SUM_NOCS
+			 , TRECCI.CNST_TRGT_LTRS_NOCS AS CNST_TRGT_LTRS_NOCS
+			 , TRECCI.CNST_TRGT_IMG_NOCS AS CNST_TRGT_IMG_NOCS
+			 , TRECCI.CNST_TRGT_VDO_NOCS AS CNST_TRGT_VDO_NOCS
+			 , TRECCI.CNST_TRGT_SND_NOCS AS CNST_TRGT_SND_NOCS
+			 , TRECCI.CNST_TRGT_XR_NOCS AS CNST_TRGT_XR_NOCS
+			 , TRECCI.CNST_TRGT_ETC_NOCS AS CNST_TRGT_ETC_NOCS
+			 , TRECCI.CNST_TRGT_SBTOT_NOCS AS CNST_TRGT_SBTOT_NOCS
+			 , TRECCI.CNST_CMPTN_NOCS AS CNST_CMPTN_NOCS
+			 , TRECCI.CNST_CMPTN_LTRS_NOCS AS CNST_CMPTN_LTRS_NOCS
+			 , TRECCI.CNST_CMPTN_IMG_NOCS AS CNST_CMPTN_IMG_NOCS
+			 , TRECCI.CNST_CMPTN_VDO_NOCS AS CNST_CMPTN_VDO_NOCS
+			 , TRECCI.CNST_CMPTN_SND_NOCS AS CNST_CMPTN_SND_NOCS
+			 , TRECCI.CNST_CMPTN_XR_NOCS AS CNST_CMPTN_XR_NOCS
+			 , TRECCI.CNST_CMPTN_ETC_NOCS AS CNST_CMPTN_ETC_NOCS
+			 , TRECCI.CNST_CMPTN_SBTOT_NOCS AS CNST_CMPTN_SBTOT_NOCS
+			 , TRECCI.SRVC_NOCS AS SRVC_NOCS
+			 , TRECCI.SRVC_LTRS_CNT AS SRVC_LTRS_CNT
+			 , TRECCI.SRVC_IMG_CNT AS SRVC_IMG_CNT
+			 , TRECCI.SRVC_VDO_CNT AS SRVC_VDO_CNT
+			 , TRECCI.SRVC_SND_CNT AS SRVC_SND_CNT
+			 , TRECCI.SRVC_XR_DATA_NOCS AS SRVC_XR_NOCS
+			 , TRECCI.SRVC_ETC_NOCS AS SRVC_ETC_NOCS
+			 , TRECCI.SRVC_SUM_CNT AS SRVC_SUM_CNT
+			 , TRECCI.CNST_SUM_NOCS AS CNST_SUM_NOCS
+			 , TRECCI.CNST_SUM_LTRS_NOCS AS CNST_SUM_LTRS_NOCS
+			 , TRECCI.CNST_SUM_IMG_NOCS AS CNST_SUM_IMG_NOCS
+			 , TRECCI.CNST_SUM_VDO_NOCS AS CNST_SUM_VDO_NOCS
+			 , TRECCI.CNST_SUM_SND_NOCS AS CNST_SUM_SND_NOCS
+			 , TRECCI.CNST_SUM_XR_DATA_NOCS AS CNST_SUM_XR_NOCS
+			 , TRECCI.CNST_SUM_ETC_NOCS AS CNST_SUM_ETC_NOCS
+			 , TRECCI.CNST_SUM_SBTOT_NOCS AS CNST_SUM_SBTOT_NOCS
+			 , TRECCI.CPYR_INST_KEEP_YN AS CPYR_INST_KEEP_YN
+			 , TRECCI.CPYR_PART_KEEP_YN AS CPYR_SCTN_KEEP_YN
+			 , TRECCI.CPYR_MAKR_KEEP_YN AS CPYR_MAKR_KEEP_YN
+			 , TRECCI.CPYR_KEEP_UNWN_YN AS CPYR_KEEP_UNWN_YN
+			 , TRECCI.CPYR_ENNC_YN AS CPYR_ENNC_YN
+			 , TRECCI.RLS_LMT_SCP_CD AS RLS_LMT_SCP_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000044'"/>
+					<property name="paramCdId" value="TRECCI.RLS_LMT_SCP_CD"/>
+				</include>) AS RLS_LMT_SCP_NM
+			 , TRECCI.CTZN_TRGT_SRVC_CD AS MRFN_TRGT_SRVC_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000045'"/>
+					<property name="paramCdId" value="TRECCI.CTZN_TRGT_SRVC_CD"/>
+				</include>) AS MRFN_TRGT_SRVC_NM
+			 , TRECCI.RLS_MTHD_CD AS RLS_MTHD_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000046'"/>
+					<property name="paramCdId" value="TRECCI.RLS_MTHD_CD"/>
+				</include>) AS RLS_MTHD_NM
+			 , TRECCI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRECCI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRECCI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TRECCI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRECCI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TRECCI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRECCI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRECCI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TRECCI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRECCI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_CLT_CONTS_INFO TRECCI
+		 WHERE TRECCI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TRECCI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 문화정보(DB) & 디지털콘텐츠 현황 등록 -->
+	<insert id="insertRcsExmnCltContsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCltContsInfoVO">
+		<selectKey order="BEFORE" keyProperty="contsSn" resultType="String">
+			SELECT
+				   COALESCE((SELECT
+									MAX(TRECCI.CONTS_SN) 
+							  FROM TX_RCS_EXMN_CLT_CONTS_INFO TRECCI
+							 WHERE TRECCI.RCS_EXMN_ID = #{rcsexmnId}
+							   AND TRECCI.INST_ID = #{instId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnCltContsInfo */
+					TX_RCS_EXMN_CLT_CONTS_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , CONTS_SN
+			 , SITE_NM
+			 , SITE_URL_ADDR
+			 , CONTS_INFO_NM
+			 , CNST_TRGT_SUM_NOCS
+			 , CNST_TRGT_LTRS_NOCS
+			 , CNST_TRGT_IMG_NOCS
+			 , CNST_TRGT_VDO_NOCS
+			 , CNST_TRGT_SND_NOCS
+			 , CNST_TRGT_XR_NOCS
+			 , CNST_TRGT_ETC_NOCS
+			 , CNST_TRGT_SBTOT_NOCS
+			 , CNST_CMPTN_NOCS
+			 , CNST_CMPTN_LTRS_NOCS
+			 , CNST_CMPTN_IMG_NOCS
+			 , CNST_CMPTN_VDO_NOCS
+			 , CNST_CMPTN_SND_NOCS
+			 , CNST_CMPTN_XR_NOCS
+			 , CNST_CMPTN_ETC_NOCS
+			 , CNST_CMPTN_SBTOT_NOCS
+			 , SRVC_NOCS
+			 , SRVC_LTRS_CNT
+			 , SRVC_IMG_CNT
+			 , SRVC_VDO_CNT
+			 , SRVC_SND_CNT
+			 , SRVC_XR_DATA_NOCS
+			 , SRVC_ETC_NOCS
+			 , SRVC_SUM_CNT
+			 , CNST_SUM_NOCS
+			 , CNST_SUM_LTRS_NOCS
+			 , CNST_SUM_IMG_NOCS
+			 , CNST_SUM_VDO_NOCS
+			 , CNST_SUM_SND_NOCS
+			 , CNST_SUM_XR_DATA_NOCS
+			 , CNST_SUM_ETC_NOCS
+			 , CNST_SUM_SBTOT_NOCS
+			 , CPYR_INST_KEEP_YN
+			 , CPYR_PART_KEEP_YN
+			 , CPYR_MAKR_KEEP_YN
+			 , CPYR_KEEP_UNWN_YN
+			 , CPYR_ENNC_YN
+			 , RLS_LMT_SCP_CD
+			 , CTZN_TRGT_SRVC_CD
+			 , RLS_MTHD_CD
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{contsSn}::NUMERIC
+			 , #{siteNm}
+			 , #{siteUrlAddr}
+			 , #{contsInfoNm}
+			 , #{cnstTrgtSumNocs}
+			 , #{cnstTrgtLtrsNocs}
+			 , #{cnstTrgtImgNocs}
+			 , #{cnstTrgtVdoNocs}
+			 , #{cnstTrgtSndNocs}
+			 , #{cnstTrgtXrNocs}
+			 , #{cnstTrgtEtcNocs}
+			 , #{cnstTrgtSbtotNocs}
+			 , #{cnstCmptnNocs}
+			 , #{cnstCmptnLtrsNocs}
+			 , #{cnstCmptnImgNocs}
+			 , #{cnstCmptnVdoNocs}
+			 , #{cnstCmptnSndNocs}
+			 , #{cnstCmptnXrNocs}
+			 , #{cnstCmptnEtcNocs}
+			 , #{cnstCmptnSbtotNocs}
+			 , #{srvcNocs}
+			 , #{srvcLtrsCnt}
+			 , #{srvcImgCnt}
+			 , #{srvcVdoCnt}
+			 , #{srvcSndCnt}
+			 , #{srvcXrNocs}
+			 , #{srvcEtcNocs}
+			 , #{srvcSumCnt}
+			 , #{cnstSumNocs}
+			 , #{cnstSumLtrsNocs}
+			 , #{cnstSumImgNocs}
+			 , #{cnstSumVdoNocs}
+			 , #{cnstSumSndNocs}
+			 , #{cnstSumXrNocs}
+			 , #{cnstSumEtcNocs}
+			 , #{cnstSumSbtotNocs}
+			 , #{cpyrInstKeepYn}
+			 , #{cpyrSctnKeepYn}
+			 , #{cpyrMakrKeepYn}
+			 , #{cpyrKeepUnwnYn}
+			 , #{cpyrEnncYn}
+			 , #{rlsLmtScpCd}
+			 , #{mrfnTrgtSrvcCd}
+			 , #{rlsMthdCd}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 문화정보(DB) & 디지털콘텐츠 현황 수정 -->
+	<update id="updateRcsExmnCltContsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCltContsInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnCltContsInfo */
+			   TX_RCS_EXMN_CLT_CONTS_INFO
+		   SET SITE_NM = #{siteNm}
+			 , SITE_URL_ADDR = #{siteUrlAddr}
+			 , CONTS_INFO_NM = #{contsInfoNm}
+			 , CNST_TRGT_SUM_NOCS = #{cnstTrgtSumNocs}
+			 , CNST_TRGT_LTRS_NOCS = #{cnstTrgtLtrsNocs}
+			 , CNST_TRGT_IMG_NOCS = #{cnstTrgtImgNocs}
+			 , CNST_TRGT_VDO_NOCS = #{cnstTrgtVdoNocs}
+			 , CNST_TRGT_SND_NOCS = #{cnstTrgtSndNocs}
+			 , CNST_TRGT_XR_NOCS = #{cnstTrgtXrNocs}
+			 , CNST_TRGT_ETC_NOCS = #{cnstTrgtEtcNocs}
+			 , CNST_TRGT_SBTOT_NOCS = #{cnstTrgtSbtotNocs}
+			 , CNST_CMPTN_NOCS = #{cnstCmptnNocs}
+			 , CNST_CMPTN_LTRS_NOCS = #{cnstCmptnLtrsNocs}
+			 , CNST_CMPTN_IMG_NOCS = #{cnstCmptnImgNocs}
+			 , CNST_CMPTN_VDO_NOCS = #{cnstCmptnVdoNocs}
+			 , CNST_CMPTN_SND_NOCS = #{cnstCmptnSndNocs}
+			 , CNST_CMPTN_XR_NOCS = #{cnstCmptnXrNocs}
+			 , CNST_CMPTN_ETC_NOCS = #{cnstCmptnEtcNocs}
+			 , CNST_CMPTN_SBTOT_NOCS = #{cnstCmptnSbtotNocs}
+			 , SRVC_NOCS = #{srvcNocs}
+			 , SRVC_LTRS_CNT = #{srvcLtrsCnt}
+			 , SRVC_IMG_CNT = #{srvcImgCnt}
+			 , SRVC_VDO_CNT = #{srvcVdoCnt}
+			 , SRVC_SND_CNT = #{srvcSndCnt}
+			 , SRVC_XR_DATA_NOCS = #{srvcXrNocs}
+			 , SRVC_ETC_NOCS = #{srvcEtcNocs}
+			 , SRVC_SUM_CNT = #{srvcSumCnt}
+			 , CNST_SUM_NOCS = #{cnstSumNocs}
+			 , CNST_SUM_LTRS_NOCS = #{cnstSumLtrsNocs}
+			 , CNST_SUM_IMG_NOCS = #{cnstSumImgNocs}
+			 , CNST_SUM_VDO_NOCS = #{cnstSumVdoNocs}
+			 , CNST_SUM_SND_NOCS = #{cnstSumSndNocs}
+			 , CNST_SUM_XR_DATA_NOCS = #{cnstSumXrNocs}
+			 , CNST_SUM_ETC_NOCS = #{cnstSumEtcNocs}
+			 , CNST_SUM_SBTOT_NOCS = #{cnstSumSbtotNocs}
+			 , CPYR_INST_KEEP_YN = #{cpyrInstKeepYn}
+			 , CPYR_PART_KEEP_YN = #{cpyrSctnKeepYn}
+			 , CPYR_MAKR_KEEP_YN = #{cpyrMakrKeepYn}
+			 , CPYR_KEEP_UNWN_YN = #{cpyrKeepUnwnYn}
+			 , CPYR_ENNC_YN = #{cpyrEnncYn}
+			 , RLS_LMT_SCP_CD = #{rlsLmtScpCd}
+			 , CTZN_TRGT_SRVC_CD = #{mrfnTrgtSrvcCd}
+			 , RLS_MTHD_CD = #{rlsMthdCd}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND CONTS_SN = #{contsSn}::NUMERIC
+	</update>
+	
+	
+	<!-- 문화정보(DB) & 디지털콘텐츠 현황 삭제 -->
+	<delete id="deleteRcsExmnCltContsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCltContsInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnCltContsInfo */
+		  FROM TX_RCS_EXMN_CLT_CONTS_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND CONTS_SN = #{contsSn}::NUMERIC
+	</delete>
+	
+	
+	<!-- 모바일앱/웹 현황 -->
+	<select id="selectRcsExmnMbAplList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnMbAplInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnMbAplList */
+			   TREMAI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREMAI.INST_ID AS INST_ID
+			 , TREMAI.APL_SN AS APL_SN
+			 , TREMAI.APL_TYPE_CD AS APL_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000029'"/>
+					<property name="paramCdId" value="TREMAI.APL_TYPE_CD"/>
+				</include>) AS APL_TYPE_NM
+			 , TREMAI.APL_NM AS APL_NM
+			 , TREMAI.APL_WEB_URL_ADDR AS APL_WEB_URL_ADDR
+			 , TREMAI.OS_NM AS OS_NM
+			 , TREMAI.DEV_YR AS DEV_YR
+			 , TREMAI.DEV_BGT_AMT AS DEV_BGT_AMT
+			 , TREMAI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREMAI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREMAI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREMAI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREMAI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREMAI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREMAI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREMAI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREMAI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREMAI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_MB_APL_INFO TREMAI
+		 WHERE TREMAI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREMAI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 모바일앱/웹 현황 등록 -->
+	<insert id="insertRcsExmnMbAplInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnMbAplInfoVO">
+		<selectKey order="BEFORE" keyProperty="aplSn" resultType="String">
+			SELECT
+				   COALESCE((SELECT
+									MAX(TREMAI.APL_SN) 
+							  FROM TX_RCS_EXMN_MB_APL_INFO TREMAI
+							 WHERE TREMAI.RCS_EXMN_ID = #{rcsexmnId}
+							   AND TREMAI.INST_ID = #{instId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnMbAplInfo */
+					TX_RCS_EXMN_MB_APL_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , APL_SN
+			 , APL_TYPE_CD
+			 , APL_NM
+			 , APL_WEB_URL_ADDR
+			 , OS_NM
+			 , DEV_YR
+			 , DEV_BGT_AMT
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{aplSn}::NUMERIC
+			 , #{aplTypeCd}
+			 , #{aplNm}
+			 , #{aplWebUrlAddr}
+			 , #{osNm}
+			 , #{devYr}
+			 , #{devBgtAmt}::NUMERIC
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 모바일앱/웹 현황 수정 -->
+	<update id="updateRcsExmnMbAplInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnMbAplInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnMbAplInfo */
+			   TX_RCS_EXMN_MB_APL_INFO
+		   SET APL_TYPE_CD = #{aplTypeCd}
+			 , APL_NM = #{aplNm}
+			 , APL_WEB_URL_ADDR = #{aplWebUrlAddr}
+			 , OS_NM = #{osNm}
+			 , DEV_YR = #{devYr}
+			 , DEV_BGT_AMT = #{devBgtAmt}::NUMERIC
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND APL_SN = #{aplSn}::NUMERIC
+	</update>
+	
+	
+	<!-- 모바일앱/웹 현황 삭제 -->
+	<delete id="deleteRcsExmnMbAplInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnMbAplInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnMbAplInfo */
+		  FROM TX_RCS_EXMN_MB_APL_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND APL_SN = #{aplSn}::NUMERIC
+	</delete>
+	
+	
+	<!-- 기관별 SNS 홍보채널 운영 현황 보기 -->
+	<select id="selectRcsExmnInstPrChnlList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInstPrChnlInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInstPrChnlList */
+			   TREIPCI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREIPCI.INST_ID AS INST_ID
+			 , TREIPCI.CHNL_SN AS CHNL_SN
+			 , TREIPCI.CHNL_ENNC AS CHNL_ENNC
+			 , TREIPCI.CHNL_TYPE_CD AS CHNL_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000030'"/>
+					<property name="paramCdId" value="TREIPCI.CHNL_TYPE_CD"/>
+				</include>) AS CHNL_TYPE_NM
+			 , TREIPCI.CHNL_ADDR AS CHNL_ADDR
+			 , TREIPCI.OPER_MNBD_TYPE_CD AS OPER_MNBD_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000031'"/>
+					<property name="paramCdId" value="TREIPCI.OPER_MNBD_TYPE_CD"/>
+				</include>) AS OPER_MNBD_TYPE_NM
+			 , TREIPCI.SRVC_PRPS_EXPLN_CN AS SRVC_PRPS_EXPLN
+			 , TREIPCI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIPCI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIPCI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREIPCI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIPCI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREIPCI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREIPCI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREIPCI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREIPCI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREIPCI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_INST_PR_CHNL_INFO TREIPCI
+		 WHERE TREIPCI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREIPCI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 기관별 SNS 홍보채널 운영 현황 등록 -->
+	<insert id="insertRcsExmnInstPrChnlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInstPrChnlInfoVO">
+		<selectKey order="BEFORE" keyProperty="chnlSn" resultType="String">
+			SELECT
+				   COALESCE((SELECT
+									MAX(TREIPCI.CHNL_SN) 
+							  FROM TX_RCS_EXMN_INST_PR_CHNL_INFO TREIPCI
+							 WHERE TREIPCI.RCS_EXMN_ID = #{rcsexmnId}
+							   AND TREIPCI.INST_ID = #{instId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnInstPrChnlInfo */
+					TX_RCS_EXMN_INST_PR_CHNL_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , CHNL_SN
+			 , CHNL_ENNC
+			 , CHNL_TYPE_CD
+			 , CHNL_ADDR
+			 , OPER_MNBD_TYPE_CD
+			 , SRVC_PRPS_EXPLN_CN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{chnlSn}::NUMERIC
+			 , #{chnlEnnc}
+			 , #{chnlTypeCd}
+			 , #{chnlAddr}
+			 , #{operMnbdTypeCd}
+			 , #{srvcPrpsExpln}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 기관별 SNS 홍보채널 운영 현황 수정 -->
+	<update id="updateRcsExmnInstPrChnlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInstPrChnlInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnInstPrChnlInfo */
+			   TX_RCS_EXMN_INST_PR_CHNL_INFO
+		   SET CHNL_ENNC = #{chnlEnnc}
+			 , CHNL_TYPE_CD = #{chnlTypeCd}
+			 , CHNL_ADDR = #{chnlAddr}
+			 , OPER_MNBD_TYPE_CD = #{operMnbdTypeCd}
+			 , SRVC_PRPS_EXPLN_CN = #{srvcPrpsExpln}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND CHNL_SN = #{chnlSn}::NUMERIC
+	</update>
+	
+	
+	<!-- 기관별 SNS 홍보채널 운영 현황 삭제  -->
+	<delete id="deleteRcsExmnInstPrChnlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInstPrChnlInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnInstPrChnlInfo */
+		  FROM TX_RCS_EXMN_INST_PR_CHNL_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND CHNL_SN = #{chnlSn}::NUMERIC
+	</delete>
+	
+	
+	<!-- 클라우드 구축현황 보기 -->
+	<select id="selectRcsExmnCludCnstInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCludCnstInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnCludCnstInfo */
+			   TRECCI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TRECCI.INST_ID AS INST_ID
+			 , TRECCI.CLUD_UTZTN_YN AS CLUD_UTZTN_YN
+			 , (CASE WHEN TRECCI.CLUD_UTZTN_YN = 'Y'
+						  THEN '사용'
+					 ELSE '사용안함'
+				END) AS CLUD_UTZTN_YN_NM
+			 , TRECCI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRECCI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRECCI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TRECCI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRECCI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TRECCI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TRECCI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TRECCI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TRECCI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TRECCI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_CLUD_CNST_INFO TRECCI
+		 WHERE TRECCI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TRECCI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 이용중 클라우드 정보 -->
+	<select id="selectRcsExmnEqpmntCludList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntCludInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnEqpmntCludList */
+			   TREECI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREECI.INST_ID AS INST_ID
+			 , TREECI.CLUD_SN AS CLUD_SN
+			 , TREECI.CLUD_UTZTN_TYPE_CD AS CLUD_UTLZ_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000032'"/>
+					<property name="paramCdId" value="TREECI.CLUD_UTZTN_TYPE_CD"/>
+				</include>) AS CLUD_UTLZ_TYPE_NM
+			 , TREECI.CLUD_YLY_COST AS CLUD_FYER_COST
+			 , TREECI.CLUD_BZENTY_NM AS CLUD_BZENTY_NM
+			 , TREECI.CLUD_IAAS_YN AS CLUD_IAAS_YN
+			 , TREECI.CLUD_SAAS_YN AS CLUD_SAAS_YN
+			 , TREECI.CLUD_PAAS_YN AS CLUD_PAAS_YN
+			 , TREECI.ITDI_YR AS ITDI_YR
+			 , TREECI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREECI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREECI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREECI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREECI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREECI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREECI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREECI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREECI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREECI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_EQPMNT_CLUD_INFO TREECI
+		 WHERE TREECI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREECI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 이용중 클라우드 정보 -->
+	<select id="selectRcsExmnEqpmntCludInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntCludInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnEqpmntCludInfo */
+			   TREECI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREECI.INST_ID AS INST_ID
+			 , TREECI.CLUD_SN AS CLUD_SN
+			 , TREECI.CLUD_UTZTN_TYPE_CD AS CLUD_UTLZ_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000032'"/>
+					<property name="paramCdId" value="TREECI.CLUD_UTZTN_TYPE_CD"/>
+				</include>) AS CLUD_UTLZ_TYPE_NM
+			 , TREECI.CLUD_YLY_COST AS CLUD_FYER_COST
+			 , TREECI.CLUD_BZENTY_NM AS CLUD_BZENTY_NM
+			 , TREECI.CLUD_IAAS_YN AS CLUD_IAAS_YN
+			 , TREECI.CLUD_SAAS_YN AS CLUD_SAAS_YN
+			 , TREECI.CLUD_PAAS_YN AS CLUD_PAAS_YN
+			 , TREECI.ITDI_YR AS ITDI_YR
+			 , TREECI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREECI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREECI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREECI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREECI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREECI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREECI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREECI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREECI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREECI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_EQPMNT_CLUD_INFO TREECI
+		 WHERE TREECI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREECI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<select id="selectRcsExmnCludCnstInfoCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCludCnstInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnCludCnstInfoCnt */
+			   COUNT(RCS_EXMN_ID) AS EXIST_CNST_CNT
+		  FROM TX_RCS_EXMN_CLUD_CNST_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</select>
+	
+	<!-- 클라우드 구축현황 보기 등록 -->
+	<insert id="insertRcsExmnCludCnstInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCludCnstInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnCludCnstInfo */
+					TX_RCS_EXMN_CLUD_CNST_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , CLUD_UTZTN_YN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , COALESCE(#{cludUtztnYn}, 'N')
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 클라우드 구축현황 보기 수정 -->
+	<update id="updateRcsExmnCludCnstInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCludCnstInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnCludCnstInfo */
+			   TX_RCS_EXMN_CLUD_CNST_INFO
+		   SET CLUD_UTZTN_YN = COALESCE(#{cludUtztnYn}, 'N')
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</update>
+	
+	
+	<!-- 클라우드 구축현황 보기 삭제 -->
+	<delete id="deleteRcsExmnCludCnstInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnCludCnstInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnCludCnstInfo */
+		  FROM TX_RCS_EXMN_CLUD_CNST_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</delete>
+	
+	
+	<select id="selectRcsExmnEqpmntCludInfoCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntCludInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnEqpmntCludInfoCnt */
+			   COUNT(CLUD_SN) AS EXIST_CLUD_CNT
+		  FROM TX_RCS_EXMN_EQPMNT_CLUD_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</select>
+	
+	<!-- 이용중 클라우드 정보 등록 -->
+	<insert id="insertRcsExmnEqpmntCludInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntCludInfoVO">
+		<selectKey order="BEFORE" keyProperty="cludSn" resultType="int">
+			SELECT
+				   COALESCE((SELECT
+									MAX(TREECI.CLUD_SN) 
+							  FROM TX_RCS_EXMN_EQPMNT_CLUD_INFO TREECI
+							 WHERE TREECI.RCS_EXMN_ID = #{rcsexmnId}
+							   AND TREECI.INST_ID = #{instId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnEqpmntCludInfo */
+					TX_RCS_EXMN_EQPMNT_CLUD_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , CLUD_SN
+			 , CLUD_UTZTN_TYPE_CD
+			 , CLUD_YLY_COST
+			 , CLUD_BZENTY_NM
+			 , CLUD_IAAS_YN
+			 , CLUD_SAAS_YN
+			 , CLUD_PAAS_YN
+			 , ITDI_YR
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{cludSn}
+			 , #{cludUtlzTypeCd}
+			 , #{cludFyerCost}
+			 , #{cludBzentyNm}
+			 , COALESCE(#{cludIaasYn}, 'N')
+			 , COALESCE(#{cludSaasYn}, 'N')
+			 , COALESCE(#{cludPaasYn}, 'N')
+			 , #{itdiYr}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 이용중 클라우드 정보 수정 -->
+	<update id="updateRcsExmnEqpmntCludInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntCludInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnEqpmntCludInfo */
+			   TX_RCS_EXMN_EQPMNT_CLUD_INFO
+		   SET CLUD_UTZTN_TYPE_CD = #{cludUtlzTypeCd}
+			 , CLUD_YLY_COST = #{cludFyerCost}
+			 , CLUD_BZENTY_NM = #{cludBzentyNm}
+			 , CLUD_IAAS_YN = COALESCE(#{cludIaasYn}, 'N')
+			 , CLUD_SAAS_YN = COALESCE(#{cludSaasYn}, 'N')
+			 , CLUD_PAAS_YN = COALESCE(#{cludPaasYn}, 'N')
+			 , ITDI_YR = #{itdiYr}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND CLUD_SN = #{cludSn}
+	</update>
+	
+	
+	<!-- 이용중 클라우드 정보 삭제 -->
+	<delete id="deleteRcsExmnEqpmntCludInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntCludInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper. */
+		  FROM TX_RCS_EXMN_EQPMNT_CLUD_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND CLUD_SN = #{cludSn}
+	</delete>
+	
+	
+	<!-- 이용중 클라우드 정보 전체 삭제 -->
+	<delete id="deleteRcsExmnEqpmntCludAllList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnEqpmntCludAllList */
+		  FROM TX_RCS_EXMN_EQPMNT_CLUD_INFO
+		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND INST_ID = #{paramInstId}
+	</delete>
+	
+	
+	<!-- 이용중 클라우드 순번 수정  -->
+	
+	
+	<!-- 서버 장비 현황 -->
+	<select id="selectRcsExmnEqpmntSrvrList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnEqpmntSrvrList */
+			   TREESI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREESI.INST_ID AS INST_ID
+			 , TREESI.SRVR_SN AS SRVR_SN
+			 , TREESI.SRVR_ENNC AS SRVR_ENNC
+			 , TREESI.SRVR_TYPE_CD AS SRVR_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000033'"/>
+					<property name="paramCdId" value="TREESI.SRVR_TYPE_CD"/>
+				</include>) AS SRVR_TYPE_NM
+			 , TREESI.ITEM_NM AS ITEM_NM
+			 , TREESI.MDL_NM AS MDL_NM
+			 , TREESI.OS_NM AS OS_NM
+			 , TREESI.MKR_NM AS MKR_NM
+			 , TREESI.SRVR_CPU_NM AS SRVR_CPU_NM
+			 , TREESI.SRVR_MMRY_NM AS SRVR_MMRY_NM
+			 , TREESI.STR_SZ_CN AS STR_SZ_CN
+			 , TREESI.KEEP_TYPE_CN AS KEEP_TYPE_CN
+			 , TREESI.SRVR_EQPMNT_CNT AS SRVR_EQPMNT_CNT
+			 , TREESI.ITDI_YR AS ITDI_YR
+			 , TREESI.VR_APLCN_YN AS VR_APLCN_YN
+			 , (CASE WHEN TREESI.VR_APLCN_YN = 'Y'
+						  THEN '사용'
+					 WHEN TREESI.VR_APLCN_YN = 'N'
+						  THEN '사용안함'
+					 ELSE ''
+				END) AS VR_APLCN_YN_NM
+			 , TREESI.ITDI_COST AS ITDI_COST
+			 , TREESI.OPER_COST AS OPER_COST
+			 , TREESI.USG_EXPLN_CN AS USG_EXPLN
+			 , TREESI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREESI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREESI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREESI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREESI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREESI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREESI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREESI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREESI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREESI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_EQPMNT_SRVR_INFO TREESI
+		 WHERE TREESI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREESI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 서버 장비 현황 등록 -->
+	<insert id="insertRcsExmnEqpmntSrvrInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrInfoVO">
+		<selectKey order="BEFORE" keyProperty="srvrSn" resultType="String">
+			SELECT
+				   COALESCE((SELECT
+									MAX(TREESI.SRVR_SN) 
+							  FROM TX_RCS_EXMN_EQPMNT_SRVR_INFO TREESI
+							 WHERE TREESI.RCS_EXMN_ID = #{rcsexmnId}
+							   AND TREESI.INST_ID = #{instId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnEqpmntSrvrInfo */
+					TX_RCS_EXMN_EQPMNT_SRVR_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , SRVR_SN
+			 , SRVR_ENNC
+			 , SRVR_TYPE_CD
+			 , ITEM_NM
+			 , MDL_NM
+			 , OS_NM
+			 , MKR_NM
+			 , SRVR_CPU_NM
+			 , SRVR_MMRY_NM
+			 , STR_SZ_CN
+			 , KEEP_TYPE_CN
+			 , SRVR_EQPMNT_CNT
+			 , ITDI_YR
+			 , VR_APLCN_YN
+			 , ITDI_COST
+			 , OPER_COST
+			 , USG_EXPLN_CN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{srvrSn}::NUMERIC
+			 , #{srvrEnnc}
+			 , #{srvrTypeCd}
+			 , #{itemNm}
+			 , #{mdlNm}
+			 , #{osNm}
+			 , #{mkrNm}
+			 , #{srvrCpuNm}
+			 , #{srvrMmryNm}
+			 , #{strSzCn}
+			 , #{keepTypeCn}
+			 , #{srvrEqpmntCnt}::NUMERIC
+			 , #{itdiYr}
+			 , COALESCE(#{vrAplcnYn}, 'N')
+			 , #{itdiCost}::NUMERIC
+			 , #{operCost}::NUMERIC
+			 , #{usgExpln}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 서버 장비 현황 수정 -->
+	<update id="updateRcsExmnEqpmntSrvrInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnEqpmntSrvrInfo */
+			   TX_RCS_EXMN_EQPMNT_SRVR_INFO
+		   SET SRVR_ENNC = #{srvrEnnc}
+			 , SRVR_TYPE_CD = #{srvrTypeCd}
+			 , ITEM_NM = #{itemNm}
+			 , MDL_NM = #{mdlNm}
+			 , OS_NM = #{osNm}
+			 , MKR_NM = #{mkrNm}
+			 , SRVR_CPU_NM = #{srvrCpuNm}
+			 , SRVR_MMRY_NM = #{srvrMmryNm}
+			 , STR_SZ_CN = #{strSzCn}
+			 , KEEP_TYPE_CN = #{keepTypeCn}
+			 , SRVR_EQPMNT_CNT = #{srvrEqpmntCnt}::NUMERIC
+			 , ITDI_YR = #{itdiYr}
+			 , VR_APLCN_YN = COALESCE(#{vrAplcnYn}, 'N')
+			 , ITDI_COST = #{itdiCost}::NUMERIC
+			 , OPER_COST = #{operCost}::NUMERIC
+			 , USG_EXPLN_CN = #{usgExpln}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND SRVR_SN = #{srvrSn}::NUMERIC
+	</update>
+	
+	
+	<!-- 서버 장비 현황 삭제 -->
+	<delete id="deleteRcsExmnEqpmntSrvrInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnEqpmntSrvrInfo */
+		  FROM TX_RCS_EXMN_EQPMNT_SRVR_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND SRVR_SN = #{srvrSn}::NUMERIC
+	</delete>
+	
+	
+	<!-- 서버 외부위착 현황 -->
+	<select id="selectRcsExmnEqpmntSrvrEntsList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrEntsInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnEqpmntSrvrEntsList */
+			   TREESEI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREESEI.INST_ID AS INST_ID
+			 , TREESEI.EXTL_BZENTY_SN AS EXTL_BZENTY_SN
+			 , TREESEI.EXTL_BZENTY_ENNC AS EXTL_BZENTY_ENNC
+			 , TREESEI.EXTL_BZENTY_NM AS EXTL_BZENTY_NM
+			 , TREESEI.HNGR_RACK_CNT AS HNGR_RACK_CNT
+			 , TREESEI.HNGR_COST AS HNGR_COST
+			 , TREESEI.HSTN_RACK_CNT AS HSTN_RACK_CNT
+			 , TREESEI.HSTN_COST AS HSTN_COST
+			 , TREESEI.WRD_TRFC_CPCT AS WRD_TRFC_CPCT_CNT
+			 , TREESEI.WRD_UTZTN_CHRG_COST AS WRD_UTZTN_CHRG_COST
+			 , TREESEI.ETC_SRVC_CN AS ETC_SRVC_CN
+             , (
+				 SELECT STRING_AGG(T02.CD_NM, ', ')
+  					FROM ( 
+							SELECT STRING_TO_TABLE(ETC_SRVC_CN,',') AS ETC_SRVC_ID
+				     			 , RCS_EXMN_ID
+				     			 , INST_ID
+				     			 , EXTL_BZENTY_SN
+			  	  			  FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO  
+			    			 WHERE RCS_EXMN_ID = TREESEI.RCS_EXMN_ID
+			      			   AND INST_ID = TREESEI.INST_ID
+			      			   AND EXTL_BZENTY_SN = TREESEI.EXTL_BZENTY_SN
+						  ) T01
+  					INNER JOIN TX_CMMN_CD T02
+     				   ON T02.CD_ID = T01.ETC_SRVC_ID
+    				  AND T02.CLSF_CD = 'CLSF000034'
+			   ) AS ETC_SRVC_CN_DTL 
+			 , (CASE WHEN POSITION('ETCSVC0001' IN TREESEI.ETC_SRVC_CN) > 0
+						  THEN 'ETCSVC0001'
+					 ELSE 'EMPTY'
+				END) AS ETC_SRVC_CD1
+			, (CASE WHEN POSITION('ETCSVC0002' IN TREESEI.ETC_SRVC_CN) > 0
+						  THEN 'ETCSVC0002'
+					 ELSE 'EMPTY'
+				END) AS ETC_SRVC_CD2
+			, (CASE WHEN POSITION('ETCSVC0003' IN TREESEI.ETC_SRVC_CN) > 0
+						  THEN 'ETCSVC0003'
+					 ELSE 'EMPTY'
+				END) AS ETC_SRVC_CD3
+			, (CASE WHEN POSITION('ETCSVC0004' IN TREESEI.ETC_SRVC_CN) > 0
+						  THEN 'ETCSVC0004'
+					 ELSE 'EMPTY'
+				END) AS ETC_SRVC_CD4
+			, (CASE WHEN POSITION('ETCSVC0005' IN TREESEI.ETC_SRVC_CN) > 0
+						  THEN 'ETCSVC0005'
+					 ELSE 'EMPTY'
+				END) AS ETC_SRVC_CD5
+			, (CASE WHEN POSITION('ETCSVC0006' IN TREESEI.ETC_SRVC_CN) > 0
+						  THEN 'ETCSVC0006'
+					 ELSE 'EMPTY'
+				END) AS ETC_SRVC_CD6
+			, (CASE WHEN POSITION('ETCSVC0007' IN TREESEI.ETC_SRVC_CN) > 0
+						  THEN 'ETCSVC0007'
+					 ELSE 'EMPTY'
+				END) AS ETC_SRVC_CD7
+			 , TREESEI.ETC_SRVC_COST AS ETC_SRVC_COST
+			 , TREESEI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREESEI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREESEI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREESEI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREESEI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREESEI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREESEI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREESEI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREESEI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREESEI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO TREESEI
+		 WHERE TREESEI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREESEI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 서버 외부위탁 등록 -->
+	<insert id="insertRcsExmnEqpmntSrvrEntsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrEntsInfoVO">
+		<selectKey order="BEFORE" keyProperty="extlBzentySn" resultType="String">
+			SELECT
+				   COALESCE((SELECT
+									MAX(TREESEI.EXTL_BZENTY_SN) 
+							  FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO TREESEI
+							 WHERE TREESEI.RCS_EXMN_ID = #{rcsexmnId}
+							   AND TREESEI.INST_ID = #{instId}), 0) + 1
+		</selectKey>
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnEqpmntSrvrEntsInfo */
+					TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , EXTL_BZENTY_SN
+			 , EXTL_BZENTY_ENNC
+			 , EXTL_BZENTY_NM
+			 , HNGR_RACK_CNT
+			 , HNGR_COST
+			 , HSTN_RACK_CNT
+			 , HSTN_COST
+			 , WRD_TRFC_CPCT
+			 , WRD_UTZTN_CHRG_COST
+			 , ETC_SRVC_CN
+			 , ETC_SRVC_COST
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{extlBzentySn}::NUMERIC
+			 , #{extlBzentyEnnc}
+			 , #{extlBzentyNm}
+			 , #{hngrRackCnt}::NUMERIC
+			 , #{hngrCost}::NUMERIC
+			 , #{hstnRackCnt}::NUMERIC
+			 , #{hstnCost}::NUMERIC
+			 , #{wrdTrfcCpctCnt}::NUMERIC
+			 , #{wrdUtztnChrgCost}::NUMERIC
+			 , #{etcSrvcCn}
+			 , #{etcSrvcCost}::NUMERIC
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 서버 외부위탁 수정 -->
+	<update id="updateRcsExmnEqpmntSrvrEntsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrEntsInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnEqpmntSrvrEntsInfo */
+			   TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO
+		   SET EXTL_BZENTY_ENNC = #{extlBzentyEnnc}
+			 , EXTL_BZENTY_NM = #{extlBzentyNm}
+			 , HNGR_RACK_CNT = #{hngrRackCnt}::NUMERIC
+			 , HNGR_COST = #{hngrCost}::NUMERIC
+			 , HSTN_RACK_CNT = #{hstnRackCnt}::NUMERIC
+			 , HSTN_COST = #{hstnCost}::NUMERIC
+			 , WRD_TRFC_CPCT = #{wrdTrfcCpctCnt}::NUMERIC
+			 , WRD_UTZTN_CHRG_COST = #{wrdUtztnChrgCost}::NUMERIC
+			 , ETC_SRVC_CN = #{etcSrvcCn}
+			 , ETC_SRVC_COST = #{etcSrvcCost}::NUMERIC
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND EXTL_BZENTY_SN = #{extlBzentySn}::NUMERIC
+	</update>
+	
+	
+	<!-- 서버 외부위탁 삭제 -->
+	<delete id="deleteRcsExmnEqpmntSrvrEntsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrEntsInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnEqpmntSrvrEntsInfo */
+		  FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+		   AND EXTL_BZENTY_SN = #{extlBzentySn}::NUMERIC
+	</delete>
+	
+	<!-- 일련번호 업데이트 -->
+	<update id="updateSnRcsExmnEqpmntSrvrEntsInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSrvrEntsInfoVO">
+		WITH ENTS_INFO ( /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateSnRcsExmnEqpmntSrvrEntsInfo */
+			RCS_EXMN_ID, INST_ID, EXTL_BZENTY_SN, NEW_SN
+		) AS (
+			  SELECT 
+					 XTREESEI.RCS_EXMN_ID
+				   , XTREESEI.INST_ID
+				   , XTREESEI.EXTL_BZENTY_SN
+				   , ROW_NUMBER()OVER(ORDER BY XTREESEI.EXTL_BZENTY_SN ASC) AS NEW_SN
+				FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO XTREESEI
+			   WHERE XTREESEI.RCS_EXMN_ID = #{rcsexmnId}
+				 AND XTREESEI.INST_ID = #{instId}
+		)
+		UPDATE TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO TREESEI 
+		   SET EXTL_BZENTY_SN = EI.NEW_SN
+		  FROM ENTS_INFO EI
+		 WHERE TREESEI.RCS_EXMN_ID = EI.RCS_EXMN_ID
+		   AND TREESEI.INST_ID = EI.INST_ID
+		   AND TREESEI.EXTL_BZENTY_SN = EI.EXTL_BZENTY_SN
+	</update>
+	
+	<!-- 정보보안장비 및 보안서비스 현황 -->
+	<select id="selectRcsExmnEqpmntSecuInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSecuInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnEqpmntSecuInfo */
+			   TREESI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREESI.INST_ID AS INST_ID
+			 , TREESI.SECU_EQPMNT_ENNC AS SECUEQPMNT_ENNC
+			 , TREESI.NTWK_SECU_EQPMNT_CD_CN AS NTWK_SECU_EQPMNT_CD_CN
+			 , (CASE WHEN POSITION('NTWKSECU01' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU01'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD1
+			 , (CASE WHEN POSITION('NTWKSECU02' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU02'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD2
+			 , (CASE WHEN POSITION('NTWKSECU03' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU03'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD3
+			 , (CASE WHEN POSITION('NTWKSECU04' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU04'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD4
+			 , (CASE WHEN POSITION('NTWKSECU05' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU05'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD5
+			 , (CASE WHEN POSITION('NTWKSECU06' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU06'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD6
+			 , (CASE WHEN POSITION('NTWKSECU07' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU07'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD7
+			 , (CASE WHEN POSITION('NTWKSECU08' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU08'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD8
+			 , (CASE WHEN POSITION('NTWKSECU09' IN TREESI.NTWK_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'NTWKSECU09'
+					 ELSE ''
+				END) AS NTWK_SECU_EQPMNT_CD9
+			 , TREESI.COMP_SECU_EQPMNT_CD_CN AS COMP_SECU_EQPMNT_CD_CN
+			 , (CASE WHEN POSITION('USRPCSEC01' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC01'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD1
+			 , (CASE WHEN POSITION('USRPCSEC02' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC02'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD2
+			 , (CASE WHEN POSITION('USRPCSEC03' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC03'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD3
+			 , (CASE WHEN POSITION('USRPCSEC04' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC04'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD4
+			 , (CASE WHEN POSITION('USRPCSEC05' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC05'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD5
+			 , (CASE WHEN POSITION('USRPCSEC06' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC06'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD6
+			 , (CASE WHEN POSITION('USRPCSEC07' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC07'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD7
+			 , (CASE WHEN POSITION('USRPCSEC08' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC08'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD8
+			 , (CASE WHEN POSITION('USRPCSEC09' IN TREESI.COMP_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'USRPCSEC09'
+					 ELSE ''
+				END) AS COMP_SECU_EQPMNT_CD9
+			 , TREESI.SRVR_SECU_EQPMNT_CD_CN AS SRVR_SECU_EQPMNT_CD_CN
+			 , (CASE WHEN POSITION('SRVRSECU01' IN TREESI.SRVR_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'SRVRSECU01'
+					 ELSE ''
+				END) AS SRVR_SECU_EQPMNT_CD1
+			 , (CASE WHEN POSITION('SRVRSECU02' IN TREESI.SRVR_SECU_EQPMNT_CD_CN) > 0
+						  THEN 'SRVRSECU02'
+					 ELSE ''
+				END) AS SRVR_SECU_EQPMNT_CD2
+			 , TREESI.SECU_MNG_EQPMNT_CD_CN AS SECU_MNG_EQPMNT_CD_CN
+			 , (CASE WHEN POSITION('SECUMGT001' IN TREESI.SECU_MNG_EQPMNT_CD_CN) > 0
+						  THEN 'SECUMGT001'
+					 ELSE ''
+				END) AS SECU_MNG_EQPMNT_CD1
+			 , (CASE WHEN POSITION('SECUMGT002' IN TREESI.SECU_MNG_EQPMNT_CD_CN) > 0
+						  THEN 'SECUMGT002'
+					 ELSE ''
+				END) AS SECU_MNG_EQPMNT_CD2
+			 , TREESI.ETC_SECU_EQPMNT_CN AS ETC_SECU_EQPMNT_CN
+			 , TREESI.SECU_DSCSN_SRVC_CD_CN AS SECU_DSCSN_SRVC_CD_CN
+			 , (CASE WHEN POSITION('SECUCSLT01' IN TREESI.SECU_DSCSN_SRVC_CD_CN) > 0
+						  THEN 'SECUCSLT01'
+					 ELSE ''
+				END) AS SECU_DSCSN_SRVC_CD1
+			 , (CASE WHEN POSITION('SECUCSLT02' IN TREESI.SECU_DSCSN_SRVC_CD_CN) > 0
+						  THEN 'SECUCSLT02'
+					 ELSE ''
+				END) AS SECU_DSCSN_SRVC_CD2
+			 , (CASE WHEN POSITION('SECUCSLT03' IN TREESI.SECU_DSCSN_SRVC_CD_CN) > 0
+						  THEN 'SECUCSLT03'
+					 ELSE ''
+				END) AS SECU_DSCSN_SRVC_CD3
+			 , (CASE WHEN POSITION('SECUCSLT04' IN TREESI.SECU_DSCSN_SRVC_CD_CN) > 0
+						  THEN 'SECUCSLT04'
+					 ELSE ''
+				END) AS SECU_DSCSN_SRVC_CD5
+			 , (CASE WHEN POSITION('SECUCSLT05' IN TREESI.SECU_DSCSN_SRVC_CD_CN) > 0
+						  THEN 'SECUCSLT05'
+					 ELSE ''
+				END) AS SECU_DSCSN_SRVC_CD6
+			 , (CASE WHEN POSITION('SECUCSLT01' IN TREESI.SECU_DSCSN_SRVC_CD_CN) > 0
+						  THEN 'SECUCSLT06'
+					 ELSE ''
+				END) AS SECU_DSCSN_SRVC_CD6
+			 , TREESI.SECU_MNG_SRVC_ENNC_YN AS SECU_MNG_SRVC_ENNC_YN
+			 , (CASE WHEN TREESI.SECU_MNG_SRVC_ENNC_YN = 'Y'
+						  THEN 'O'
+					 ELSE 'X'
+				END) AS SECU_MNG_SRVC_ENNC_YN_NM
+			 , TREESI.SECU_MNG_SRVC_INST_TYPE_CD AS SECU_MNG_SRVC_INST_TYPE_CD
+			 , TREESI.SECU_MNG_SRVC_INST_NM AS SECU_MNG_SRVC_INST_NM
+			 , TREESI.SECU_EDU_TRNG_CD_CN AS SECU_EDU_TRNG_CD_CN
+			 , (CASE WHEN POSITION('SECEDU0001' IN TREESI.SECU_EDU_TRNG_CD_CN) > 0
+						  THEN 'SECEDU0001'
+					 ELSE ''
+				END) AS SECU_EDU_TRNG_CD1
+			 , (CASE WHEN POSITION('SECEDU0002' IN TREESI.SECU_EDU_TRNG_CD_CN) > 0
+						  THEN 'SECEDU0002'
+					 ELSE ''
+				END) AS SECU_EDU_TRNG_CD2
+			 , TREESI.INFSCR_IS_CN AS INFSCR_IS_CN
+			 , (CASE WHEN POSITION('INFRMIS001' IN TREESI.INFSCR_IS_CN) > 0
+						  THEN 'INFRMIS001'
+					 ELSE ''
+				END) AS INFSCR_IS_CD1
+			 , (CASE WHEN POSITION('INFRMIS002' IN TREESI.INFSCR_IS_CN) > 0
+						  THEN 'INFRMIS002'
+					 ELSE ''
+				END) AS INFSCR_IS_CD2
+			 , (CASE WHEN POSITION('INFRMIS003' IN TREESI.INFSCR_IS_CN) > 0
+						  THEN 'INFRMIS003'
+					 ELSE ''
+				END) AS INFSCR_IS_CD3
+			 , (CASE WHEN POSITION('INFRMIS004' IN TREESI.INFSCR_IS_CN) > 0
+						  THEN 'INFRMIS004'
+					 ELSE ''
+				END) AS INFSCR_IS_CD4
+			 , (CASE WHEN POSITION('INFRMIS005' IN TREESI.INFSCR_IS_CN) > 0
+						  THEN 'INFRMIS005'
+					 ELSE ''
+				END) AS INFSCR_IS_CD5
+			 , (CASE WHEN POSITION('INFRMIS006' IN TREESI.INFSCR_IS_CN) > 0
+						  THEN 'INFRMIS006'
+					 ELSE ''
+				END) AS INFSCR_IS_CD6
+			 , (CASE WHEN POSITION('INFRMIS007' IN TREESI.INFSCR_IS_CN) > 0
+						  THEN 'INFRMIS007'
+					 ELSE ''
+				END) AS INFSCR_IS_CD7
+			 , TREESI.SECU_INSP_CD_CN AS SECU_INSP_CD_CN
+			 , (CASE WHEN POSITION('SECUFIX001' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX001'
+					 ELSE ''
+				END) AS SECU_INSP_CD1
+			 , (CASE WHEN POSITION('SECUFIX002' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX002'
+					 ELSE ''
+				END) AS SECU_INSP_CD2
+			 , (CASE WHEN POSITION('SECUFIX003' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX003'
+					 ELSE ''
+				END) AS SECU_INSP_CD3
+			 , (CASE WHEN POSITION('SECUFIX004' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX004'
+					 ELSE ''
+				END) AS SECU_INSP_CD4
+			 , (CASE WHEN POSITION('SECUFIX005' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX005'
+					 ELSE ''
+				END) AS SECU_INSP_CD5
+			 , (CASE WHEN POSITION('SECUFIX006' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX006'
+					 ELSE ''
+				END) AS SECU_INSP_CD6
+			 , (CASE WHEN POSITION('SECUFIX007' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX007'
+					 ELSE ''
+				END) AS SECU_INSP_CD7
+			 , (CASE WHEN POSITION('SECUFIX008' IN TREESI.SECU_INSP_CD_CN) > 0
+						  THEN 'SECUFIX008'
+					 ELSE ''
+				END) AS SECU_INSP_CD8
+			 , TREESI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREESI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREESI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREESI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREESI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREESI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREESI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREESI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREESI.LAST_MDFCN_DT AS AST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREESI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_EQPMNT_SECU_INFO TREESI
+		 WHERE TREESI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREESI.INST_ID = #{paramInstId}
+	</select>
+	
+	
+	<!-- 정보보안장비 및 보안서비스 등록 여부  -->
+	<select id="selectRcsExmnEqpmntSecuInfoCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSecuInfoVO" resultType="java.lang.Integer">
+		SELECT 
+			   COUNT(RCS_EXMN_ID) AS EXIST_SECU_INFO_CNT
+		  FROM TX_RCS_EXMN_EQPMNT_SECU_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</select>
+	
+	
+	<!-- 정보보안장비 및 보안서비스 현황 등록 -->
+	<insert id="insertRcsExmnEqpmntSecuInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSecuInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnEqpmntSecuInfo */
+					TX_RCS_EXMN_EQPMNT_SECU_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , SECU_EQPMNT_ENNC
+			 , NTWK_SECU_EQPMNT_CD_CN
+			 , COMP_SECU_EQPMNT_CD_CN
+			 , SRVR_SECU_EQPMNT_CD_CN
+			 , SECU_MNG_EQPMNT_CD_CN
+			 , ETC_SECU_EQPMNT_CN
+			 , SECU_DSCSN_SRVC_CD_CN
+			 , SECU_MNG_SRVC_ENNC_YN
+			 , SECU_MNG_SRVC_INST_TYPE_CD
+			 , SECU_MNG_SRVC_INST_NM
+			 , SECU_EDU_TRNG_CD_CN
+			 , INFSCR_IS_CN
+			 , SECU_INSP_CD_CN
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{secueqpmntEnnc}
+			 , #{ntwkSecuEqpmntCdCn}
+			 , #{compSecuEqpmntCdCn}
+			 , #{srvrSecuEqpmntCdCn}
+			 , #{secuMngEqpmntCdCn}
+			 , #{etcSecuEqpmntCn}
+			 , #{secuDscsnSrvcCdCn}
+			 , #{secuMngSrvcEnncYn}
+			 , #{secuMngSrvcInstTypeCd}
+			 , #{secuMngSrvcInstNm}
+			 , #{secuEduTrngCdCn}
+			 , #{infscrIsCn}
+			 , #{secuInspCdCn}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 정보보안장비 및 보안서비스 현황 수정 -->
+	<update id="updateRcsExmnEqpmntSecuInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSecuInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnEqpmntSecuInfo */
+			   TX_RCS_EXMN_EQPMNT_SECU_INFO
+		   SET SECU_EQPMNT_ENNC = #{secueqpmntEnnc}
+			 , NTWK_SECU_EQPMNT_CD_CN = #{ntwkSecuEqpmntCdCn}
+			 , COMP_SECU_EQPMNT_CD_CN = #{compSecuEqpmntCdCn}
+			 , SRVR_SECU_EQPMNT_CD_CN = #{srvrSecuEqpmntCdCn}
+			 , SECU_MNG_EQPMNT_CD_CN = #{secuMngEqpmntCdCn}
+			 , ETC_SECU_EQPMNT_CN = #{etcSecuEqpmntCn}
+			 , SECU_DSCSN_SRVC_CD_CN = #{secuDscsnSrvcCdCn}
+			 , SECU_MNG_SRVC_ENNC_YN = #{secuMngSrvcEnncYn}
+			 , SECU_MNG_SRVC_INST_TYPE_CD = #{secuMngSrvcInstTypeCd}
+			 , SECU_MNG_SRVC_INST_NM = #{secuMngSrvcInstNm}
+			 , SECU_EDU_TRNG_CD_CN = #{secuEduTrngCdCn}
+			 , INFSCR_IS_CN = #{infscrIsCn}
+			 , SECU_INSP_CD_CN = #{secuInspCdCn}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</update>
+	
+	
+	<!-- 정보보안장비 및 보안서비스 현황 삭제 -->
+	<delete id="deleteRcsExmnEqpmntSecuInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnEqpmntSecuInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnEqpmntSecuInfo */
+		  FROM TX_RCS_EXMN_EQPMNT_SECU_INFO
+		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND INST_ID = #{paramInstId}
+	</delete>
+	
+	
+	<!-- 문화정보 자원 품질관리 수준진단 -->
+	<select id="selectRcsExmnQltMngLvlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnQltMngLvlInfoVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnQltMngLvlInfo */
+			   TREQMLI.RCS_EXMN_ID AS RCSEXMN_ID
+			 , TREQMLI.INST_ID AS INST_ID
+			 , TREQMLI.PLAN_QLT_PLCY_ESTB_SCR AS PLAN_QLT_PLCY_ESTB_SCR
+			 , TREQMLI.PLAN_QLT_OGNZ_CPST_SCR AS PLAN_QLT_OGNZ_CPST_SCR
+			 , TREQMLI.PLAN_QLT_PLAN_ESTB_SCR AS PLAN_QLT_PLAN_ESTB_SCR
+			 , TREQMLI.PLAN_QLT_EDU_KNLD_SHAR_SCR AS PLAN_QLT_EDU_KNLD_SHAR_SCR
+			 , TREQMLI.CNST_STD_DFNT_SCR AS CNST_STD_DFNT_SCR
+			 , TREQMLI.CNST_STD_CHCK_ACTN_SCR AS CNST_STD_CHCK_ACTN_SCR
+			 , TREQMLI.CNST_STRR_DFNT_SCR AS CNST_STRR_DFNT_SCR
+			 , TREQMLI.CNST_STRR_CHCK_ACTN_SCR AS CNST_STRR_CHCK_ACTN_SCR
+			 , TREQMLI.CNST_RCS_DFNT_SCR AS CNST_RCS_DFNT_SCR
+			 , TREQMLI.CNST_RCS_CHCK_ACTN_SCR AS CNST_RCS_CHCK_ACTN_SCR
+			 , TREQMLI.OPER_TASK_RULE_DFNT_SCR AS OPER_TASK_RULE_DFNT_SCR
+			 , TREQMLI.OPER_RCS_QLT_INSP_SCR AS OPER_RCS_QLT_INSP_SCR
+			 , TREQMLI.OPER_RCS_QLT_BTMNT_SCR AS OPER_RCS_QLT_BTMNT_SCR
+			 , TREQMLI.CNJT_RCS_FRMT_SCR AS CNJT_RCS_FRMT_SCR
+			 , TREQMLI.CNJT_RCS_MNTN_SCR AS CNJT_RCS_MNTN_SCR
+			 , TREQMLI.CNJT_RCS_CHCK_ACTN_SCR AS CNJT_RCS_CHCK_ACTN_SCR
+			 , TREQMLI.FRST_RGTR_ID AS FRST_RGTR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREQMLI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREQMLI.FRST_RGTR_ID"/>
+				</include>) AS FRST_RGTR_NCM
+			 , TREQMLI.FRST_REG_DT AS FRST_REG_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREQMLI.FRST_REG_DT"/>
+				</include>) AS FRST_REG_DT_V19
+			 , TREQMLI.LAST_MDFR_ID AS LAST_MDFR_ID
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNm'"/>
+					<property name="paramUserId" value="TREQMLI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NM
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getUserInfo">
+					<property name="paramColNm" value="'userNcm'"/>
+					<property name="paramUserId" value="TREQMLI.LAST_MDFR_ID "/>
+				</include>) AS LAST_MDFR_NCM
+			 , TREQMLI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					<property name="paramDateFormat" value="'CHAR19'"/>
+					<property name="paramDate" value="TREQMLI.LAST_MDFCN_DT"/>
+				</include>) AS LAST_MDFCN_DT_V19
+		  FROM TX_RCS_EXMN_QLT_MNG_LVL_INFO TREQMLI
+		 WHERE TREQMLI.RCS_EXMN_ID = #{paramRcsexmnId}
+		   AND TREQMLI.INST_ID = #{paramInstId}
+	</select>
+
+	
+	<!-- 문화정보 자원 품질관리 수준 진단 등록 여부 -->
+	<select id="selectRcsExmnQltMngLvlInfoCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnQltMngLvlInfoVO" resultType="java.lang.Integer">
+		SELECT
+			   COUNT(RCS_EXMN_ID) AS EXIST_CNT
+		  FROM TX_RCS_EXMN_QLT_MNG_LVL_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</select>
+	
+	
+	<!-- 문화정보 자원 품질관리 수준진단 등록 -->
+	<insert id="insertRcsExmnQltMngLvlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnQltMngLvlInfoVO">
+		INSERT INTO /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.insertRcsExmnQltMngLvlInfo */
+					TX_RCS_EXMN_QLT_MNG_LVL_INFO
+			   (
+			   RCS_EXMN_ID
+			 , INST_ID
+			 , PLAN_QLT_PLCY_ESTB_SCR
+			 , PLAN_QLT_OGNZ_CPST_SCR
+			 , PLAN_QLT_PLAN_ESTB_SCR
+			 , PLAN_QLT_EDU_KNLD_SHAR_SCR
+			 , CNST_STD_DFNT_SCR
+			 , CNST_STD_CHCK_ACTN_SCR
+			 , CNST_STRR_DFNT_SCR
+			 , CNST_STRR_CHCK_ACTN_SCR
+			 , CNST_RCS_DFNT_SCR
+			 , CNST_RCS_CHCK_ACTN_SCR
+			 , OPER_TASK_RULE_DFNT_SCR
+			 , OPER_RCS_QLT_INSP_SCR
+			 , OPER_RCS_QLT_BTMNT_SCR
+			 , CNJT_RCS_FRMT_SCR
+			 , CNJT_RCS_MNTN_SCR
+			 , CNJT_RCS_CHCK_ACTN_SCR
+			 , FRST_RGTR_ID
+			 , FRST_REG_DT
+			 , LAST_MDFR_ID
+			 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   #{rcsexmnId}
+			 , #{instId}
+			 , #{planQltPlcyEstbScr}
+			 , #{planQltOgnzCpstScr}
+			 , #{planQltPlanEstbScr}
+			 , #{planQltEduKnldSharScr}
+			 , #{cnstStdDfntScr}
+			 , #{cnstStdChckActnScr}
+			 , #{cnstStrrDfntScr}
+			 , #{cnstStrrChckActnScr}
+			 , #{cnstRcsDfntScr}
+			 , #{cnstRcsChckActnScr}
+			 , #{operTaskRuleDfntScr}
+			 , #{operRcsQltInspScr}
+			 , #{operRcsQltBtmntScr}
+			 , #{cnjtRcsFrmtScr}
+			 , #{cnjtRcsMntnScr}
+			 , #{cnjtRcsChckActnScr}
+			 , #{frstRgtrId}
+			 , NOW()
+			 , #{lastMdfrId}
+			 , NOW()
+			   )
+	</insert>
+	
+	
+	<!-- 문화정보 자원 품질관리 수준진단 수정 -->
+	<update id="updateRcsExmnQltMngLvlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnQltMngLvlInfoVO">
+		UPDATE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.updateRcsExmnQltMngLvlInfo */
+			   TX_RCS_EXMN_QLT_MNG_LVL_INFO
+		   SET PLAN_QLT_PLCY_ESTB_SCR = #{planQltPlcyEstbScr}
+			 , PLAN_QLT_OGNZ_CPST_SCR = #{planQltOgnzCpstScr}
+			 , PLAN_QLT_PLAN_ESTB_SCR = #{planQltPlanEstbScr}
+			 , PLAN_QLT_EDU_KNLD_SHAR_SCR = #{planQltEduKnldSharScr}
+			 , CNST_STD_DFNT_SCR = #{cnstStdDfntScr}
+			 , CNST_STD_CHCK_ACTN_SCR = #{cnstStdChckActnScr}
+			 , CNST_STRR_DFNT_SCR = #{cnstStrrDfntScr}
+			 , CNST_STRR_CHCK_ACTN_SCR = #{cnstStrrChckActnScr}
+			 , CNST_RCS_DFNT_SCR = #{cnstRcsDfntScr}
+			 , CNST_RCS_CHCK_ACTN_SCR = #{cnstRcsChckActnScr}
+			 , OPER_TASK_RULE_DFNT_SCR = #{operTaskRuleDfntScr}
+			 , OPER_RCS_QLT_INSP_SCR = #{operRcsQltInspScr}
+			 , OPER_RCS_QLT_BTMNT_SCR = #{operRcsQltBtmntScr}
+			 , CNJT_RCS_FRMT_SCR = #{cnjtRcsFrmtScr}
+			 , CNJT_RCS_MNTN_SCR = #{cnjtRcsMntnScr}
+			 , CNJT_RCS_CHCK_ACTN_SCR = #{cnjtRcsChckActnScr}
+			 , LAST_MDFR_ID = #{lastMdfrId}
+			 , LAST_MDFCN_DT = NOW()
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</update>
+	
+	
+	<!-- 문화정보 자원 품질관리 수준진단 삭제 -->
+	<delete id="deleteRcsExmnQltMngLvlInfo" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnQltMngLvlInfoVO">
+		DELETE /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.deleteRcsExmnQltMngLvlInfo */
+		  FROM TX_RCS_EXMN_QLT_MNG_LVL_INFO
+		 WHERE RCS_EXMN_ID = #{rcsexmnId}
+		   AND INST_ID = #{instId}
+	</delete>
+	
+	<!-- 문화정보 자원조사 기관미가공데이터 행갯수 조회 -->
+	<select id="selectRcsExmnInstRowCnt" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="java.lang.Integer">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInstRowCnt */
+		       COALESCE(MAX(ROW_CNT),1) AS ROW_CNT
+		  FROM (
+		  		SELECT RCS_EXMN_ID
+		  		     , INST_ID
+		  		     , COUNT(1) AS ROW_CNT
+		  		  FROM TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO
+		  		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+				<if test="paramInstId != null and paramInstId !='' ">
+				   AND INST_ID = #{paramInstId}
+				</if>
+				 GROUP BY RCS_EXMN_ID, INST_ID
+				 UNION ALL
+		  		SELECT RCS_EXMN_ID
+		  		     , INST_ID
+		  		     , COUNT(1) AS ROW_CNT
+		  		  FROM TX_RCS_EXMN_CLT_CONTS_INFO
+		  		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+				<if test="paramInstId != null and paramInstId !='' ">
+				   AND INST_ID = #{paramInstId}
+				</if>
+				 GROUP BY RCS_EXMN_ID, INST_ID
+				 UNION ALL
+		  		SELECT RCS_EXMN_ID
+		  		     , INST_ID
+		  		     , COUNT(1) AS ROW_CNT
+		  		  FROM TX_RCS_EXMN_MB_APL_INFO
+		  		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+				<if test="paramInstId != null and paramInstId !='' ">
+				   AND INST_ID = #{paramInstId}
+				</if>
+				 GROUP BY RCS_EXMN_ID, INST_ID
+				 UNION ALL
+		  		SELECT RCS_EXMN_ID
+		  		     , INST_ID
+		  		     , COUNT(1) AS ROW_CNT
+		  		  FROM TX_RCS_EXMN_INST_PR_CHNL_INFO
+		  		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+				<if test="paramInstId != null and paramInstId !='' ">
+				   AND INST_ID = #{paramInstId}
+				</if>
+				 GROUP BY RCS_EXMN_ID, INST_ID
+				 UNION ALL
+		  		SELECT RCS_EXMN_ID
+		  		     , INST_ID
+		  		     , COUNT(1) AS ROW_CNT
+		  		  FROM TX_RCS_EXMN_EQPMNT_SRVR_INFO
+		  		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+				<if test="paramInstId != null and paramInstId !='' ">
+				   AND INST_ID = #{paramInstId}
+				</if>
+				 GROUP BY RCS_EXMN_ID, INST_ID
+				 UNION ALL
+		  		SELECT RCS_EXMN_ID
+		  		     , INST_ID
+		  		     , COUNT(1) AS ROW_CNT
+		  		  FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO
+		  		 WHERE RCS_EXMN_ID = #{paramRcsexmnId}
+				<if test="paramInstId != null and paramInstId !='' ">
+				   AND INST_ID = #{paramInstId}
+				</if>
+				 GROUP BY RCS_EXMN_ID, INST_ID
+		       ) A
+	</select>
+	
+	<!-- 문화정보 자원조사 기관미가공데이터 목록 -->
+	<select id="selectRcsExmnInstRawDataList" parameterType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInfoVO" resultType="kr.go.culture.xr.admin.cltInfoRcsExmnMgt.vo.RcsExmnInstRawDataVO">
+		SELECT /* kr.go.culture.xr.admin.cltInfoRcsExmnMgt.mapper.CltInfoRcsExmnMgtMapper.selectRcsExmnInstRawDataList */
+			   TRETII.INST_ID AS INST_ID
+			 , TII.INST_NM AS INST_NM
+			 , TII.INST_CD AS INST_CD
+			 , TII.INST_TYPE_CD AS INST_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000002'"/>
+					<property name="paramCdId" value="TII.INST_TYPE_CD"/>
+				</include>) AS INST_TYPE_NM
+			 , TII.FILD_TYPE_CD AS FILD_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000003'"/>
+					<property name="paramCdId" value="TII.FILD_TYPE_CD"/>
+				</include>) AS FILD_TYPE_NM
+			 , TRETII.DEPT_NM AS DEPT_NM
+			 , TRETII.EXMNR_NM AS EXMNR_NM
+			 , TRETII.EXMNR_TELNO AS EXMNR_TELNO
+			 , TRETII.EXMNR_EML_ADDR AS EXMNR_EML_ADDR
+			 , TRETII.EXMN_CMPTN_DT AS EXMN_CMPTN_DT
+			 , TREINI.WHOL_CPT_CNT AS WHOL_CPT_CNT
+			 , TREINI.INFRM_NOPE AS INFRM_NOPE
+			 , TREINI.INFSCR_NOPE AS INFSCR_NOPE
+			 , TREINI.INFRM_INFSCR_SUM_NOPE AS INFRM_INFSCR_SUM_NOPE
+			 , TREIBI.BGT_YR AS BGT_YR
+			 , TREIBI.STCF_GNRL_BGT_AMT AS STCF_GNRL_BGT_AMT
+			 , TREIBI.STCF_INFRM_BGT_AMT AS STCF_INFRM_BGT_AMT
+			 , TREIBI.FUND_GNRL_BGT_AMT AS FUND_GNRL_BGT_AMT
+			 , TREIBI.FUND_INFRM_BGT_AMT AS FUND_INFRM_BGT_AMT
+			 , TREIBI.ETC_BGT_AMT AS ETC_BGT_AMT
+			 , TREIBI.BGT_SUM_AMT AS BGT_SUM_AMT
+			 , TREBDI.BGT_YR AS BGT_DTL_YR
+			 , TREBDI.PLNG_BGT_AMT AS PLNG_BGT_AMT
+			 , TREBDI.PLNG_FIRCS_SE_CD 
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.PLNG_FIRCS_SE_CD"/>
+				</include>) AS PLNG_FIRCS_SE_NM
+			 , TREBDI.DEV_CNST_BGT_AMT AS DEV_CNST_BGT_AMT
+			 , TREBDI.DEV_CNST_FIRCS_SE_CD AS DEV_CNST_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.DEV_CNST_FIRCS_SE_CD"/>
+				</include>) AS DEV_CNST_FIRCS_SE_NM
+			 , TREBDI.OPER_MNG_BGT_AMT AS OPER_MNG_BGT_AMT
+			 , TREBDI.OPER_MNG_FIRCS_SE_CD AS OPER_MNG_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.OPER_MNG_FIRCS_SE_CD"/>
+				</include>) AS OPER_MNG_FIRCS_SE_NM
+			 , TREBDI.AST_ACQS_BGT_AMT AS AST_ACQS_BGT_AMT
+			 , TREBDI.AST_ACQS_FIRCS_SE_CD AS AST_ACQS_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.AST_ACQS_FIRCS_SE_CD"/>
+				</include>) AS AST_ACQS_FIRCS_SE_NM
+			 , TREBDI.ETC_BGT_AMT AS ETC_BGT_DTL_AMT
+			 , TREBDI.ETC_FIRCS_SE_CD AS ETC_FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREBDI.ETC_FIRCS_SE_CD"/>
+				</include>) AS ETC_FIRCS_SE_NM
+			 , TREBDI.BGT_SUM_AMT AS SUM_BGT_AMT
+			 , TREIBPI.RCS_SN AS BIZ_SN
+			 , TREIBPI.BGT_BIZ_NM AS BGT_BIZ_NM
+			 , TREIBPI.DTL_BIZ_NM AS DTL_BIZ_NM
+			 , TREIBPI.BIZ_TYPE_CD_CN AS BIZ_TYPE_CD_CN
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000028'"/>
+					<property name="paramCdId" value="TREIBPI.BIZ_TYPE_CD_CN"/>
+				</include>) AS BIZ_TYPE_CD_CN_NM
+			 , TREIBPI.BIZ_BGNG_YMD AS BIZ_BGNG_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+					<property name="paramYmd" value="TREIBPI.BIZ_BGNG_YMD"/>
+					<property name="paramSeparator" value="'-'"/>
+				</include>) AS BIZ_BGNG_YMD_V10
+			 , TREIBPI.BIZ_END_YMD AS BIZ_END_YMD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getYmdToChar10">
+					<property name="paramYmd" value="TREIBPI.BIZ_END_YMD"/>
+					<property name="paramSeparator" value="'-'"/>
+				</include>) AS BIZ_END_YMD_V10
+			 , TREIBPI.FIRCS_SE_CD AS FIRCS_SE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000027'"/>
+					<property name="paramCdId" value="TREIBPI.FIRCS_SE_CD"/>
+				</include>) AS FIRCS_SE_NM
+			 , TREIBPI.BGT_AMT AS BGT_AMT
+			 , TRECCI.RCS_SN AS CONTS_SN
+			 , TRECCI.SITE_NM AS SITE_NM
+			 , TRECCI.SITE_URL_ADDR AS SITE_URL_ADDR
+			 , TRECCI.CONTS_INFO_NM AS CONTS_INFO_NM
+			 , TRECCI.CNST_TRGT_SUM_NOCS AS CNST_TRGT_SUM_NOCS
+			 , TRECCI.CNST_TRGT_LTRS_NOCS AS CNST_TRGT_LTRS_NOCS
+			 , TRECCI.CNST_TRGT_IMG_NOCS AS CNST_TRGT_IMG_NOCS
+			 , TRECCI.CNST_TRGT_VDO_NOCS AS CNST_TRGT_VDO_NOCS
+			 , TRECCI.CNST_TRGT_SND_NOCS AS CNST_TRGT_SND_NOCS
+			 , TRECCI.CNST_TRGT_XR_NOCS AS CNST_TRGT_XR_NOCS
+			 , TRECCI.CNST_TRGT_ETC_NOCS AS CNST_TRGT_ETC_NOCS
+			 , TRECCI.CNST_TRGT_SBTOT_NOCS AS CNST_TRGT_SBTOT_NOCS
+			 , TRECCI.CNST_CMPTN_NOCS AS CNST_CMPTN_NOCS
+			 , TRECCI.CNST_CMPTN_LTRS_NOCS AS CNST_CMPTN_LTRS_NOCS
+			 , TRECCI.CNST_CMPTN_IMG_NOCS AS CNST_CMPTN_IMG_NOCS
+			 , TRECCI.CNST_CMPTN_VDO_NOCS AS CNST_CMPTN_VDO_NOCS
+			 , TRECCI.CNST_CMPTN_SND_NOCS AS CNST_CMPTN_SND_NOCS
+			 , TRECCI.CNST_CMPTN_XR_NOCS AS CNST_CMPTN_XR_NOCS
+			 , TRECCI.CNST_CMPTN_ETC_NOCS AS CNST_CMPTN_ETC_NOCS
+			 , TRECCI.CNST_CMPTN_SBTOT_NOCS AS CNST_CMPTN_SBTOT_NOCS
+			 , TRECCI.SRVC_NOCS AS SRVC_NOCS
+			 , TRECCI.SRVC_LTRS_CNT AS SRVC_LTRS_CNT
+			 , TRECCI.SRVC_IMG_CNT AS SRVC_IMG_CNT
+			 , TRECCI.SRVC_VDO_CNT AS SRVC_VDO_CNT
+			 , TRECCI.SRVC_SND_CNT AS SRVC_SND_CNT
+			 , TRECCI.SRVC_XR_DATA_NOCS AS SRVC_XR_DATA_NOCS
+			 , TRECCI.SRVC_ETC_NOCS AS SRVC_ETC_NOCS
+			 , TRECCI.SRVC_SUM_CNT AS SRVC_SUM_CNT
+			 , TRECCI.CNST_SUM_NOCS AS CNST_SUM_NOCS
+			 , TRECCI.CNST_SUM_LTRS_NOCS AS CNST_SUM_LTRS_NOCS
+			 , TRECCI.CNST_SUM_IMG_NOCS AS CNST_SUM_IMG_NOCS
+			 , TRECCI.CNST_SUM_VDO_NOCS AS CNST_SUM_VDO_NOCS
+			 , TRECCI.CNST_SUM_SND_NOCS AS CNST_SUM_SND_NOCS
+			 , TRECCI.CNST_SUM_XR_DATA_NOCS AS CNST_SUM_XR_DATA_NOCS
+			 , TRECCI.CNST_SUM_ETC_NOCS AS CNST_SUM_ETC_NOCS
+			 , TRECCI.CNST_SUM_SBTOT_NOCS AS CNST_SUM_SBTOT_NOCS
+			 , TRECCI.CPYR_INST_KEEP_YN AS CPYR_INST_KEEP_YN
+			 , TRECCI.CPYR_PART_KEEP_YN AS CPYR_PART_KEEP_YN
+			 , TRECCI.CPYR_MAKR_KEEP_YN AS CPYR_MAKR_KEEP_YN
+			 , TRECCI.CPYR_KEEP_UNWN_YN AS CPYR_KEEP_UNWN_YN
+			 , TRECCI.CPYR_ENNC_YN AS CPYR_ENNC_YN
+			 , TRECCI.RLS_LMT_SCP_CD AS RLS_LMT_SCP_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000044'"/>
+					<property name="paramCdId" value="TRECCI.RLS_LMT_SCP_CD"/>
+				</include>) AS RLS_LMT_SCP_NM
+			 , TRECCI.CTZN_TRGT_SRVC_CD AS CTZN_TRGT_SRVC_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000045'"/>
+					<property name="paramCdId" value="TRECCI.CTZN_TRGT_SRVC_CD"/>
+				</include>) AS MRFN_TRGT_SRVC_NM
+			 , TRECCI.RLS_MTHD_CD AS RLS_MTHD_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000046'"/>
+					<property name="paramCdId" value="TRECCI.RLS_MTHD_CD"/>
+				</include>) AS RLS_MTHD_NM
+			 , TREMAI.RCS_SN AS APL_SN
+			 , TREMAI.APL_TYPE_CD AS APL_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000029'"/>
+					<property name="paramCdId" value="TREMAI.APL_TYPE_CD"/>
+				</include>) AS APL_TYPE_NM
+			 , TREMAI.APL_NM AS APL_NM
+			 , TREMAI.APL_WEB_URL_ADDR AS APL_WEB_URL_ADDR
+			 , TREMAI.OS_NM AS APL_OS_NM 
+			 , TREMAI.DEV_YR AS DEV_YR
+			 , TREMAI.DEV_BGT_AMT AS DEV_BGT_AMT
+			 , TREIPCI.RCS_SN AS CHNL_SN
+			 , TREIPCI.CHNL_ENNC AS CHNL_ENNC
+			 , TREIPCI.CHNL_TYPE_CD AS CHNL_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000030'"/>
+					<property name="paramCdId" value="TREIPCI.CHNL_TYPE_CD"/>
+				</include>) AS CHNL_TYPE_NM
+			 , TREIPCI.CHNL_ADDR AS CHNL_ADDR
+			 , TREIPCI.OPER_MNBD_TYPE_CD AS OPER_MNBD_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000031'"/>
+					<property name="paramCdId" value="TREIPCI.OPER_MNBD_TYPE_CD"/>
+				</include>) AS OPER_MNBD_TYPE_NM
+			 , TREIPCI.SRVC_PRPS_EXPLN_CN AS SRVC_PRPS_EXPLN_CN
+			 , TRECCIB.CLUD_UTZTN_YN AS CLUD_UTZTN_YN
+			 , TREECI.RCS_SN AS CLUD_SN
+			 , TREECI.CLUD_UTZTN_TYPE_CD AS CLUD_UTZTN_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000032'"/>
+					<property name="paramCdId" value="TREECI.CLUD_UTZTN_TYPE_CD"/>
+				</include>) AS CLUD_UTZTN_TYPE_NM
+			 , TREECI.CLUD_YLY_COST AS CLUD_YLY_COST
+			 , TREECI.CLUD_BZENTY_NM AS CLUD_BZENTY_NM
+			 , TREECI.CLUD_IAAS_YN AS CLUD_IAAS_YN
+			 , TREECI.CLUD_SAAS_YN AS CLUD_SAAS_YN
+			 , TREECI.CLUD_PAAS_YN AS CLUD_PAAS_YN
+			 , TREECI.ITDI_YR AS CLUD_ITDI_YR
+			 , TREESI.RCS_SN AS SRVR_SN
+			 , TREESI.SRVR_ENNC AS SRVR_ENNC
+			 , TREESI.SRVR_TYPE_CD AS SRVR_TYPE_CD
+			 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					<property name="paramClsfCd" value="'CLSF000033'"/>
+					<property name="paramCdId" value="TREESI.SRVR_TYPE_CD"/>
+				</include>) AS SRVR_TYPE_NM
+			 , TREESI.ITEM_NM AS ITEM_NM
+			 , TREESI.MDL_NM AS MDL_NM
+			 , TREESI.OS_NM AS SRVR_OS_NM
+			 , TREESI.MKR_NM AS MKR_NM
+			 , TREESI.SRVR_CPU_NM AS SRVR_CPU_NM
+			 , TREESI.SRVR_MMRY_NM AS SRVR_MMRY_NM
+			 , TREESI.STR_SZ_CN AS STR_SZ_CN
+			 , TREESI.KEEP_TYPE_CN AS KEEP_TYPE_CN
+			 , TREESI.SRVR_EQPMNT_CNT AS SRVR_EQPMNT_CNT
+			 , TREESI.ITDI_YR AS SRVR_ITDI_YR
+			 , TREESI.VR_APLCN_YN AS VR_APLCN_YN
+			 , TREESI.ITDI_COST AS ITDI_COST
+			 , TREESI.OPER_COST AS OPER_COST
+			 , TREESI.USG_EXPLN_CN AS USG_EXPLN_CN
+			 , TREESEI.RCS_SN AS EXTL_BZENTY_SN
+			 , TREESEI.EXTL_BZENTY_ENNC AS EXTL_BZENTY_ENNC
+			 , TREESEI.EXTL_BZENTY_NM AS EXTL_BZENTY_NM 
+			 , TREESEI.HNGR_RACK_CNT AS HNGR_RACK_CNT
+			 , TREESEI.HNGR_COST AS HNGR_COST
+			 , TREESEI.HSTN_RACK_CNT AS HSTN_RACK_CNT
+			 , TREESEI.HSTN_COST AS HSTN_COST
+			 , TREESEI.WRD_TRFC_CPCT AS WRD_TRFC_CPCT
+			 , TREESEI.WRD_UTZTN_CHRG_COST AS WRD_UTZTN_CHRG_COST
+			 , (CASE WHEN COALESCE(TREESEI.ETC_SRVC_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('ETCSVC0001' IN TREESEI.ETC_SRVC_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS ETC_SRVC_CN_01
+			 , (CASE WHEN COALESCE(TREESEI.ETC_SRVC_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('ETCSVC0002' IN TREESEI.ETC_SRVC_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS ETC_SRVC_CN_02
+			 , (CASE WHEN COALESCE(TREESEI.ETC_SRVC_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('ETCSVC0003' IN TREESEI.ETC_SRVC_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS ETC_SRVC_CN_03
+			 , (CASE WHEN COALESCE(TREESEI.ETC_SRVC_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('ETCSVC0004' IN TREESEI.ETC_SRVC_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS ETC_SRVC_CN_04
+			 , (CASE WHEN COALESCE(TREESEI.ETC_SRVC_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('ETCSVC0005' IN TREESEI.ETC_SRVC_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS ETC_SRVC_CN_05
+			 , (CASE WHEN COALESCE(TREESEI.ETC_SRVC_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('ETCSVC0006' IN TREESEI.ETC_SRVC_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS ETC_SRVC_CN_06
+			 , (CASE WHEN COALESCE(TREESEI.ETC_SRVC_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('ETCSVC0007' IN TREESEI.ETC_SRVC_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS ETC_SRVC_CN_07
+			 , TREESEI.ETC_SRVC_COST AS ETC_SRVC_COST 
+			 , TREESIB.SECU_EQPMNT_ENNC AS SECU_EQPMNT_ENNC
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU01' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU02' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_02
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU03' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_03
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU04' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_04
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU05' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_05
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU06' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_06
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU07' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_07
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU08' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_08
+			 , (CASE WHEN COALESCE(TREESIB.NTWK_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('NTWKSECU09' IN TREESIB.NTWK_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS NTWK_SECU_EQPMNT_CD_CN_09
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC01' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC02' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_02
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC03' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_03
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC04' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_04
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC05' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_05
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC06' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_06
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC07' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_07
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC08' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_08
+			 , (CASE WHEN COALESCE(TREESIB.COMP_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('USRPCSEC09' IN TREESIB.COMP_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS COMP_SECU_EQPMNT_CD_CN_09
+			 , (CASE WHEN COALESCE(TREESIB.SRVR_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SRVRSECU01' IN TREESIB.SRVR_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SRVR_SECU_EQPMNT_CD_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.SRVR_SECU_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SRVRSECU02' IN TREESIB.SRVR_SECU_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SRVR_SECU_EQPMNT_CD_CN_02
+			 , (CASE WHEN COALESCE(TREESIB.SECU_MNG_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUMGT001' IN TREESIB.SECU_MNG_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_MNG_EQPMNT_CD_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.SECU_MNG_EQPMNT_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUMGT002' IN TREESIB.SECU_MNG_EQPMNT_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_MNG_EQPMNT_CD_CN_02
+			 , TREESIB.ETC_SECU_EQPMNT_CN AS ETC_SECU_EQPMNT_CN
+			 , (CASE WHEN COALESCE(TREESIB.SECU_DSCSN_SRVC_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUCSLT01' IN TREESIB.SECU_DSCSN_SRVC_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_DSCSN_SRVC_CD_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.SECU_DSCSN_SRVC_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUCSLT02' IN TREESIB.SECU_DSCSN_SRVC_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_DSCSN_SRVC_CD_CN_02
+			 , (CASE WHEN COALESCE(TREESIB.SECU_DSCSN_SRVC_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUCSLT03' IN TREESIB.SECU_DSCSN_SRVC_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_DSCSN_SRVC_CD_CN_03
+			 , (CASE WHEN COALESCE(TREESIB.SECU_DSCSN_SRVC_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUCSLT04' IN TREESIB.SECU_DSCSN_SRVC_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_DSCSN_SRVC_CD_CN_04
+			 , (CASE WHEN COALESCE(TREESIB.SECU_DSCSN_SRVC_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUCSLT05' IN TREESIB.SECU_DSCSN_SRVC_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_DSCSN_SRVC_CD_CN_05
+			 , (CASE WHEN COALESCE(TREESIB.SECU_DSCSN_SRVC_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUCSLT06' IN TREESIB.SECU_DSCSN_SRVC_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_DSCSN_SRVC_CD_CN_06
+			 , TREESIB.SECU_MNG_SRVC_ENNC_YN AS SECU_MNG_SRVC_ENNC_YN
+			 , TREESIB.SECU_MNG_SRVC_INST_NM AS SECU_MNG_SRVC_INST_NM
+			 , (CASE WHEN COALESCE(TREESIB.SECU_EDU_TRNG_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECEDU0001' IN TREESIB.SECU_EDU_TRNG_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_EDU_TRNG_CD_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.SECU_EDU_TRNG_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECEDU0002' IN TREESIB.SECU_EDU_TRNG_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_EDU_TRNG_CD_CN_02
+			 , (CASE WHEN COALESCE(TREESIB.INFSCR_IS_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('INFRMIS001' IN TREESIB.INFSCR_IS_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS INFSCR_IS_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.INFSCR_IS_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('INFRMIS002' IN TREESIB.INFSCR_IS_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS INFSCR_IS_CN_02
+			 , (CASE WHEN COALESCE(TREESIB.INFSCR_IS_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('INFRMIS003' IN TREESIB.INFSCR_IS_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS INFSCR_IS_CN_03
+			 , (CASE WHEN COALESCE(TREESIB.INFSCR_IS_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('INFRMIS004' IN TREESIB.INFSCR_IS_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS INFSCR_IS_CN_04
+			 , (CASE WHEN COALESCE(TREESIB.INFSCR_IS_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('INFRMIS005' IN TREESIB.INFSCR_IS_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS INFSCR_IS_CN_05
+			 , (CASE WHEN COALESCE(TREESIB.INFSCR_IS_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('INFRMIS006' IN TREESIB.INFSCR_IS_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS INFSCR_IS_CN_06
+			 , (CASE WHEN COALESCE(TREESIB.INFSCR_IS_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('INFRMIS007' IN TREESIB.INFSCR_IS_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS INFSCR_IS_CN_07
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX001' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_INSP_CD_CN_01
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX002' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_INSP_CD_CN_02
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX003' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_INSP_CD_CN_03
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX004' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				  END) AS SECU_INSP_CD_CN_04
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX005' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				  END) AS SECU_INSP_CD_CN_05
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX006' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+			  END) AS SECU_INSP_CD_CN_06
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX007' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				  END) AS SECU_INSP_CD_CN_07
+			 , (CASE WHEN COALESCE(TREESIB.SECU_INSP_CD_CN,'') = '' THEN NULL
+			 		 WHEN POSITION('SECUFIX008' IN TREESIB.SECU_INSP_CD_CN) <![CDATA[>]]> 0
+						  THEN 'Y'
+					 ELSE 'N'
+				END) AS SECU_INSP_CD_CN_08
+			 , TREQMLI.PLAN_QLT_PLCY_ESTB_SCR AS PLAN_QLT_PLCY_ESTB_SCR
+			 , TREQMLI.PLAN_QLT_OGNZ_CPST_SCR AS PLAN_QLT_OGNZ_CPST_SCR
+			 , TREQMLI.PLAN_QLT_PLAN_ESTB_SCR AS PLAN_QLT_PLAN_ESTB_SCR
+			 , TREQMLI.PLAN_QLT_EDU_KNLD_SHAR_SCR AS PLAN_QLT_EDU_KNLD_SHAR_SCR
+			 , TREQMLI.CNST_STD_DFNT_SCR AS CNST_STD_DFNT_SCR
+			 , TREQMLI.CNST_STD_CHCK_ACTN_SCR AS CNST_STD_CHCK_ACTN_SCR
+			 , TREQMLI.CNST_STRR_DFNT_SCR AS CNST_STRR_DFNT_SCR
+			 , TREQMLI.CNST_STRR_CHCK_ACTN_SCR AS CNST_STRR_CHCK_ACTN_SCR
+			 , TREQMLI.CNST_RCS_DFNT_SCR AS CNST_RCS_DFNT_SCR 
+			 , TREQMLI.CNST_RCS_CHCK_ACTN_SCR AS CNST_RCS_CHCK_ACTN_SCR
+			 , TREQMLI.OPER_TASK_RULE_DFNT_SCR AS OPER_TASK_RULE_DFNT_SCR
+			 , TREQMLI.OPER_RCS_QLT_INSP_SCR AS OPER_RCS_QLT_INSP_SCR
+			 , TREQMLI.OPER_RCS_QLT_BTMNT_SCR AS OPER_RCS_QLT_BTMNT_SCR 
+			 , TREQMLI.CNJT_RCS_FRMT_SCR AS CNJT_RCS_FRMT_SCR
+			 , TREQMLI.CNJT_RCS_MNTN_SCR AS CNJT_RCS_MNTN_SCR
+			 , TREQMLI.CNJT_RCS_CHCK_ACTN_SCR AS CNJT_RCS_CHCK_ACTN_SCR
+		  FROM (
+				 SELECT *
+				   FROM TX_RCS_EXMN_TRGT_INST_INFO T01 
+				  INNER JOIN (
+							SELECT GENERATE_SERIES(1,#{rowCnt}) AS RCS_SN
+				        ) T02
+					ON TRUE
+				 WHERE T01.RCS_EXMN_ID = #{paramRcsexmnId}
+				<if test="paramInstId != null and paramInstId !='' ">
+				   AND T01.INST_ID = #{paramInstId}
+				</if>
+				   AND T01.EXMN_CMPTN_YN = 'Y'
+			   ) TRETII 
+		 INNER JOIN TX_INST_INFO TII
+			ON (	TRETII.INST_ID = TII.INST_ID
+				AND TII.DEL_YN = 'N')
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , 1 AS RCS_SN
+				   FROM TX_RCS_EXMN_INFRM_NMPR_INFO T01 
+			   ) TREINI
+			ON TRETII.RCS_EXMN_ID = TREINI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREINI.INST_ID
+		   AND TRETII.RCS_SN = TREINI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , 1 AS RCS_SN
+				   FROM TX_RCS_EXMN_INFRM_BGT_INFO T01 
+			   ) TREIBI
+			ON TRETII.RCS_EXMN_ID = TREIBI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREIBI.INST_ID
+		   AND TRETII.RCS_SN = TREIBI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , 1 AS RCS_SN
+				   FROM TX_RCS_EXMN_BGT_DTL_INFO T01 
+			   ) TREBDI
+			ON TRETII.RCS_EXMN_ID = TREBDI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREBDI.INST_ID
+		   AND TRETII.RCS_SN = TREBDI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , ROW_NUMBER() OVER (PARTITION BY RCS_EXMN_ID, INST_ID ORDER BY BIZ_SN ASC) AS RCS_SN
+				   FROM TX_RCS_EXMN_INFRM_BIZ_PRGRS_INFO T01 
+			   ) TREIBPI
+			ON TRETII.RCS_EXMN_ID = TREIBPI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREIBPI.INST_ID
+		   AND TRETII.RCS_SN = TREIBPI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , ROW_NUMBER() OVER (PARTITION BY RCS_EXMN_ID, INST_ID ORDER BY CONTS_SN ASC) AS RCS_SN
+				   FROM TX_RCS_EXMN_CLT_CONTS_INFO T01 
+			   ) TRECCI
+			ON TRETII.RCS_EXMN_ID = TRECCI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TRECCI.INST_ID
+		   AND TRETII.RCS_SN = TRECCI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , ROW_NUMBER() OVER (PARTITION BY RCS_EXMN_ID, INST_ID ORDER BY APL_SN ASC) AS RCS_SN
+				   FROM TX_RCS_EXMN_MB_APL_INFO T01 
+			   ) TREMAI
+			ON TRETII.RCS_EXMN_ID = TREMAI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREMAI.INST_ID
+		   AND TRETII.RCS_SN = TREMAI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , ROW_NUMBER() OVER (PARTITION BY RCS_EXMN_ID, INST_ID ORDER BY CHNL_SN ASC) AS RCS_SN
+				   FROM TX_RCS_EXMN_INST_PR_CHNL_INFO T01 
+			   ) TREIPCI
+			ON TRETII.RCS_EXMN_ID = TREIPCI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREIPCI.INST_ID
+		   AND TRETII.RCS_SN = TREIPCI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , 1 AS RCS_SN
+				   FROM TX_RCS_EXMN_CLUD_CNST_INFO T01 
+			   ) TRECCIB
+			ON TRETII.RCS_EXMN_ID = TRECCIB.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TRECCIB.INST_ID
+		   AND TRETII.RCS_SN = TRECCIB.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , 1 AS RCS_SN
+				   FROM TX_RCS_EXMN_EQPMNT_CLUD_INFO T01 
+			   ) TREECI
+			ON TRETII.RCS_EXMN_ID = TREECI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREECI.INST_ID
+		   AND TRETII.RCS_SN = TREECI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , ROW_NUMBER() OVER (PARTITION BY RCS_EXMN_ID, INST_ID ORDER BY SRVR_SN ASC) AS RCS_SN
+				   FROM TX_RCS_EXMN_EQPMNT_SRVR_INFO T01 
+			   ) TREESI
+			ON TRETII.RCS_EXMN_ID = TREESI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREESI.INST_ID
+		   AND TRETII.RCS_SN = TREESI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , ROW_NUMBER() OVER (PARTITION BY RCS_EXMN_ID, INST_ID ORDER BY EXTL_BZENTY_SN ASC) AS RCS_SN
+				   FROM TX_RCS_EXMN_EQPMNT_SRVR_ENTS_INFO T01 
+			   ) TREESEI
+			ON TRETII.RCS_EXMN_ID = TREESEI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREESEI.INST_ID
+		   AND TRETII.RCS_SN = TREESEI.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , 1 AS RCS_SN
+				   FROM TX_RCS_EXMN_EQPMNT_SECU_INFO T01 
+			   ) TREESIB
+			ON TRETII.RCS_EXMN_ID = TREESIB.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREESIB.INST_ID
+		   AND TRETII.RCS_SN = TREESIB.RCS_SN
+		  LEFT JOIN (
+				 SELECT T01.*
+				      , 1 AS RCS_SN
+				   FROM TX_RCS_EXMN_QLT_MNG_LVL_INFO T01 
+			   ) TREQMLI
+			ON TRETII.RCS_EXMN_ID = TREQMLI.RCS_EXMN_ID
+		   AND TRETII.INST_ID = TREQMLI.INST_ID
+		   AND TRETII.RCS_SN = TREQMLI.RCS_SN
+		 WHERE TRETII.RCS_EXMN_ID = #{paramRcsexmnId}
+		<if test="paramInstId != null and paramInstId !='' ">
+		   AND TRETII.INST_ID = #{paramInstId}
+		</if>
+		   AND (
+					TRETII.RCS_SN = 1
+				 OR TREIBPI.RCS_EXMN_ID IS NOT NULL
+				 OR TREIPCI.RCS_EXMN_ID IS NOT NULL
+				 OR TREESI.RCS_EXMN_ID IS NOT NULL
+				 OR TRECCI.RCS_EXMN_ID IS NOT NULL
+				 OR TREMAI.RCS_EXMN_ID IS NOT NULL
+				 OR TREESEI.RCS_EXMN_ID IS NOT NULL
+			   )
+		 ORDER BY TRETII.INST_ID ASC, TRETII.RCS_SN ASC
+	</select>
+
+</mapper>

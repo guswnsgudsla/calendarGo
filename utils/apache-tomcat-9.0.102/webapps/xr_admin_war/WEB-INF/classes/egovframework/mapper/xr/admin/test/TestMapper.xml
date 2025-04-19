@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.test.mapper.TestMapper">
+    <select id="selectTestbyId" resultType="kr.go.culture.xr.admin.test.entity.TestCommon">
+        SELECT atch_file_group_id
+             , atch_file_sn
+             , atch_file_id
+             , file_type_cd
+             , file_strg_path_nm
+             , strg_file_nm
+             , orgnl_atch_file_nm
+             , file_extn_cd
+             , file_cn
+             , file_sz
+             , frst_rgtr_id
+             , frst_reg_dt
+             , last_mdfr_id
+             , last_mdfcn_dt
+        FROM  tx_atch_file_dtl_info
+        WHERE 1=1
+          AND ATCH_FILE_GROUP_ID = #{atchFileGroupId}
+    </select>
+</mapper>

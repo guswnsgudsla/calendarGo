@@ -1,0 +1,374 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@page import="java.util.List"%>
+<%@page import="com.proj.calendar.vo.CalendarGoVO"%>
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<script src="/js/jquery-3.7.1.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script src="/js/index.global.min.js"></script>
+	<link  href="/css/calMain.css" rel="stylesheet"/>
+	<link  href="/css/bootstrap.min.css" rel="stylesheet"/>
+	
+	<!-- 카톡공유 -->
+	<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" integrity="sha384-DKYJZ8NLiK8MN4/C5P2dtSmLQ4KwPaoqAfyA/DfmEc1VDxu4yyC7wy6K1Hs90nka" crossorigin="anonymous"></script>
+	<title>Calendar</title>
+	
+	<script>
+	/* 카톡공유 */
+	Kakao.init('dd98e06da22cff132d31a032d8c56655'); // 사용하려는 앱의 JavaScript 키 입력
+
+	document.addEventListener('DOMContentLoaded', function() {
+		var vId    = '';
+		var vStrDt = '';
+		var vEndDt = '';
+		var vCont  = '';
+		
+		var calendarEl = document.getElementById('calendar');
+		var calendar = new FullCalendar.Calendar(calendarEl, {
+			initialView: 'dayGridMonth',
+			selectable: true, //선택가능
+			dayMaxEvents: 3, //more버튼
+			eventOrder : 'displayOrder', 
+			headerToolbar: { //header 디자인
+				start: 'prev',
+				center: 'title',
+				end: 'next'
+			},
+			footerToolbar: { //footer 디자인
+				start: 'today',
+				center: 'addAniversButton',
+				end: 'addCalButton'
+			},
+			events : [ //일정 불러오기
+				<%List<CalendarGoVO> calList = (List<CalendarGoVO>) request.getAttribute("calList");%>
+				<%for (CalendarGoVO vo : calList) {%>
+					{
+						id:'<%=vo.getCalId()%>',
+						title: '<%=vo.getCalCont()%>',
+						start: '<%=vo.getCalStrDate()%>',
+						end: '<%=vo.getCalEndDate()%>',
+						<%if (vo.getCalAnvYn().equals("Y")) {%>
+							color: '#3c8fe2'
+						<%}else { %>
+						color: '#1d3a57'
+						<%}%>
+						
+					},
+				<%}%>
+			],
+			eventClick: function(info) { //일정 선택 시 기능
+				// 하루 빼기
+				var vEndDate = new Date(info.event.endStr);
+				vEndDate.setDate(vEndDate.getDate() - 1);
+				var year = vEndDate.getFullYear();
+				var month = String(vEndDate.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작
+				var day = String(vEndDate.getDate()).padStart(2, '0');
+				var newDate = year+'-'+month+'-'+day;
+				
+				$('#calendar_str_date').removeClass('disableGo');
+				$('#calendar_str_date').val(info.event.startStr);
+				$('#calendar_end_date').removeClass('disableGo');
+				$('#calendar_end_date').val(newDate);
+				$('#calendar_cont').val(info.event.title);
+				vId = info.event.id;
+				
+				$('#shareCalendar').css('display', 'block');
+				$('#addCalendar').css('display', 'none');
+				$('#editCalendar').css('display', 'block');
+				$('#delCalendar').css('display', 'block');
+				$('#calendarModal').modal('show');
+			},
+			select: function(info) { //빈칸 선택 시 기능
+				var selDate = info.startStr; //선택한날짜
+				
+				$('#calendar_str_date').val(selDate);
+				$('#calendar_str_date').addClass('disableGo');
+				$('#calendar_end_date').val(selDate);
+				$('#calendar_end_date').addClass('disableGo');
+				$('#calendar_cont').val('');
+				
+				$('#shareCalendar').css('display', 'none');
+				$('#addCalendar').css('display', 'block');
+				$('#editCalendar').css('display', 'none');
+				$('#delCalendar').css('display', 'none');
+				$('#calendarModal').modal('show');
+			},
+			customButtons: { //일정추가버튼 기능
+				addCalButton: {
+					text: '일정추가',
+					click: function() {
+						$('#calendar_str_date').val('');
+						$('#calendar_str_date').removeClass('disableGo');
+						$('#calendar_end_date').val('');
+						$('#calendar_end_date').removeClass('disableGo');
+						$('#calendar_cont').val('');
+						
+						$('#shareCalendar').css('display', 'none');
+						$('#addCalendar').css('display', 'block');
+						$('#editCalendar').css('display', 'none');
+						$('#delCalendar').css('display', 'none');
+						$('#calendarModal').modal('show');
+					}
+				},
+				addAniversButton: {
+					text: '공휴일추가',
+					click: function() {
+						$('#aniversModal').modal('show');
+					}
+				}
+			}
+		});
+		
+		//일정_validation
+		function calValidation() {
+			vStrDt = $('#calendar_str_date').val();
+			vEndDt = $('#calendar_end_date').val();
+			vCont  = $('#calendar_cont').val();
+
+			//내용 입력 여부 확인
+			if (vStrDt == '' || vStrDt == null) {
+				alert('시작 날짜를 입력하세요.');
+				return false;
+			}else if (vEndDt == '' || vEndDt == null) {
+				alert('종료 날짜를 입력하세요.');
+				return false;
+			}else if (vCont == '' || vCont == null) {
+				alert('일정 내용을 입력하세요.');
+				return false;
+			}
+			
+			//validation
+			if (new Date(vEndDt) - new Date(vStrDt) < 0) {
+				alert('일정 종료일이 일정 시작일보다 먼저입니다.');
+				return false;
+			}
+		}
+		
+		//일정_전송
+		function sendCalendar(url, data, type) {
+			$.ajax({
+				type: "POST",
+				url: url,
+				data: data,
+				success: function(returnData) {
+					if (returnData == 'success') {
+						alert("일정이 "+type+"되었습니다.");
+						window.location.reload();
+					}else {
+						alert("일정"+type+"에 실패하였습니다. 재시도하여주시기 바랍니다.");
+					}
+				}
+			});
+		}
+		
+		//일정추가
+		$('#addCalendar').click( function(){
+			//일정_validation
+			calValidation();
+			
+			//일정_전송
+			var data = {
+				vStrDt: vStrDt,
+				vEndDt: vEndDt,
+				vCont: vCont
+			};
+			sendCalendar('/calendarAdd.do', data, '등록');
+		});
+		
+		//일정수정
+		$('#editCalendar').click( function(){
+			//일정_validation
+			calValidation();
+			
+			//일정_전송
+			var data = {
+				vCalId: vId,
+				vStrDt: vStrDt,
+				vEndDt: vEndDt,
+				vCont: vCont
+			};
+			sendCalendar('/calendarEdit.do', data, '수정');
+		});
+		
+		//일정삭제
+		$('#delCalendar').click( function(){
+			calValidation();
+			
+			var answer = confirm("일정을 삭제하시겠습니까?");
+			if(answer) {
+				var data = {
+					vCalId: vId
+				};
+				sendCalendar('/calendarDel.do', data, '삭제');
+			} else {
+				return false;
+			}
+		});
+		
+		//일정공유
+		$('#shareCalendar').click( function(){
+			calValidation();
+			
+			var vShareText = '[' + vStrDt + ' ~ ' + vEndDt + '] ' + vCont;
+			Kakao.Share.sendDefault({
+				objectType: 'text',
+				text: vShareText,
+				link: {
+					webUrl: 'http://localhost:8008'
+				}
+			});
+		});
+		
+		//공휴일 추가
+		$('#addAnivers').click( function(){
+			var selVal = $("#selAnivers option:selected").val();
+			var selYn  = $("#selAnivers>option:selected").attr('data-yn');
+			
+			if (selYn == 'Y') {
+				alert("이미 추가되어있는 공휴일 년도입니다.");
+				return false;
+			}
+			
+			var answer = confirm(selVal+"년도의 공휴일을 불러오시겠습니까?");
+			if (answer) {
+				$.ajax({
+					type: "POST",
+					url: "/addAnivers.do",
+					data: {
+						yearData: selVal
+					},
+					success: function(returnData) {
+// 						console.log(returnData);
+						
+						if (returnData == 'success') {
+							alert("공휴일이 추가되었습니다.");
+							window.location.reload();
+						}else if (returnData == "duplicate") {
+							alert("이미 등록된 자료입니다. 다른년도를 선택해주시기 바랍니다.");
+						} else {
+							alert("공휴일추가에 실패하였습니다. 재시도하여주시기 바랍니다.");
+						}
+					}
+				});
+			}else {
+				return false;
+			}
+		});
+		
+
+		//공휴일 삭제
+		$('#delAnivers').click( function(){
+			var selVal = $("#selAnivers option:selected").val();
+			var selYn  = $("#selAnivers>option:selected").attr('data-yn');
+			
+			if (selYn == 'N') {
+				alert("삭제할 데이터가 없습니다.");
+				return false;
+			}
+			
+			
+// 			var answer = confirm("일정을 삭제하시겠습니까?");
+// 			if(answer) {
+// 				var data = {
+// 					vCalId: vId
+// 				};
+// 				sendCalendar('/calendarDel.do', data, '삭제');
+// 			} else {
+// 				return false;
+// 			}
+			
+			
+			var answer = confirm(selVal+"년도의 공휴일을 삭제하시겠습니까?");
+			if (answer) {
+				$.ajax({
+					type: "POST",
+					url: "/calendarAnivDel.do",
+					data: {
+						yearData: selVal
+					},
+					success: function(returnData) {
+						if (returnData == 'success') {
+							alert("해당년도 공휴일이 삭제되었습니다.");
+							window.location.reload();
+						}else {
+							alert("공휴일삭제에 실패하였습니다. 재시도하여주시기 바랍니다.");
+						}
+					}
+				});
+			}else {
+				return false;
+			}
+		});
+		
+		calendar.render();
+	});
+	</script>
+</head>
+
+<body>
+	<div id="calendar_wrap">
+		<div id='calendar'></div>
+	</div>
+
+	<div class="modal fade" id="calendarModal" tabindex="20" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">일정 확인</h5>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label for="taskId" class="col-form-label">시작 날짜</label>
+						<input type="date"  class="form-control" id="calendar_str_date" name="calendar_str_date">
+						<label for="taskId" class="col-form-label">종료 날짜</label>
+						<input type="date"  class="form-control" id="calendar_end_date" name="calendar_end_date">
+						<label for="taskId" class="col-form-label">일정 내용</label>
+						<input type="text"  class="form-control" id="calendar_cont" name="calendar_cont">
+					</div>
+				</div>
+				<div class="modal-footer justify-content-between">
+					<button type="button" class="btn btn-info" id="shareCalendar" name="shareCalendar">공유하기</button>
+					<div class="left_right_align">
+						<button type="button" class="btn btn-info"    id="addCalendar"   name="addCalendar" >추가</button>
+						<button type="button" class="btn btn-warning" id="editCalendar"  name="editCalendar">수정</button>
+						<button type="button" class="btn btn-danger"  id="delCalendar"   name="delCalendar" >삭제</button>
+						<button type="button" class="btn btn-secondary" id="sprintSettingModalClose" name="sprintSettingModalClose" data-dismiss="modal">취소</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="modal fade" id="aniversModal" tabindex="20" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">캘린더에 공휴일 추가하기</h5>
+				</div>
+				<div class="modal-body">
+					<div class="form-group">
+						<label for="taskId" class="col-form-label">선택년도</label>
+						<select class="form-control" id="selAnivers" name="selAnivers" aria-label="Default select example">
+							<c:forEach var="result" items="${yearList}">
+							<option value="${result.yearList}" data-yn="${result.yearYn }">${result.yearList}</option>
+							</c:forEach>
+						</select>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-info"      id="addAnivers" name="addAnivers">추가</button>
+					<button type="button" class="btn btn-danger"    id="delAnivers" name="delAnivers">삭제</button>
+					<button type="button" class="btn btn-secondary" id="sprintSettingModalClose" name="sprintSettingModalClose" data-dismiss="modal">취소</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

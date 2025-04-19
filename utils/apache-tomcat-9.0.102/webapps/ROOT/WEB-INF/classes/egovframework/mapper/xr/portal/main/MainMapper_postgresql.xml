@@ -1,0 +1,948 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.portal.main.mapper.MainMapper">
+
+	<select id="selectRcmdtnCltRscList" resultType="kr.go.culture.xr.portal.main.vo.RcmdtnCltRscVo">
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT /* 추천 문화자원 조회 kr.go.culture.xr.portal.main.mapper.MainMapper.selectRcmdtnCltRscList */
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT001'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INST_CTGRY_NM			/* 기관(레거시)카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT002'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS DATA_TYPE_CTGRY_NM		/* 데이터유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT003'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS CONTS_TYPE_CTGRY_NM		/* 콘텐츠유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT004'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS SRVC_TYPE_CTGRY_NM		/* 서비스유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT005'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INDR_TYPE_CTGRY_NM		/* 산업유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT006'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS NTN_TAGE_TYPE_CTGRY_NM	/* 국가지역시대유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT007'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS MTR_TYPE_CTGRY_NM		/* 재질유형카테고리명 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 INNER JOIN (
+				SELECT DSPY_ITEM_ID AS CLRCS_ID
+				     , SORT_SN
+				  FROM TX_PRTL_DSPY_LIST_INFO
+				 WHERE DSPY_ID IN (
+							SELECT DSPY_ID
+							  FROM TX_PRTL_DSPY_INFO
+							 WHERE DEL_YN = 'N'
+							   AND USE_YN = 'Y'
+							   AND DSPY_TYPE_CD = 'PTDPTY0001'
+							 ORDER BY FRST_REG_DT DESC
+							 LIMIT 1
+						 )
+					AND RLS_YN = 'Y'
+		  	   ) T03
+		  	ON T03.CLRCS_ID = T01.CLRCS_ID
+		 WHERE 1 = 1
+		 ORDER BY T03.SORT_SN ASC
+	</select>
+
+	<select id="selectLnkgCltRscList" parameterType="kr.go.culture.xr.portal.main.vo.RcmdtnCltRscVo" resultType="kr.go.culture.xr.portal.main.vo.LnkgCltRscVo">
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT /* 연관 문화자원 조회 kr.go.culture.xr.portal.main.mapper.MainMapper.selectLnkgCltRscList */
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T03.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T03.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T03.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT001'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INST_CTGRY_NM			/* 기관(레거시)카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT002'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS DATA_TYPE_CTGRY_NM		/* 데이터유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT003'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS CONTS_TYPE_CTGRY_NM		/* 콘텐츠유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT004'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS SRVC_TYPE_CTGRY_NM		/* 서비스유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT005'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INDR_TYPE_CTGRY_NM		/* 산업유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT006'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS NTN_TAGE_TYPE_CTGRY_NM	/* 국가지역시대유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT007'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS MTR_TYPE_CTGRY_NM		/* 재질유형카테고리명 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		 INNER JOIN (
+		 	   	SELECT EXBI_ID
+		 	   	     , CLRCS_ID
+		 	   	     , SORT_SN1
+		 	   	     , SORT_SN2
+		 	   	  FROM (
+				 	   	SELECT T01.EXBI_ID
+				 	   	     , T01.CLRCS_ID
+				 	   	     , T02.SORT_SN AS SORT_SN1
+				 	   	     , T01.SORT_SN AS SORT_SN2
+				  		     , ROW_NUMBER() OVER (PARTITION BY T01.CLRCS_ID ORDER BY T01.EXBI_ID DESC,T02.SORT_SN ASC,T01.SORT_SN ASC) AS EXBI_SN
+				 	   	  FROM TX_EXBI_CLRCS_REL_INFO T01
+						 INNER JOIN (
+								SELECT DSPY_ITEM_ID AS EXBI_ID
+								     , SORT_SN
+								  FROM TX_PRTL_DSPY_LIST_INFO 
+								 WHERE DSPY_ID IN (
+											SELECT DSPY_ID
+											  FROM TX_PRTL_DSPY_INFO
+											 WHERE DEL_YN = 'N'
+											   AND USE_YN = 'Y'
+											   AND DSPY_TYPE_CD = 'PTDPTY0002'
+										 )
+									AND RLS_YN = 'Y'
+						  	   ) T02
+						  	ON T02.EXBI_ID = T01.EXBI_ID
+				 	   	 WHERE T01.EXBI_ID IN (
+				 	   	 	   	SELECT EXBI_ID
+				 	   	 	   	  FROM TX_EXBI_CLRCS_REL_INFO
+				 	   	 	   	 WHERE CLRCS_ID = #{clrcsId}
+				 	   	 	   )
+				 	   	   AND T01.EXBI_ID IN (
+				 	   	 	   	SELECT EXBI_ID
+				 	   	 	   	  FROM TX_EXBI_INFO
+				 	   	 	   	 WHERE EXBI_BGNG_YMD <![CDATA[<=]]> TO_CHAR(NOW(),'YYYYMMDD')
+				 	   	 	   	   AND EXBI_END_YMD <![CDATA[>=]]> TO_CHAR(NOW(),'YYYYMMDD')
+				 	   	 	   	   AND RLS_YN = 'Y'
+				 	   	 	   )
+				 	   	   AND T01.RLS_YN = 'Y'
+		 	   	       ) T01
+				 WHERE EXBI_SN = 1				 	   
+		       ) T02
+		    ON T02.CLRCS_ID = T01.CLRCS_ID  
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T03
+		  	ON T03.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T03.ATCH_FILE_SN = 1
+		 WHERE 1 = 1
+		   AND T01.CLRCS_ID != #{clrcsId}
+		 ORDER BY T02.SORT_SN1 ASC, T02.SORT_SN2 ASC
+	</select>
+
+	<select id="selectCltRscBrifStat" resultType="kr.go.culture.xr.portal.main.vo.CltRscBrifStatVo">
+		SELECT /* 전체 문화자원 통계 조회 kr.go.culture.xr.portal.main.mapper.MainMapper.selectCltRscBrifStat */
+			   (SELECT COUNT(1)
+			      FROM TX_INST_INFO
+			     WHERE INST_ID IN (
+			     		SELECT INST_ID
+			     		  FROM TX_DGTL_CLRCS_MTDT_INFO
+			     		 WHERE RLS_YN = 'Y'
+			     	   )
+			   ) AS INVL_INST_CNT		/* 참여기관 수 */
+			 , (SELECT COUNT(1)
+			      FROM TX_DGTL_CLRCS_MTDT_INFO
+			     WHERE RLS_YN = 'Y'
+			       AND INST_ID IN (
+			     		SELECT INST_ID
+			     		  FROM TX_INST_INFO
+			     		 WHERE RLS_YN = 'Y'
+			     	   )
+			   ) AS RLS_RSC_CNT			/* 공개자원 수 */
+			 , (SELECT SUM(DWNLD_CNT)
+			      FROM TX_DGTL_CLRCS_MTDT_INFO
+			     /* 
+			     WHERE RLS_YN = 'Y'
+			       AND INST_ID IN (
+			     		SELECT INST_ID
+			     		  FROM TX_INST_INFO
+			     		 WHERE RLS_YN = 'Y'
+			     	   )
+			     */
+			   ) AS DWNLD_CNT			/* 다운로드 수 */
+			 , (SELECT SUM(RCMDTN_CNT)
+			      FROM TX_DGTL_CLRCS_MTDT_INFO
+			     /* 
+			     WHERE RLS_YN = 'Y'
+			       AND INST_ID IN (
+			     		SELECT INST_ID
+			     		  FROM TX_INST_INFO
+			     		 WHERE RLS_YN = 'Y'
+			     	   )
+			     */
+			   ) AS ITRST_CNT			/* 관심 수 */
+			 , (SELECT SUM(INQ_CNT)
+			      FROM TX_DGTL_CLRCS_MTDT_INFO
+			     /* 
+			     WHERE RLS_YN = 'Y'
+			       AND INST_ID IN (
+			     		SELECT INST_ID
+			     		  FROM TX_INST_INFO
+			     		 WHERE RLS_YN = 'Y'
+			     	   )
+			     */
+			   ) AS SRCH_CNT			/* 조회수 */
+			 , (SELECT COUNT(1)
+			      FROM TX_MBR_INFO
+			   ) AS MBR_CNT			/* 사용자수 */
+	</select>
+
+	<select id="selectNewCltRscList" resultType="kr.go.culture.xr.portal.dgtlcltrsc.vo.DgtlClrcsMtdtInfoVo">
+		/* 신규등록 문화자원 조회 kr.go.culture.xr.portal.main.mapper.MainMapper.selectNewCltRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+		       A.* 
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = A.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM (
+				SELECT 
+					   T01.CLRCS_ID				/* 문화자원아이디 */
+					 , T01.INST_ID				/* 기관아이디 */
+					 , (
+					 	SELECT T08.INST_NM
+					 	  FROM TX_INST_INFO T08
+					 	 WHERE T08.INST_ID = T01.INST_ID
+					   ) AS INST_NM				/* 기관명 */
+					 , T01.CLRCS_NM				/* 문화자원명 */
+					 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+					 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+					 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+					 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+					 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+					 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+					 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+					 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+					 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+					 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+					 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+					 , T01.CLCN_CD				/* 소장품코드 */
+					 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+					 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+					 , T01.INQ_CNT				/* 조회수 */
+					 , T01.RLS_YN				/* 공개여부 */
+					 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+					 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+					 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+					 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+					 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+					 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+					 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+					 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+					 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+					 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+					 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+					 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+					 , T01.WRI_NM				/* 작가명 */
+					 , T01.FDSP_NM				/* 출토지명 */
+					 , T01.DSPY_NM				/* 전시명 */
+					 , T01.DSPY_PLC_NM			/* 전시장소명 */
+					 , T01.RCMDTN_CNT			/* 추천수 */
+					 , T01.DWNLD_CNT			/* 다운로드수 */
+					 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+					 , TO_CHAR(T01.LAST_MDFCN_DT,'YYYY.MM.DD') AS LAST_MDFCN_DT /* 최종수정일시 */
+					 , (
+					 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+					 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+					 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+					 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+					 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT001'
+					 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+					   ) AS INST_CTGRY_NM			/* 기관(레거시)카테고리명 */
+					 , (
+					 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+					 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+					 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+					 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+					 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT002'
+					 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+					   ) AS DATA_TYPE_CTGRY_NM		/* 데이터유형카테고리명 */
+					 , (
+					 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+					 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+					 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+					 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+					 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT003'
+					 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+					   ) AS CONTS_TYPE_CTGRY_NM		/* 콘텐츠유형카테고리명 */
+					 , (
+					 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+					 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+					 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+					 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+					 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT004'
+					 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+					   ) AS SRVC_TYPE_CTGRY_NM		/* 서비스유형카테고리명 */
+					 , (
+					 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+					 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+					 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+					 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+					 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT005'
+					 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+					   ) AS INDR_TYPE_CTGRY_NM		/* 산업유형카테고리명 */
+					 , (
+					 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+					 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+					 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+					 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+					 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT006'
+					 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+					   ) AS NTN_TAGE_TYPE_CTGRY_NM	/* 국가지역시대유형카테고리명 */
+					 , (
+					 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+					 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+					 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+					 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+					 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT007'
+					 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+					   ) AS MTR_TYPE_CTGRY_NM		/* 재질유형카테고리명 */
+				  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+				  LEFT JOIN (
+				  		SELECT ATCH_FILE_GROUP_ID
+				  		     , FILE_STRG_PATH_NM
+				  		     , STRG_FILE_NM
+				  		     , ORGNL_ATCH_FILE_NM
+				  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+				  		  FROM TX_ATCH_FILE_DTL_INFO
+				  	   ) T02
+				  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+				   AND T02.ATCH_FILE_SN = 1
+				 WHERE 1 = 1
+				   AND T01.RLS_YN = 'Y'
+				 ORDER BY T01.FRST_REG_DT DESC, T01.CLRCS_ID DESC
+			   ) A
+		OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
+	</select>
+	
+	<select id="selectDwnldRnkgCltRscList" resultType="kr.go.culture.xr.portal.main.vo.DwnldRnkgCltRscVo">
+		/* 최다다운로드 문화자원 조회 kr.go.culture.xr.portal.main.mapper.MainMapper.selectDwnldRnkgCltRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+			 , TO_CHAR(T01.LAST_MDFCN_DT,'YYYY.MM.DD') AS LAST_MDFCN_DT /* 최종수정일시 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT001'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INST_CTGRY_NM			/* 기관(레거시)카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT002'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS DATA_TYPE_CTGRY_NM		/* 데이터유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT003'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS CONTS_TYPE_CTGRY_NM		/* 콘텐츠유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT004'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS SRVC_TYPE_CTGRY_NM		/* 서비스유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT005'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INDR_TYPE_CTGRY_NM		/* 산업유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT006'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS NTN_TAGE_TYPE_CTGRY_NM	/* 국가지역시대유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT007'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS MTR_TYPE_CTGRY_NM		/* 재질유형카테고리명 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 WHERE 1 = 1
+	     ORDER BY T01.DWNLD_CNT DESC
+		 LIMIT 10
+	</select>
+
+	<select id="selectViewRnkgCltRscList" resultType="kr.go.culture.xr.portal.main.vo.DwnldRnkgCltRscVo">
+		/* 최다조회수 문화자원 조회 kr.go.culture.xr.portal.main.mapper.MainMapper.selectDwnldRnkgCltRscList */
+		WITH RECURSIVE DATA_TYPE_ROOT_CTGRY (ROOT_CTGRY_ID, ROOT_CTGRY_NM, CTGRY_ID, CTGRY_NM, UP_CTGRY_ID,CTGRY_STEP_NO,DEPTH, PATH, CYCLE) AS
+		(
+			/* 계층구조의 시작조건 쿼리 */
+			 SELECT A.CTGRY_ID	AS ROOT_CTGRY_ID
+			 	  , A.CTGRY_NM	AS ROOT_CTGRY_NM
+				  , A.CTGRY_ID
+				  ,	A.CTGRY_NM   
+				  ,	A.UP_CTGRY_ID
+				  ,	A.CTGRY_STEP_NO
+				  ,	1
+				  ,	ARRAY[A.CTGRY_ID::TEXT]
+				  ,	FALSE
+			   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			  WHERE A.CTGRY_TYPE_CD = 'CLRCSCT002'
+			    AND A.CTGRY_STEP_NO = 1
+			  UNION ALL
+			 /*하위 데이터를 찾아가기 위한 반복조건 쿼리*/
+			 SELECT B.ROOT_CTGRY_ID
+			     ,  B.ROOT_CTGRY_NM
+				  ,	A.CTGRY_ID
+				  , A.CTGRY_NM   
+				  , A.UP_CTGRY_ID
+				  , A.CTGRY_STEP_NO
+				  , B.DEPTH + 1
+				  , ARRAY_APPEND(B.PATH, A.CTGRY_ID::TEXT)
+				  , A.CTGRY_ID = ANY(B.PATH)
+			  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+			 INNER JOIN DATA_TYPE_ROOT_CTGRY B
+			    ON B.CTGRY_ID = A.UP_CTGRY_ID
+			 WHERE 1 = 1
+			   AND NOT CYCLE	
+		) 
+		SELECT 
+			   T01.CLRCS_ID				/* 문화자원아이디 */
+			 , T01.INST_ID				/* 기관아이디 */
+			 , (
+			 	SELECT T08.INST_NM
+			 	  FROM TX_INST_INFO T08
+			 	 WHERE T08.INST_ID = T01.INST_ID
+			   ) AS INST_NM				/* 기관명 */
+			 , T01.CLRCS_NM				/* 문화자원명 */
+			 , T01.CLRCS_ENG_NM			/* 문화자원영문명 */
+			 , T01.CLRCS_CHN_NM AS CLRCS_CHNSN_NM		/* 문화자원중문명 */
+			 , T01.CLRCS_AUT_NM			/* 문화자원저자명 */
+			 , T01.CLRCS_NTN_CD			/* 문화자원국가코드 */
+			 , T01.CLRCS_TAGE_CD		/* 문화자원시대코드 */
+			 , T01.CLRCS_MTR_CD			/* 문화자원재질코드 */
+			 , T01.CLRCS_SBTTL_NM AS CLRCS_SBTTL			/* 문화자원부제목 */
+			 , T01.CLRCS_EXPLN_CN AS CLRCS_EXPLN			/* 문화자원설명 */
+			 , T01.CLRCS_ANXT_EXPLN_CN AS CLRCS_ANXT_EXPLN		/* 문화자원부가설명 */
+			 , T01.CLRCS_SZ_CN AS CLRCS_SZ				/* 문화자원크기 */
+			 , T01.CLTPTY_TYPE_CD		/* 문화재유형코드 */
+			 , T01.CLCN_CD				/* 소장품코드 */
+			 , T01.CLRCS_URL_ADDR AS CLRCS_URL			/* 문화자원URL */
+			 , T01.CLCT_TYPE_CD			/* 수집유형코드 */
+			 , T01.INQ_CNT				/* 조회수 */
+			 , T01.RLS_YN				/* 공개여부 */
+			 , T01.CPYR_TYPE_CD AS CPYRHT_TYPE_CD		/* 저작권유형코드 */
+			 , T01.CLCT_SYS_APLCN_YN	/* 수집시스템적용여부 */
+			 , T01.CLCT_RULE_MDFR_ID	/* 수집규칙수정자아이디 */
+			 , T01.CLCT_RULE_MDFCN_DT	/* 수집규칙수정일시 */
+			 , T01.DEL_WTNG_YN			/* 삭제대기여부 */
+			 , T01.DEL_RQSTR_ID			/* 삭제요청자아이디 */
+			 , T01.DEL_DMND_DT			/* 삭제요청일시 */
+			 , T01.INST_ITSL_MNG_NO		/* 기관자체관리번호 */
+			 , T01.RPRS_IMG_GROUP_ID	/* 대표이미지그룹아이디 */
+			 , T02.FILE_STRG_PATH_NM  AS RPRS_IMG_FILE_STRG_PATH_NM
+			 , T02.STRG_FILE_NM  AS RPRS_IMG_STRG_FILE_NM
+			 , T02.ORGNL_ATCH_FILE_NM  AS RPRS_IMG_ORGNL_ATCH_FILE_NM
+			 , T01.WRI_NM				/* 작가명 */
+			 , T01.FDSP_NM				/* 출토지명 */
+			 , T01.DSPY_NM				/* 전시명 */
+			 , T01.DSPY_PLC_NM			/* 전시장소명 */
+			 , T01.RCMDTN_CNT			/* 추천수 */
+			 , T01.DWNLD_CNT			/* 다운로드수 */
+			 , T01.MNGR_RCMDTN_YN		/* 관리자추천여부 */
+			 , TO_CHAR(T01.LAST_MDFCN_DT,'YYYY.MM.DD') AS LAST_MDFCN_DT /* 최종수정일시 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT001'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INST_CTGRY_NM			/* 기관(레거시)카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT002'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS DATA_TYPE_CTGRY_NM		/* 데이터유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT003'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS CONTS_TYPE_CTGRY_NM		/* 콘텐츠유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT004'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS SRVC_TYPE_CTGRY_NM		/* 서비스유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT005'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS INDR_TYPE_CTGRY_NM		/* 산업유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT006'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS NTN_TAGE_TYPE_CTGRY_NM	/* 국가지역시대유형카테고리명 */
+			 , (
+			 	SELECT STRING_AGG(DISTINCT T10.CTGRY_WHOL_NM, ' > ' ORDER BY T10.CTGRY_WHOL_NM ASC)
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN TX_CLRCS_CLSF_CTGRY_INFO T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	   AND T10.CTGRY_TYPE_CD = 'CLRCSCT007'
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			   ) AS MTR_TYPE_CTGRY_NM		/* 재질유형카테고리명 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_ID
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_ID		/* 데이터유형근원카테고리아이디 */
+			 , (
+			 	SELECT T10.ROOT_CTGRY_NM
+			 	  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO T09
+			 	 INNER JOIN DATA_TYPE_ROOT_CTGRY T10
+			 	    ON T10.CTGRY_ID = T09.CTGRY_ID
+			 	 WHERE T09.CLRCS_ID = T01.CLRCS_ID
+			 	 LIMIT 1
+			   ) AS DATA_TYPE_ROOT_CTGRY_NM		/* 데이터유형근원카테고리명 */
+		  FROM TX_DGTL_CLRCS_MTDT_INFO T01
+		  LEFT JOIN (
+		  		SELECT ATCH_FILE_GROUP_ID
+		  		     , FILE_STRG_PATH_NM
+		  		     , STRG_FILE_NM
+		  		     , ORGNL_ATCH_FILE_NM
+		  		     , ROW_NUMBER() OVER (PARTITION BY ATCH_FILE_GROUP_ID ORDER BY ATCH_FILE_SN DESC) AS ATCH_FILE_SN
+		  		  FROM TX_ATCH_FILE_DTL_INFO
+		  	   ) T02
+		  	ON T02.ATCH_FILE_GROUP_ID = T01.RPRS_IMG_GROUP_ID
+		   AND T02.ATCH_FILE_SN = 1
+		 WHERE 1 = 1
+	     ORDER BY T01.INQ_CNT DESC
+		 LIMIT 10
+	</select>
+</mapper>

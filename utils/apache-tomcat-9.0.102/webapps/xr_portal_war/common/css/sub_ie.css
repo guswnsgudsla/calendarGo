@@ -1,0 +1,47 @@
+@charset "UTF-8";
+
+/* 
+2021-10-26 : 크롬 기준 적용 
+* 크롬에서 브라우저 적용할것만 정의
+*/ 
+
+/* IE10+ */
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+	/* 전체검색 - 리스트 */
+	.data_box_each .box .box_cnt.cnt01 > div.img_w > span img {
+		margin: 50% auto;
+	}
+	/* 전체검색 - 상세 */
+	.data_box_each .box .box_cnt.cnt01 > div.img_w > span img.detail {
+		margin: 68% auto;
+	}
+	/* 메인 - 카테고리 */
+	.main .platform_list > li {
+		width: 14.25%;
+	}
+}
+
+/* 반응형 - 사이즈 높은 순에서 낮은순으로 정의 */
+/* IE10+ */
+@media screen and (-ms-high-contrast: active), (max-width:1200px) {
+	.main .platform_list > li {
+		width: 25%;
+	}	
+}
+
+/* IE10+ */
+@media screen and (-ms-high-contrast: active), (max-width:768px) {
+	/* 전체검색 - 리스트 */
+	.data_box_each .box .box_cnt.cnt01 > div.img_w > span img {
+		margin: 0% auto;
+	}
+	
+	/* 전체검색 - 상세 */
+	.data_box_each .box .box_cnt.cnt01 > div.img_w > span img.detail {
+		margin: 0% auto;
+	}
+	.main .platform_list > li {
+		width: 33.33%;
+	}
+	
+}

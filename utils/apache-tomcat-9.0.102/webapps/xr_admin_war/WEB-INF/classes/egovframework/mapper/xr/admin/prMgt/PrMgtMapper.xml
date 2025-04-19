@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="kr.go.culture.xr.admin.prMgt.mapper.PrMgtMapper">
+
+	<!-- 리스트 수 집계 -->
+	<select id="selectPrListCnt" resultType="Integer">
+		SELECT /*
+		kr.go.culture.xr.admin.prMgt.mapper.PrMgtMapper.selectPrListCnt
+		*/
+		COUNT(PR_ID)
+		FROM TX_PR_INFO TPI 
+		WHERE 1=1
+		<if test="srchBgngYmd != null and srchBgngYmd != ''  and srchEndYmd != null and srchEndYmd != ''">
+			AND TPI.FRST_REG_DT <![CDATA[>=]]>  TO_DATE(#{srchBgngYmd},'YYYY-MM-DD') 
+			AND TPI.FRST_REG_DT <![CDATA[<=]]>  TO_DATE(#{srchEndYmd},'YYYY-MM-DD') + 1
+		</if>
+		<if test="srchDataTypeCd != null and srchDataTypeCd != ''">
+			AND TPI.UTZTN_DATA_TYPE_CD = #{srchDataTypeCd}
+		</if>
+		<if test="srchAprvYn != null and srchAprvYn != ''">
+			AND TPI.APRV_YN = #{srchAprvYn}
+		</if>
+		<if test="srchTtl != null and srchTtl != ''">
+			AND TPI.PR_TTL_NM LIKE CONCAT('%', TRIM(#{srchTtl}), '%')
+		</if>
+		<if test="srchEntNm != null and srchEntNm != ''">
+			AND TPI.ENT_NM LIKE CONCAT('%', TRIM(#{srchEntNm}), '%')
+		</if>
+	</select>
+
+	<!-- 게시물 리스트 가져오기 -->
+	<select id="selectPrList"
+		resultType="kr.go.culture.xr.admin.prMgt.vo.PrVO" >
+		SELECT /*kr.go.culture.xr.admin.prMgt.mapper.PrMgtMapper.selectPrList*/
+			ROW_NUMBER()OVER(ORDER BY NT.PR_ID ASC) AS LIST_NO
+			, NT.PR_ID AS PR_ID
+			, NT.APRV_YN AS APRV_YN
+			, NT.PR_TTL AS PR_TTL
+			, NT.ENT_NM AS ENT_NM
+			, NT.RGTR_EML_ADDR AS RGTR_EML_ADDR
+			, NT.UTZTN_DATA_TYPE_CD AS UTZTN_DATA_TYPE_CD
+			, NT.FRST_REG_DT AS FRST_REG_DT
+			, NT.FRST_REG_DT_V10 AS FRST_REG_DT_V10
+			, NT.FRST_RGTR_ID AS FRST_RGTR_ID
+			, NT.AUTZR_ID AS AUTZR_ID
+			, NT.APRV_DT AS APRV_DT
+			, NT.APRV_DT_V10 AS APRV_DT_V10
+		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		FROM
+			(SELECT 
+				TPI.PR_ID 
+				, TPI.APRV_YN 
+				, TPI.PR_TTL_NM AS PR_TTL
+				, TPI.ENT_NM
+				, TPI.RGTR_EML_ADDR
+				, TPTRI.UTZTN_DATA_TYPE_CD 
+				, TPI.FRST_REG_DT
+				, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+						<property name="paramDateFormat" value="'CHAR10'"/>
+						<property name="paramDate" value="TPI.FRST_REG_DT"/>
+					</include>) AS FRST_REG_DT_V10
+				, TPI.FRST_RGTR_ID
+				, TPI.AUTZR_ID
+				, TPI.APRV_DT
+				, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+						<property name="paramDateFormat" value="'CHAR10'"/>
+						<property name="paramDate" value="TPI.APRV_DT"/>
+					</include>) AS APRV_DT_V10
+			FROM TX_PR_INFO TPI 
+			LEFT JOIN TX_PR_TYPE_REL_INFO TPTRI 
+			ON TPI.PR_ID = TPTRI.PR_ID 
+			) NT
+		WHERE 1=1
+		<if test="srchBgngYmd != null and srchBgngYmd != ''  and srchEndYmd != null and srchEndYmd != ''">
+			AND NT.FRST_REG_DT <![CDATA[>=]]>  TO_DATE(#{srchBgngYmd},'YYYY-MM-DD') 
+			AND NT.FRST_REG_DT <![CDATA[<=]]>  TO_DATE(#{srchEndYmd},'YYYY-MM-DD') + 1
+		</if>
+		<if test="srchBgngYmd != null and srchBgngYmd != ''">
+			AND NT.FRST_REG_DT <![CDATA[>=]]>  TO_DATE(#{srchBgngYmd},'YYYY-MM-DD') 
+		</if>
+		<if test="srchEndYmd != null and srchEndYmd != ''">
+			AND NT.FRST_REG_DT <![CDATA[<=]]>  TO_DATE(#{srchEndYmd},'YYYY-MM-DD') + 1
+		</if>
+		<if test="srchDataTypeCd != null and srchDataTypeCd != ''">
+			AND NT.UTZTN_DATA_TYPE_CD = #{srchDataTypeCd}
+		</if>
+		<if test="srchAprvYn != null and srchAprvYn != ''">
+			AND NT.APRV_YN = #{srchAprvYn}
+		</if>
+		<if test="srchTtl != null and srchTtl != ''">
+			AND NT.PR_TTL LIKE CONCAT('%', TRIM(#{srchTtl}), '%')
+		</if>
+		<if test="srchEntNm != null and srchEntNm != ''">
+			AND NT.ENT_NM LIKE CONCAT('%', TRIM(#{srchEntNm}), '%')
+		</if>
+		ORDER BY LIST_NO DESC
+		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	
+	<!-- 홍보채널 상세조회 -->
+	<select id="selectPrDtl" resultType="kr.go.culture.xr.admin.prMgt.vo.PrVO">
+		SELECT /*kr.go.culture.xr.admin.prMgt.mapper.PrMgtMapper.selectPrDtl*/
+			XTPI.PR_TTL AS PR_TTL
+			,XTPI.PR_ID
+			,XTPI.BIZ_NM AS BIZ_NM
+			,XTPI.ENT_NM AS ENT_NM
+			,XTPI.PVSN_INST_ID AS PVSN_INST_ID
+			,XTPI.PVSN_INST_NM AS PVSN_INST_NM
+			,XTPI.RGTR_EML_ADDR AS RGTR_EML_ADDR
+			,XTPI.UTZTN_DATA_CN AS UTZTN_DATA_CN 
+			,XTPI.ENT_HMPG_ADDR AS ENT_HMPG_ADDR
+			,XTPI.BIZ_CN AS BIZ_CN
+			,XTPI.APRV_YN AS APRV_YN
+			,XTPI.RJCT_CN AS RJCT_CN  
+			,XTPI.PRE_PR_ID AS PRE_PR_ID 
+			,XTPI.NEXT_PR_ID AS NEXT_PR_ID 
+			,XTPI.RPRS_IMG_GROUP_ID AS RPRS_IMG_GROUP_ID
+			,XTPI.FILE_PATH AS FILE_PATH
+			,XTPI.ORGNL_ATCH_FILE_NM AS ORGNL_ATCH_FILE_NM
+			,XTPI.STRG_FILE_NM AS STRG_FILE_NM
+		FROM
+			(SELECT 
+				TPI.PR_TTL_NM AS PR_TTL
+				,TPI.PR_ID
+				,TPI.BIZ_NM 
+				,TPI.ENT_NM 
+				,TPI.PVSN_INST_ID 
+				,(<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+				 		<property name="paramColNm" value="'instNm'"/>
+				 		<property name="paramInstId" value="TPI.PVSN_INST_ID"/>
+					</include>) AS PVSN_INST_NM
+				,TPI.RGTR_EML_ADDR 
+				,TPI.UTZTN_DATA_CN 
+				,TPI.ENT_HMPG_ADDR
+				,TPI.RPRS_IMG_GROUP_ID
+				, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				 		<property name="paramInfoCd" value="'OPATH'"/>
+				 		<property name="paramAtchFileGroupId" value="TPI.RPRS_IMG_GROUP_ID"/>
+					</include>) AS FILE_PATH
+				 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				 		<property name="paramInfoCd" value="'ORGNM'"/>
+				 		<property name="paramAtchFileGroupId" value="TPI.RPRS_IMG_GROUP_ID"/>
+					</include>) AS ORGNL_ATCH_FILE_NM
+				 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				 		<property name="paramInfoCd" value="'STRGNM'"/>
+				 		<property name="paramAtchFileGroupId" value="TPI.RPRS_IMG_GROUP_ID"/>
+					</include>) AS STRG_FILE_NM
+				,TPI.BIZ_CN 
+				,TPI.APRV_YN 
+				,TPI.RJCT_CN 
+				,LAG (TPI.PR_ID,1) OVER(ORDER BY TPI.PR_ID ASC) AS PRE_PR_ID
+				,LEAD (TPI.PR_ID,1) OVER(ORDER BY TPI.PR_ID ASC) AS NEXT_PR_ID
+			FROM
+			TX_PR_INFO TPI ) XTPI
+		WHERE XTPI.PR_ID = #{srchPrId}
+	</select>
+	
+	<!-- 홍보채널 이전글 다음글 제목 조회 -->
+	<select id="selectTtl" resultType="String">
+		SELECT /*kr.go.culture.xr.admin.prMgt.mapper.PrMgtMapper.selectPrDtl*/
+			TPI.PR_TTL_NM AS PR_TTL
+		FROM
+		TX_PR_INFO TPI 
+		WHERE PR_ID = #{srchPrId}
+	</select>
+	
+	<!-- 승인여부 및 비고사항 수정 -->
+	<update id="updatePr" parameterType="kr.go.culture.xr.admin.prMgt.vo.PrVO">
+		UPDATE TX_PR_INFO 
+		SET 
+			APRV_YN = #{aprvYn}
+			,RJCT_CN = #{rjctCn}
+			,AUTZR_ID = #{userId}
+			,APRV_DT = NOW()
+			,LAST_MDFR_ID = #{userId}
+			,LAST_MDFCN_DT = NOW()
+		WHERE PR_ID = #{srchPrId}
+	</update>
+</mapper>

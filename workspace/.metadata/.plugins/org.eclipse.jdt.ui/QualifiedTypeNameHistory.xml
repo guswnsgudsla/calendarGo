@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="org.springframework.stereotype.Controller"/>
+    <fullyQualifiedTypeName name="org.springframework.web.bind.annotation.GetMapping"/>
+    <fullyQualifiedTypeName name="org.springframework.web.bind.annotation.PostMapping"/>
+    <fullyQualifiedTypeName name="org.springframework.web.bind.annotation.ModelAttribute"/>
+    <fullyQualifiedTypeName name="org.springframework.web.servlet.mvc.support.RedirectAttributes"/>
+    <fullyQualifiedTypeName name="jakarta.servlet.http.HttpServletRequest"/>
+    <fullyQualifiedTypeName name="org.springframework.ui.ModelMap"/>
+    <fullyQualifiedTypeName name="lombok.Getter"/>
+    <fullyQualifiedTypeName name="lombok.Setter"/>
+    <fullyQualifiedTypeName name="com.proj.calendar.vo.CalendarGoVO"/>
+    <fullyQualifiedTypeName name="org.springframework.web.bind.annotation.ResponseBody"/>
+    <fullyQualifiedTypeName name="org.springframework.web.servlet.ModelAndView"/>
+    <fullyQualifiedTypeName name="org.springframework.web.bind.annotation.RequestMapping"/>
+    <fullyQualifiedTypeName name="jakarta.annotation.Resource"/>
+    <fullyQualifiedTypeName name="java.awt.List"/>
+    <fullyQualifiedTypeName name="java.util.List"/>
+    <fullyQualifiedTypeName name="com.proj.calendar.service.CalendarGoService"/>
+    <fullyQualifiedTypeName name="com.proj.calendar.mapper.CalendarGoMapper"/>
+    <fullyQualifiedTypeName name="org.apache.ibatis.annotations.Mapper"/>
+    <fullyQualifiedTypeName name="org.mybatis.spring.annotation.MapperScans"/>
+    <fullyQualifiedTypeName name="org.mybatis.spring.annotation.MapperScan"/>
+    <fullyQualifiedTypeName name="org.springframework.stereotype.Service"/>
+    <fullyQualifiedTypeName name="lombok.RequiredArgsConstructor"/>
+    <fullyQualifiedTypeName name="com.proj.calendar.dao.CalendarGoDAO"/>
+    <fullyQualifiedTypeName name="java.text.DateFormat"/>
+    <fullyQualifiedTypeName name="java.text.SimpleDateFormat"/>
+    <fullyQualifiedTypeName name="java.sql.Date"/>
+    <fullyQualifiedTypeName name="java.util.Date"/>
+    <fullyQualifiedTypeName name="java.util.Calendar"/>
+</qualifiedTypeNameHistroy>

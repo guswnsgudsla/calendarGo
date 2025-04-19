@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.mainMgt.mapper.MainMgtMapper">
+
+	<!-- 전체 사용자 수 -->
+	<select id="selectAllUserCnt" resultType="int">
+		SELECT  COUNT(1) AS ALL_USER_CNT
+		  FROM TX_MBR_INFO 
+	</select>
+	<!-- 전체 참여기관 수 -->
+	<select id="selectAllInstCnt" resultType="int">
+		SELECT COUNT(Z.INST_ID) AS ALL_INST_CNT
+		  FROM (
+				SELECT INST_ID
+				  FROM TX_DGTL_CLRCS_MTDT_INFO
+				 WHERE DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+			  GROUP BY INST_ID  
+		 		) Z
+	</select>
+	<!-- 전체 등록 현황 수 (메타)-->
+	<select id="selectAllDgtlRegCnt" resultType="int">
+		 SELECT COUNT(1) AS ALL_DGTL_CNT
+	       FROM TX_DGTL_CLRCS_MTDT_INFO A
+	      WHERE A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+	</select>
+	<!-- 전체 등록 현황 수 (산출물) 기관관리자일 경우 본인기관만 -->
+	<select id="selectAllDgtlPrdctRegCnt" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO" resultType="int">
+		 SELECT COUNT(1) AS ALL_DGTL_CNT
+	       FROM TX_DGTL_CLRCS_MTDT_INFO A
+	      WHERE A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+	    <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+		    AND A.INST_ID = #{instId}
+		</if> 
+	</select>
+	<!-- 전체 다운로드 수 -->
+	<select id="selectAllDgtlDownCnt" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="int">
+		SELECT COUNT(1) AS ALL_DOWN_CNT
+		  FROM TX_PRDCT_USE_TRCK_INFO A
+	INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+		    ON A.CLRCS_ID = B.CLRCS_ID
+		   AND A.PRDCT_SN = B.PRDCT_SN
+	<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+	INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+        	ON B.CLRCS_ID = C.CLRCS_ID
+           AND C.INST_ID = #{instId}
+	</if>		   
+	</select>
+	
+	<!-- 년별 사용자 증감 -->
+	<select id="selectUserYearIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+				   SELECT  COUNT(1)
+					 FROM TX_MBR_INFO 
+				    WHERE TO_CHAR(FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 YEAR','YYYY')
+			  ) AS BEF_USER_CNT
+			 ,(
+			 	SELECT  COUNT(1)
+					 FROM TX_MBR_INFO 
+				    WHERE TO_CHAR(FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE),'YYYY')
+			  ) AS CUR_USER_CNT
+	</select>
+	<!-- 월별 사용자 증감 -->
+	<select id="selectUserMonthIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+				   SELECT  COUNT(1)
+					 FROM TX_MBR_INFO 
+				    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 MONTH','YYYY-MM')
+			  ) AS BEF_USER_CNT
+			 ,(
+			 	SELECT  COUNT(1)
+					 FROM TX_MBR_INFO 
+				    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE),'YYYY-MM')
+			  ) AS CUR_USER_CNT
+	</select>
+	
+	<!-- 주별 사용자 증감 -->
+	<select id="selectUserWeekIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+			   SELECT COUNT(1) 
+			     FROM TX_MBR_INFO 
+			  	WHERE EXTRACT(WEEK FROM FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE)) - 1
+			  ) AS BEF_USER_CNT
+			 ,(
+			 	SELECT COUNT(1) 
+			 	  FROM TX_MBR_INFO 
+			 	 WHERE EXTRACT(WEEK FROM FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE))
+			  ) AS CUR_USER_CNT
+	</select>
+	
+	<!-- 일별 사용자 증감 -->
+	<select id="selectUserDayIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+			SELECT
+			  (
+				   SELECT  COUNT(1)
+					 FROM TX_MBR_INFO 
+				    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 DAY','YYYY-MM-DD')
+			  ) AS BEF_USER_CNT
+			 ,(
+			 	SELECT  COUNT(1)
+					 FROM TX_MBR_INFO 
+				    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE),'YYYY-MM-DD')
+			  ) AS CUR_USER_CNT
+	</select>
+	
+	<!-- 년별 참여기관  증감 (문화 자원 등록한 기관만 COUNT)-->
+	<select id="selectInstYearIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+			  	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT  INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO 
+					    WHERE TO_CHAR(FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 YEAR','YYYY')
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS BEF_INST_CNT
+			 ,(
+			 	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT  INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO 
+					    WHERE TO_CHAR(FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE) ,'YYYY')
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS CUR_INST_CNT
+	</select>
+	
+	<!-- 월별 참여기관  증감 (문화 자원 등록한 기관만 COUNT)-->
+	<select id="selectInstMonthIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+			  	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO 
+					    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 MONTH','YYYY-MM')
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS BEF_INST_CNT
+			 ,(
+			 	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT  INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO 
+					    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE),'YYYY-MM')
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS CUR_INST_CNT
+	</select>
+	
+	<!-- 주별 참여기관  증감 (문화 자원 등록한 기관만 COUNT)-->
+	<select id="selectInstWeekIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+			  	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT  INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO
+					    WHERE EXTRACT(WEEK FROM FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE)) - 1
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS BEF_INST_CNT
+			 ,(
+			 	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT  INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO 
+					    WHERE EXTRACT(WEEK FROM FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE))
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS CUR_INST_CNT
+	</select>
+	
+	<!-- 일별 참여기관  증감 (문화 자원 등록한 기관만 COUNT)-->
+	<select id="selectInstDayIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+			  	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT  INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO 
+					    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 DAY','YYYY-MM-DD')
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS BEF_INST_CNT
+			 ,(
+			 	SELECT COUNT(INST_ID)
+			  	  FROM(	
+					   SELECT  INST_ID
+						 FROM TX_DGTL_CLRCS_MTDT_INFO 
+					    WHERE TO_CHAR(FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE),'YYYY-MM-DD')
+					      AND DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					    GROUP BY INST_ID
+				      )X
+			  ) AS CUR_INST_CNT
+	</select>
+	
+	<!-- 년별 문화자원 등록현황  증감 1 기관관리자일 경우 본인기관만 -->
+	<select id="selectDgtlClcRegYearIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+				  	SELECT COUNT(1)
+					  FROM TX_DGTL_CLRCS_MTDT_INFO A
+				     WHERE TO_CHAR(A.FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 YEAR','YYYY')
+				       AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+					   AND A.INST_ID = #{instId}
+				</if> 
+			  ) AS BEF_DGTL_CLC_CNT
+			 ,(
+			 	SELECT COUNT(1)
+				  FROM TX_DGTL_CLRCS_MTDT_INFO A
+				 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE) ,'YYYY')
+				   AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+				   AND A.INST_ID = #{instId}
+				</if>  
+			  ) AS CUR_DGTL_CLC_CNT
+	</select>
+	
+	<!-- 월별 문화자원 등록현황  증감 2 기관관리자일 경우 본인기관만 -->
+	<select id="selectDgtlClcRegMonthIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+				  	SELECT COUNT(1)
+					  FROM TX_DGTL_CLRCS_MTDT_INFO A
+				     WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 MONTH','YYYY-MM')
+				       AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					 <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+				   	   AND A.INST_ID = #{instId}
+					 </if> 
+			  ) AS BEF_DGTL_CLC_CNT
+			 ,(
+			 		SELECT COUNT(1)
+					  FROM TX_DGTL_CLRCS_MTDT_INFO A
+				     WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE) ,'YYYY-MM')
+				       AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					 <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+				   	   AND A.INST_ID = #{instId}
+					 </if>					     
+			  ) AS CUR_DGTL_CLC_CNT
+	</select>
+	
+	<!-- 주별 문화자원 등록현황  증감 3 기관관리자일 경우 본인기관만 -->
+	<select id="selectDgtlClcRegWeekIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+				  	SELECT COUNT(1)
+					  FROM TX_DGTL_CLRCS_MTDT_INFO A
+					 WHERE EXTRACT(WEEK FROM A.FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE)) - 1
+				       AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					 <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+				   	   AND A.INST_ID = #{instId}
+					 </if>					     
+			  ) AS BEF_DGTL_CLC_CNT
+			 ,(
+			 	SELECT COUNT(1)
+					  FROM TX_DGTL_CLRCS_MTDT_INFO A
+					 WHERE EXTRACT(WEEK FROM A.FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE))
+				       AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					 <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+				   	   AND A.INST_ID = #{instId}
+					 </if>					    
+			  ) AS CUR_DGTL_CLC_CNT
+	</select>
+	
+	<!-- 일별 문화자원 등록현황  증감 4 기관관리자일 경우 본인기관만 -->
+	<select id="selectDgtlClcRegDayIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			  (
+				  	SELECT COUNT(1)
+					  FROM TX_DGTL_CLRCS_MTDT_INFO A
+				     WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 DAY','YYYY-MM-DD')
+				       AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					 <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+				   	   AND A.INST_ID = #{instId}
+					 </if>					     
+			  ) AS BEF_DGTL_CLC_CNT
+			 ,(
+			 	SELECT COUNT(1)
+					  FROM TX_DGTL_CLRCS_MTDT_INFO A
+				     WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE) ,'YYYY-MM-DD')
+				       AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y'
+					 <if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+				   	   AND A.INST_ID = #{instId}
+					 </if>					     
+			  ) AS CUR_DGTL_CLC_CNT
+	</select>
+	
+	<!-- 년별 다운로드 현황  증감 5-->
+	<select id="selectDgtlDownYearIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		   SELECT
+				(
+					SELECT COUNT(1)
+					  FROM TX_PRDCT_USE_TRCK_INFO A
+				INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+					    ON A.CLRCS_ID = B.CLRCS_ID
+					   AND A.PRDCT_SN = B.PRDCT_SN
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+				INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        	ON B.CLRCS_ID = C.CLRCS_ID
+			           AND C.INST_ID = #{instId}
+				</if>					   
+					 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 YEAR','YYYY')
+				 ) AS BEF_DGTL_DOWN_CNT	
+				 , 
+				 (
+					SELECT COUNT(1)
+					  FROM TX_PRDCT_USE_TRCK_INFO A
+				INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+					    ON A.CLRCS_ID = B.CLRCS_ID
+					   AND A.PRDCT_SN = B.PRDCT_SN
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+				INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        	ON B.CLRCS_ID = C.CLRCS_ID
+			           AND C.INST_ID = #{instId}
+				</if>					   
+					 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY') = TO_CHAR(CAST(#{searchDate} AS DATE) ,'YYYY')
+				 ) AS CUR_DGTL_DOWN_CNT	
+	</select>
+	
+	<!-- 월별 다운로드 현황  증감 6-->
+	<select id="selectDgtlDownMonthIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+				(
+					SELECT COUNT(1)
+					  FROM TX_PRDCT_USE_TRCK_INFO A
+				INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+					    ON A.CLRCS_ID = B.CLRCS_ID
+					   AND A.PRDCT_SN = B.PRDCT_SN
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+				INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        	ON B.CLRCS_ID = C.CLRCS_ID
+			           AND C.INST_ID = #{instId}
+				</if>					   
+					 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 MONTH','YYYY-MM')
+				 ) AS BEF_DGTL_DOWN_CNT	
+				 , 
+				 (
+					SELECT COUNT(1)
+					  FROM TX_PRDCT_USE_TRCK_INFO A
+				INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+					    ON A.CLRCS_ID = B.CLRCS_ID
+					   AND A.PRDCT_SN = B.PRDCT_SN
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+				INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        	ON B.CLRCS_ID = C.CLRCS_ID
+			           AND C.INST_ID = #{instId}
+				</if>					   
+					 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM') = TO_CHAR(CAST(#{searchDate} AS DATE) ,'YYYY-MM')
+				 ) AS CUR_DGTL_DOWN_CNT	
+	</select>
+	
+	<!-- 주별 다운로드 현황  증감 7-->
+	<select id="selectDgtlDownWeekIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+				(
+					SELECT COUNT(1)
+					  FROM TX_PRDCT_USE_TRCK_INFO A
+				INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+					    ON A.CLRCS_ID = B.CLRCS_ID
+					   AND A.PRDCT_SN = B.PRDCT_SN
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+				INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        	ON B.CLRCS_ID = C.CLRCS_ID
+			           AND C.INST_ID = #{instId}
+				</if>
+					 WHERE EXTRACT(WEEK FROM A.FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE)) - 1
+				 ) AS BEF_DGTL_DOWN_CNT	
+				 , 
+				 (
+					SELECT COUNT(1)
+					  FROM TX_PRDCT_USE_TRCK_INFO A
+				INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+					    ON A.CLRCS_ID = B.CLRCS_ID
+					   AND A.PRDCT_SN = B.PRDCT_SN
+				<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+				INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        	ON B.CLRCS_ID = C.CLRCS_ID
+			           AND C.INST_ID = #{instId}
+				</if>					   
+					 WHERE EXTRACT(WEEK FROM A.FRST_REG_DT) = EXTRACT(WEEK FROM CAST(#{searchDate} AS DATE))
+				 ) AS CUR_DGTL_DOWN_CNT	
+	</select>
+	
+	<!-- 일별 다운로드 현황  증감 8-->
+	<select id="selectDgtlDownDayIncrease" parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO"  resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+			(
+				SELECT COUNT(1)
+				  FROM TX_PRDCT_USE_TRCK_INFO A
+			INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+				    ON A.CLRCS_ID = B.CLRCS_ID
+				   AND A.PRDCT_SN = B.PRDCT_SN
+			<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+			INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        ON B.CLRCS_ID = C.CLRCS_ID
+			        AND C.INST_ID = #{instId}
+			</if>        
+				 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE) - INTERVAL '1 DAY','YYYY-MM-DD')
+			 ) AS BEF_DGTL_DOWN_CNT	
+			 , 
+			 (
+				SELECT COUNT(1)
+				  FROM TX_PRDCT_USE_TRCK_INFO A
+			INNER JOIN TX_DGTL_CLRCS_PRDCT_INFO B
+				    ON A.CLRCS_ID = B.CLRCS_ID
+				   AND A.PRDCT_SN = B.PRDCT_SN
+			<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">				   
+			INNER JOIN TX_DGTL_CLRCS_MTDT_INFO C
+			        ON B.CLRCS_ID = C.CLRCS_ID
+			        AND C.INST_ID = #{instId}
+			</if>   				   
+				 WHERE TO_CHAR(A.FRST_REG_DT,'YYYY-MM-DD') = TO_CHAR(CAST(#{searchDate} AS DATE) ,'YYYY-MM-DD')
+			 ) AS CUR_DGTL_DOWN_CNT	
+	</select>
+	
+	<!-- 최신 등록 디지털 문화 자원 3개-->
+	<select id="selectRecentDgtlClcList"  parameterType="kr.go.culture.xr.admin.mainMgt.vo.MainVO" resultType="kr.go.culture.xr.admin.mainMgt.vo.MainVO">
+		SELECT
+				   T.CLRCS_ID 
+				 , T.FRST_REG_DT
+				 , T.INST_ID
+				 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getInstInfo">
+				 		<property name="paramColNm" value="'instNm'"/>
+				 		<property name="paramInstId" value="T.INST_ID"/>
+					</include>) AS INST_NM
+				 , T.CLRCS_NM
+				 , T.RPRS_IMG_GROUP_ID
+				 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				 		<property name="paramInfoCd" value="'OPATH'"/>
+				 		<property name="paramAtchFileGroupId" value="T.RPRS_IMG_GROUP_ID"/>
+					</include>) AS FILE_PATH
+				 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				 		<property name="paramInfoCd" value="'ORGNM'"/>
+				 		<property name="paramAtchFileGroupId" value="T.RPRS_IMG_GROUP_ID"/>
+					</include>) AS ORGNL_ATCH_FILE_NM
+				 , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				 		<property name="paramInfoCd" value="'STRGNM'"/>
+				 		<property name="paramAtchFileGroupId" value="T.RPRS_IMG_GROUP_ID"/>
+					</include>) AS STRG_FILE_NM
+				, (SELECT 
+									STRING_AGG(Z.CTGRY_WHOL_NM,' / ') AS CTGRY_WHOL_NM_VAL
+						 FROM 
+								(
+									SELECT CTGRY_WHOL_NM  
+									  FROM TX_CLRCS_CLSF_CTGRY_INFO
+									  WHERE CTGRY_ID IN (
+					  										SELECT CTGRY_ID 
+					  										  FROM TX_CLRCS_CLSF_CTGRY_REL_INFO
+					  										 WHERE CLRCS_ID = T.CLRCS_ID 
+					   										   AND CTGRY_TYPE_CD IN ('CLRCSCT002','CLRCSCT003')  
+							 							)
+							 			 AND  USE_YN = 'Y'
+							  ORDER BY CTGRY_TYPE_CD 
+						)Z) CATE_PATH_NM	
+		  FROM 
+	 		(
+				SELECT 
+					   B.CLRCS_ID 
+					 , B.FRST_REG_DT
+					 , A.INST_ID
+					 , A.CLRCS_NM
+					 , A.RPRS_IMG_GROUP_ID
+				  FROM (
+							SELECT CLRCS_ID , MAX(FRST_REG_DT) AS FRST_REG_DT
+						  	  FROM TX_DGTL_CLRCS_PRDCT_INFO
+							 WHERE DEL_WTNG_YN  <![CDATA[<>]]> 'Y'   
+						  GROUP BY CLRCS_ID
+					    ) B
+			INNER JOIN TX_DGTL_CLRCS_MTDT_INFO A
+			 	    ON A.CLRCS_ID = B.CLRCS_ID
+			<if test= "userTypeCd == 'USERTY0002' and instId != '' and instId != null">
+			   	   AND A.INST_ID = #{instId}
+			</if> 			 	    
+			 	   AND A.DEL_WTNG_YN <![CDATA[<>]]> 'Y' 
+			  ORDER BY B.FRST_REG_DT DESC
+			     LIMIT 3
+		     )T
+	</select>
+</mapper>

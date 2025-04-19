@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper	namespace="kr.go.culture.xr.admin.crtrInfoMgt.mapper.CrtrInfoMgtMapper">
+
+	<!-- 대분류 코드 리스트 조회 -->
+	<select id="selectMasterCodeList" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" resultType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" >
+	SELECT
+			 X.CLSF_LIST_NO
+		   , X.CLSF_CD
+	       , X.CLSF_NM 
+	       , X.CLSF_CD_EXPLN_CN AS CLSF_CD_EXPLN 
+	       , X.USE_YN
+	       , X.APRV_YN 
+	       , X.AUTZR_ID
+	       , X.APRV_DT
+	       , X.FRST_RGTR_ID 
+	       , X.FRST_REG_DT 
+	       , X.LAST_MDFR_ID 
+	       , X.LAST_MDFCN_DT
+			
+	  FROM (
+			SELECT 
+					 ROW_NUMBER()OVER(ORDER BY A.CLSF_CD ASC) AS CLSF_LIST_NO	
+			       , A.CLSF_CD
+			       , A.CLSF_NM 
+			       , A.CLSF_CD_EXPLN_CN 
+			       , A.USE_YN
+			       , A.APRV_YN 
+			       , A.AUTZR_ID
+			       , A.APRV_DT
+			       , A.FRST_RGTR_ID
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 	<property name="paramDateFormat" value="'CHAR10'"/>
+					 	<property name="paramDate" value="A.FRST_REG_DT"/>
+					  </include>) AS FRST_REG_DT
+			       , A.LAST_MDFR_ID 
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 	<property name="paramDateFormat" value="'CHAR10'"/>
+					 	<property name="paramDate" value="A.LAST_MDFCN_DT"/>
+					  </include>) AS LAST_MDFCN_DT
+			 FROM TX_CMMN_CLSF_CD A
+		    WHERE 1=1
+		    <if test='paramUseYn != null and paramUseYn != ""'>
+			  AND A.USE_YN = #{paramUseYn}
+			</if>
+		    <if test='paramClsfNm != null and paramClsfNm != ""'>
+			  AND A.CLSF_NM LIKE CONCAT('%', TRIM(#{paramClsfNm}), '%')
+			</if>
+			<if test="paramFromDate != null and paramFromDate != '' and paramtoDate != null and paramtoDate != ''">
+			   AND TO_CHAR(A.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[>=]]> #{paramFromDate}
+			   AND TO_CHAR(A.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[<=]]> #{paramtoDate}
+			</if> 	 
+		 	)X
+	 ORDER BY X.CLSF_LIST_NO DESC
+	    LIMIT #{paramRecordCnt}
+	   OFFSET (#{paramPageNo} - 1) * #{paramRecordCnt}
+	</select>
+	
+	<select id="selectMasterInfo" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" resultType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" >
+			SELECT 
+					 A.CLSF_CD
+			       , A.CLSF_NM 
+			       , A.CLSF_CD_EXPLN_CN AS CLSF_CD_EXPLN 
+			       , A.USE_YN
+			       , A.APRV_YN 
+			       , A.AUTZR_ID
+			       , A.APRV_DT
+			       , A.FRST_RGTR_ID
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 	<property name="paramDateFormat" value="'CHAR10'"/>
+					 	<property name="paramDate" value="A.FRST_REG_DT"/>
+					  </include>) AS FRST_REG_DT
+			       , A.LAST_MDFR_ID 
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 	<property name="paramDateFormat" value="'CHAR10'"/>
+					 	<property name="paramDate" value="A.LAST_MDFCN_DT"/>
+					  </include>) AS LAST_MDFCN_DT
+			 FROM TX_CMMN_CLSF_CD A
+		    WHERE A.CLSF_CD = #{clsfCd}
+	</select>
+	<select id="selectMasterCodeTotalCnt" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" resultType="java.lang.Integer">
+	
+			SELECT 
+				  COUNT(A.CLSF_CD) AS TOT_LIST_CNT
+			 FROM TX_CMMN_CLSF_CD A
+		    WHERE 1=1
+		    <if test='paramUseYn != null and paramUseYn != ""'>
+			  AND A.USE_YN = #{paramUseYn}
+			</if>
+		    <if test='paramClsfNm != null and paramClsfNm != ""'>
+			  AND A.CLSF_NM LIKE CONCAT('%', TRIM(#{paramClsfNm}), '%')
+			</if>
+			<if test="paramFromDate != null and paramFromDate != '' and paramtoDate != null and paramtoDate != ''">
+			   AND TO_CHAR(A.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[>=]]> #{paramFromDate}
+			   AND TO_CHAR(A.FRST_REG_DT, 'YYYY-MM-DD') <![CDATA[<=]]> #{paramtoDate}
+			</if>
+	</select>
+	
+	
+	<select id="selectSubCodeList" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrDtlInfoVO" resultType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrDtlInfoVO" >
+		SELECT	
+				X.CD_ID_NO
+			  , X.CD_ID 
+		      , X.CLSF_CD 
+		      , X.CD_NM 
+		      , X.CD_EXPLN_CN AS CD_EXPLN 
+		      , X.USE_YN 
+		      , X.APRV_YN
+		      , X.SORT_SN
+		      , X.ANXT_CN1 
+		      , X.ANXT_CN2 
+		      , X.ANXT_CN3 
+		      , X.ANXT_CN4 
+		      , X.ANXT_CN5
+		      , X.FRST_RGTR_ID
+		      , X.FRST_REG_DT
+		      , X.LAST_MDFR_ID
+		      , X.LAST_MDFCN_DT
+		  FROM (
+				SELECT  
+						ROW_NUMBER()OVER(ORDER BY A.SORT_SN ASC) AS CD_ID_NO
+					  , A.CD_ID 
+				      , A.CLSF_CD 
+				      , A.CD_NM 
+				      , A.CD_EXPLN_CN 
+				      , A.USE_YN 
+				      , A.APRV_YN
+				      , A.SORT_SN
+				      , A.ANXT_CN1 
+				      , A.ANXT_CN2 
+				      , A.ANXT_CN3 
+				      , A.ANXT_CN4 
+				      , A.ANXT_CN5
+				      , A.FRST_RGTR_ID 
+				      , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+						 	<property name="paramDateFormat" value="'CHAR10'"/>
+						 	<property name="paramDate" value="A.FRST_REG_DT"/>
+					  	 </include>) AS FRST_REG_DT 
+				      , A.LAST_MDFR_ID 
+				      , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+						 	<property name="paramDateFormat" value="'CHAR10'"/>
+						 	<property name="paramDate" value="A.LAST_MDFCN_DT"/>
+					  	 </include>) AS LAST_MDFCN_DT      
+				FROM  TX_CMMN_CD A
+			   WHERE A.CLSF_CD = #{paramClsfCd}
+		  )X			   
+		ORDER BY X.CD_ID_NO 
+	</select>
+	<select id="selectClsfCd" resultType="String">
+				SELECT
+					   CONCAT('CLSF',LPAD(CAST(NEXTVAL('sq_tx_cmmn_clsf_cd_seq_01') AS TEXT),6,'0')) AS CLSF_CD
+	</select>
+	<!-- 대분류 코드 등록 -->
+	<insert id="insertCodeInfo" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO">		
+		INSERT INTO TX_CMMN_CLSF_CD
+		(
+			  CLSF_CD
+			, CLSF_NM
+			, CLSF_CD_EXPLN_CN
+			, USE_YN
+			, APRV_YN
+			, AUTZR_ID
+			, APRV_DT
+			, FRST_RGTR_ID
+			, FRST_REG_DT
+			, LAST_MDFR_ID
+			, LAST_MDFCN_DT
+		)VALUES(
+			  #{clsfCd}
+			, #{clsfNm}
+			, #{clsfCdExpln}
+			, #{useYn}
+			, 'Y'
+			, #{autzrId}
+			, NOW()
+			, #{frstRgtrId}
+			, NOW()
+			, #{lastMdfrId}
+			, NOW()  
+		)
+	</insert>
+	<!-- 대분류 코드 이력등록 -->	 
+	<insert id="insertCodeInfoHstry" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO">
+	<selectKey order="BEFORE" keyProperty="chgHstrySn" resultType="int">
+	 SELECT
+		COALESCE((SELECT
+						MAX(A.CHG_HSTRY_SN) 
+				  FROM TX_CMMN_CLSF_CD_CHG_HSTRY A
+				 WHERE A.CLSF_CD = #{clsfCd}), 0) + 1
+	</selectKey>
+		INSERT INTO TX_CMMN_CLSF_CD_CHG_HSTRY
+		(
+			  CLSF_CD
+			, CHG_HSTRY_SN
+			, CHG_HSTRY_TYPE_CD
+			, CLSF_NM
+			, USE_YN
+			, APRV_YN
+			, AUTZR_ID
+			, APRV_DT
+			, RGTR_ID
+			, REG_DT
+		)VALUES(
+			  #{clsfCd}
+			, #{chgHstrySn}
+			, #{chgHstryTypeCd}
+			, #{clsfNm}
+			, #{useYn}
+			, (SELECT APRV_YN FROM TX_CMMN_CLSF_CD WHERE CLSF_CD = #{clsfCd})
+			, (SELECT AUTZR_ID FROM TX_CMMN_CLSF_CD WHERE CLSF_CD = #{clsfCd})
+			, (SELECT APRV_DT FROM TX_CMMN_CLSF_CD WHERE CLSF_CD = #{clsfCd})
+			, #{rgtrId}
+			, NOW()
+		)
+	</insert>
+	
+	<update id="updateCodeInfo" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO">
+		UPDATE TX_CMMN_CLSF_CD
+		   SET  CLSF_NM = #{clsfNm}
+		      , CLSF_CD_EXPLN_CN = #{clsfCdExpln}
+		      , USE_YN = #{useYn}
+		      , LAST_MDFR_ID =  #{lastMdfrId}
+		      , LAST_MDFCN_DT = NOW()
+		 WHERE CLSF_CD = #{clsfCd}
+	</update>
+	<update id="updateCodeDtlInfo" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrDtlInfoVO">
+		UPDATE TX_CMMN_CD
+		   SET  CD_ID = #{cdId}
+		      , CD_NM = #{cdNm}
+		      , CD_EXPLN_CN = #{cdExpln}
+		      , USE_YN = #{useYn}
+		      , SORT_SN = #{sortSn}
+		      , ANXT_CN1 = #{anxtCn1}
+		      , ANXT_CN2 = #{anxtCn2}
+		      , ANXT_CN3 = #{anxtCn3}
+		      , ANXT_CN4 = #{anxtCn4}
+		      , ANXT_CN5 = #{anxtCn5}
+		      , LAST_MDFR_ID = #{lastMdfrId}
+		      , LAST_MDFCN_DT = NOW()
+		 WHERE CLSF_CD = #{clsfCd}
+		   AND CD_ID = #{cdId}
+	</update>
+	<!-- 소분류 코드 등록 -->
+	<insert id="insertCodeDtlInfo" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrDtlInfoVO">
+		INSERT INTO TX_CMMN_CD
+			(
+				 CD_ID
+				,CLSF_CD
+				,CD_NM
+				,CD_EXPLN_CN
+				,USE_YN
+				,APRV_YN
+				,AUTZR_ID
+				,APRV_DT
+				,SORT_SN
+				,ANXT_CN1
+				,ANXT_CN2
+				,ANXT_CN3
+				,ANXT_CN4
+				,ANXT_CN5
+				,FRST_RGTR_ID
+				,FRST_REG_DT
+				,LAST_MDFR_ID
+				,LAST_MDFCN_DT
+			) VALUES (
+				 #{cdId}
+				,#{clsfCd}
+				,#{cdNm}
+				,#{cdExpln}
+				,#{useYn}
+				,'Y'
+				,#{autzrId}
+				,NOW()
+				,#{sortSn}
+				,#{anxtCn1}
+				,#{anxtCn2}
+				,#{anxtCn3}
+				,#{anxtCn4}
+				,#{anxtCn5}
+				,#{frstRgtrId}
+				,NOW()
+				,#{lastMdfrId}
+				,NOW()
+			)
+	</insert>
+	
+	<!-- 소분류 코드 이력등록 -->
+	<insert id="insertCodeDtlInfoHstry" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrDtlInfoVO">
+		<selectKey order="BEFORE" keyProperty="chgHstrySn" resultType="int">
+		SELECT
+			COALESCE((SELECT
+							MAX(A.CHG_HSTRY_SN) 
+					  FROM TX_CMMN_CD_CHG_HSTRY A
+					 WHERE A.CLSF_CD = #{clsfCd}
+					   AND A.CD_ID = #{cdId}), 0) + 1
+		</selectKey>
+			INSERT INTO TX_CMMN_CD_CHG_HSTRY
+			(
+				  CD_ID
+				, CLSF_CD
+				, CHG_HSTRY_SN
+				, CHG_HSTRY_TYPE_CD
+				, CD_NM
+				, CD_EXPLN_CN
+				, USE_YN
+				, APRV_YN
+				, AUTZR_ID
+				, APRV_DT
+				, SORT_SN
+				, ANXT_CN1
+				, ANXT_CN2
+				, ANXT_CN3
+				, ANXT_CN4
+				, ANXT_CN5				
+				, RGTR_ID
+				, REG_DT
+			)VALUES(
+				  #{cdId}
+				, #{clsfCd}
+				, #{chgHstrySn}
+				, #{chgHstryTypeCd}
+				, #{cdNm}
+				, #{cdExpln}
+				, #{useYn}
+				, (SELECT APRV_YN FROM TX_CMMN_CD WHERE CD_ID = #{cdId} AND CLSF_CD = #{clsfCd})
+				, #{autzrId}
+				, (SELECT APRV_DT FROM TX_CMMN_CD WHERE CD_ID = #{cdId} AND CLSF_CD = #{clsfCd})
+				, #{sortSn}
+				, #{anxtCn1}
+				, #{anxtCn2}
+				, #{anxtCn3}
+				, #{anxtCn4}
+				, #{anxtCn5}
+				, #{rgtrId}
+				, NOW()
+			)
+	</insert>
+	<!-- 기관아이디 중복 여부 체크 -->
+	<select id="checkDuplicateClsfCd" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" resultType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO">
+		SELECT 
+			   CASE WHEN COUNT(A.CLSF_CD) > 0
+						 THEN 'Y'
+					WHEN COUNT(A.CLSF_CD) = 0
+						 THEN 'N'
+			   END AS CHK_DUPL_CLSF_CD_YN
+		  FROM TX_CMMN_CLSF_CD A
+		 WHERE A.CLSF_CD = #{clsfCd}
+	</select>
+	<!-- 대메뉴 이력 리스트 -->
+	<select id="selectMasterCodeHstryList" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" resultType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrInfoVO" >
+	SELECT
+			 X.CLSF_LIST_NO
+		   , X.CLSF_CD
+	       , X.CHG_HSTRY_SN
+	       , X.CHG_HSTRY_TYPE_CD
+	       , X.CLSF_NM 
+	       , X.CLSF_CD_EXPLN_CN AS CLSF_CD_EXPLN 
+	       , X.USE_YN
+	       , X.APRV_YN 
+	       , X.AUTZR_ID
+	       , X.APRV_DT
+	       , X.RGTR_ID 
+	       , X.REG_DT
+			
+	  FROM (
+			SELECT 
+					 ROW_NUMBER()OVER(ORDER BY A.CLSF_CD ASC) AS CLSF_LIST_NO	
+			       , A.CLSF_CD
+			       , A.CHG_HSTRY_SN
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					 		<property name="paramClsfCd" value="'CLSF000001'"/>
+					 		<property name="paramCdId" value="A.CHG_HSTRY_TYPE_CD"/>
+						</include>) AS CHG_HSTRY_TYPE_CD
+			       , A.CLSF_NM 
+			       , A.CLSF_CD_EXPLN_CN 
+			       , A.USE_YN
+			       , A.APRV_YN 
+			       , A.AUTZR_ID
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 	<property name="paramDateFormat" value="'CHAR10'"/>
+					 	<property name="paramDate" value="A.APRV_DT"/>
+					  </include>) AS APRV_DT
+			       , A.RGTR_ID
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 	<property name="paramDateFormat" value="'CHAR10'"/>
+					 	<property name="paramDate" value="A.REG_DT"/>
+					  </include>) AS REG_DT
+			 FROM TX_CMMN_CLSF_CD_CHG_HSTRY A
+		    WHERE 1=1
+			  AND A.CLSF_CD = #{clsfCd}
+		 	)X
+	 ORDER BY X.CLSF_LIST_NO DESC
+	</select>
+	<!-- 소분류 이력 조회 -->
+	<select id="selectSubCodeHstryList" parameterType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrDtlInfoVO" resultType="kr.go.culture.xr.admin.crtrInfoMgt.vo.CrtrDtlInfoVO" >
+	SELECT
+			 X.CD_ID_NO
+		   , X.CLSF_CD
+		   , X.CD_ID
+		   , X.CD_NM
+	       , X.CHG_HSTRY_SN
+	       , X.CHG_HSTRY_TYPE_CD
+	       , X.CD_EXPLN_CN AS CD_EXPLN 
+	       , X.USE_YN
+	       , X.APRV_YN 
+	       , X.AUTZR_ID
+	       , X.APRV_DT
+	       , X.RGTR_ID 
+	       , X.REG_DT
+	       , X.SORT_SN
+		   , X.ANXT_CN1	  
+		   , X.ANXT_CN2
+		   , X.ANXT_CN3
+		   , X.ANXT_CN4
+		   , X.ANXT_CN5
+			
+	  FROM (
+			SELECT 
+					 ROW_NUMBER()OVER(ORDER BY A.CD_ID ASC) AS CD_ID_NO	
+			       , A.CLSF_CD
+			       , A.CD_ID
+			       , A.CD_NM
+			       , A.CHG_HSTRY_SN
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getCmmnCdNm">
+					 		<property name="paramClsfCd" value="'CLSF000001'"/>
+					 		<property name="paramCdId" value="A.CHG_HSTRY_TYPE_CD"/>
+						</include>) AS CHG_HSTRY_TYPE_CD
+			       , A.CD_EXPLN_CN
+			       , A.USE_YN
+			       , A.APRV_YN 
+			       , A.AUTZR_ID
+			       , A.APRV_DT
+			       , A.RGTR_ID
+			       , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+					 	<property name="paramDateFormat" value="'CHAR10'"/>
+					 	<property name="paramDate" value="A.REG_DT"/>
+					  </include>) AS REG_DT
+				   , A.SORT_SN
+				   , A.ANXT_CN1	  
+				   , A.ANXT_CN2
+				   , A.ANXT_CN3
+				   , A.ANXT_CN4
+				   , A.ANXT_CN5
+			 FROM TX_CMMN_CD_CHG_HSTRY A
+		    WHERE A.CLSF_CD = #{clsfCd}
+		 	)X
+	 ORDER BY X.CD_ID_NO DESC
+	</select>
+</mapper>

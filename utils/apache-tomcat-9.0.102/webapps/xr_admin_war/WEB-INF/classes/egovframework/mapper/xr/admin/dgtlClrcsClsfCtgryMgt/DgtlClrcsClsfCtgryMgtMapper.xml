@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.mapper.DgtlClrcsClsfCtgryMgtMapper">
+
+	<!-- 분류 코드 조회 트리 형식-->
+	<select id="selectDgtlClrcsClsfCtgryList" resultType="kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.vo.DgtlClrcsClsfCtgryVO">
+	/* kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.mapper.DgtlClrcsClsfCtgryMapper.selectDgtlClrcsClsfCtgryList */
+    WITH RECURSIVE CATE_LIST (CTGRY_ID,UP_CTGRY_ID,CTGRY_NM,CTGRY_TYPE_CD,CTGRY_STEP_NO,SORT_SN,USE_YN,LEVEL, PATH, CYCLE) AS
+      (
+       SELECT 
+           A.CTGRY_ID
+         , A.UP_CTGRY_ID
+         , A.CTGRY_NM
+         , A.CTGRY_TYPE_CD
+         , A.CTGRY_STEP_NO
+         , A.SORT_SN
+         , A.USE_YN
+         , 0
+         , ARRAY[LPAD(A.SORT_SN::VARCHAR,9,'0')||A.CTGRY_ID::text]
+         , FALSE
+         FROM TX_CLRCS_CLSF_CTGRY_INFO A
+        WHERE A.UP_CTGRY_ID IS NULL
+           AND A.CTGRY_TYPE_CD = #{ctgryTypeCd}
+		   AND A.USE_YN = 'Y'
+		   <if test= "instId != '' and instId != null">
+			   AND A.INST_ID = #{instId}
+		   </if>
+        UNION ALL
+        SELECT A.CTGRY_ID
+             , A.UP_CTGRY_ID
+             , A.CTGRY_NM
+             , A.CTGRY_TYPE_CD
+             , A.CTGRY_STEP_NO
+             , A.SORT_SN
+             , A.USE_YN
+             , LEVEL + 1
+             , PATH || (LPAD(A.SORT_SN::VARCHAR,9,'0')||A.CTGRY_ID), (LPAD(A.SORT_SN::VARCHAR,9,'0')||A.CTGRY_ID) = ANY(PATH)
+          FROM TX_CLRCS_CLSF_CTGRY_INFO A , CATE_LIST DC
+         WHERE A.UP_CTGRY_ID = DC.CTGRY_ID
+           and A.USE_YN = 'Y'
+           AND NOT CYCLE 
+        )  
+        SELECT
+                CTGRY_ID
+              , UP_CTGRY_ID
+              , CTGRY_TYPE_CD
+              , CTGRY_NM
+              , LEVEL
+              , PATH
+              , SORT_SN 
+            FROM CATE_LIST
+    ORDER BY PATH
+				    
+	</select>
+	<!-- 레거시 카테고리 등록 기관 -->
+	<select id="selectLegacyInstList" resultType="kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.vo.DgtlClrcsClsfCtgryVO">
+		 SELECT
+		 	    T01.INST_ID
+		      , T01.INST_NM
+		   FROM TX_INST_INFO T01
+		  WHERE T01.RLS_YN = 'Y'
+		    AND T01.DEL_YN = 'N'
+		  ORDER BY INST_NM
+	</select>
+	<!-- 분류 코드 조회 카테고리 이름 Duplicate 체크-->
+	<select id="selectDgtlClrcsClsfCtgryDupCheck" resultType="Integer">
+		/* kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.mapper.DgtlClrcsClsfCtgryMapper.selectDgtlClrcsClsfCtgryDupCheck */
+			   WITH RECURSIVE CATE_LIST (CTGRY_ID,UP_CTGRY_ID,CTGRY_NM,CTGRY_TYPE_CD,CTGRY_STEP_NO,CTGRY_WHOL_NM,SORT_SN,USE_YN,LEVEL, PATH, CYCLE) AS
+						(
+							SELECT 
+									  A.CTGRY_ID
+									, A.UP_CTGRY_ID
+									, A.CTGRY_NM
+									, A.CTGRY_TYPE_CD
+									, A.CTGRY_STEP_NO
+									, A.CTGRY_WHOL_NM
+									, A.SORT_SN
+									, A.USE_YN
+									, 0
+									, ARRAY[A.CTGRY_ID::text]
+									, FALSE
+							  FROM TX_CLRCS_CLSF_CTGRY_INFO A
+							 WHERE A.UP_CTGRY_ID IS NULL
+							   AND A.CTGRY_TYPE_CD = #{ctgryTypeCd}
+							   AND A.USE_YN = 'Y'
+							 <if test= "instId != '' and instId != null">
+							   	AND A.INST_ID = 'NGCB01'
+							 </if>
+							 UNION ALL
+							 SELECT   A.CTGRY_ID
+							        , A.UP_CTGRY_ID
+								    , A.CTGRY_NM
+									, A.CTGRY_TYPE_CD
+									, A.CTGRY_STEP_NO
+									, A.CTGRY_WHOL_NM
+									, A.SORT_SN
+									, A.USE_YN
+									, LEVEL + 1
+									, PATH || A.CTGRY_ID, A.CTGRY_ID = ANY(PATH)
+							   FROM TX_CLRCS_CLSF_CTGRY_INFO A , CATE_LIST DC
+							  WHERE A.UP_CTGRY_ID = DC.CTGRY_ID
+							    and A.USE_YN = 'Y'
+							  AND NOT CYCLE 
+					   )  
+				          SELECT
+        		  				 COUNT(CTGRY_ID)
+					        FROM CATE_LIST
+					      WHERE 1=1
+					        AND LEVEL = #{level}					        
+					        AND CTGRY_NM = TRIM(#{ctgryNm})
+					    <if test= "upCtgryId != '' and upCtgryId != null">
+							AND UP_CTGRY_ID = #{upCtgryId}
+						</if>
+	</select>
+	<!-- 분류 코드 등록 -->
+	<insert id="insertDgtlClrcsClsfCtgryInfo" parameterType="kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.vo.DgtlClrcsClsfCtgryVO">
+	/* kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.mapper.DgtlClrcsClsfCtgryMapper.insertDgtlClrcsClsfCtgryInfo */
+	INSERT INTO TX_CLRCS_CLSF_CTGRY_INFO
+		(
+			  CTGRY_ID
+			, UP_CTGRY_ID
+			, CTGRY_NM
+			, CTGRY_TYPE_CD
+			, CTGRY_STEP_NO
+			, SORT_SN
+			, CTGRY_WHOL_NM
+			, INST_ID
+			, USE_YN
+			, FRST_RGTR_ID
+			, FRST_REG_DT
+			, LAST_MDFR_ID
+			, LAST_MDFCN_DT
+		) VALUES (
+			  TRIM(TO_CHAR(NEXTVAL('SQ_TX_CLRCS_CLSF_CTGRY_INFO_01'),'0000000009'))
+			, #{upCtgryId}
+			, #{ctgryNm}
+			, #{ctgryTypeCd}
+			, #{ctgryStepNo}
+			, #{sortSn}
+			<if test= "ctgryStepNo == 1">
+			, #{ctgryNm}
+			</if>
+			<if test= "ctgryStepNo > 1">
+			, (SELECT CTGRY_WHOL_NM || '-' || #{ctgryNm} FROM TX_CLRCS_CLSF_CTGRY_INFO WHERE CTGRY_ID = #{upCtgryId}) 
+			</if>
+			, #{instId}
+			, 'Y'
+			, #{frstRgtrId}
+			, NOW()
+			, #{lastMdfrId}
+			, NOW()
+		)
+	</insert>
+	<!-- 분류 코드 수정 -->
+	<update id="updateDgtlClrcsClsfCtgryInfo" parameterType="kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.vo.DgtlClrcsClsfCtgryVO">
+	/* kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.mapper.DgtlClrcsClsfCtgryMapper.updateDgtlClrcsClsfCtgryInfo */
+		UPDATE TX_CLRCS_CLSF_CTGRY_INFO
+		   SET    CTGRY_NM      = #{ctgryNm}
+				, SORT_SN       = #{sortSn}
+				, CTGRY_WHOL_NM = #{ctgryWholNm}
+				, LAST_MDFR_ID  = #{lastMdfrId}
+				, LAST_MDFCN_DT = NOW()
+          WHERE CTGRY_ID        = #{ctgryId}				
+	</update>
+	
+	<!-- 분류 wholNm 수정 -->
+	<update id="updateDgtlClrcsClsfCtgryWholNm" parameterType="kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.vo.DgtlClrcsClsfCtgryVO">
+	/* kr.go.culture.xr.admin.dgtlClrcsClsfCtgryMgt.mapper.DgtlClrcsClsfCtgryMapper.updateDgtlClrcsClsfCtgryWholNm */
+    WITH RECURSIVE CATE_LIST (CTGRY_ID, UP_CTGRY_ID, CTGRY_NM, CTGRY_TYPE_CD, CTGRY_STEP_NO, SORT_SN, USE_YN, ARR_ID, ARR_NM) AS (
+		 SELECT A.CTGRY_ID
+		      , A.UP_CTGRY_ID
+		      , A.CTGRY_NM
+		      , A.CTGRY_TYPE_CD
+		      , A.CTGRY_STEP_NO
+		      , A.SORT_SN
+		      , A.USE_YN
+		      , ARRAY[A.CTGRY_ID::text]
+		      , ARRAY[A.CTGRY_NM::text]
+		   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+		  WHERE A.UP_CTGRY_ID IS NULL
+		    AND A.CTGRY_TYPE_CD = #{ctgryTypeCd}
+		    AND A.USE_YN = 'Y'
+		    AND A.INST_ID = #{instId}
+		  UNION ALL
+		 SELECT A.CTGRY_ID
+		      , A.UP_CTGRY_ID
+		      , A.CTGRY_NM
+		      , A.CTGRY_TYPE_CD
+		      , A.CTGRY_STEP_NO
+		      , A.SORT_SN
+		      , A.USE_YN
+		      , ARR_ID || A.CTGRY_ID
+		      , ARR_NM || A.CTGRY_NM
+		   FROM TX_CLRCS_CLSF_CTGRY_INFO A
+		  INNER JOIN CATE_LIST DC
+		     ON A.UP_CTGRY_ID = DC.CTGRY_ID
+		  WHERE A.USE_YN = 'Y'
+		)
+		UPDATE TX_CLRCS_CLSF_CTGRY_INFO T01
+		   SET CTGRY_WHOL_NM = ARRAY_TO_STRING(ARR_NM, ' - ')
+		  FROM CATE_LIST T02
+		 WHERE T01.CTGRY_ID = T02.CTGRY_ID
+		   AND #{ctgryId} = ANY(ARR_ID::text[])				
+	</update>
+	
+</mapper>

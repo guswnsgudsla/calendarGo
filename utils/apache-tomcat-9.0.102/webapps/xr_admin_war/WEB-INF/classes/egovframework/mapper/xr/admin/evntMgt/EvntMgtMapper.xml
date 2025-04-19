@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="kr.go.culture.xr.admin.evntMgt.mapper.EvntMgtMapper">
+	
+	<!-- 이벤트 리스트 조회 -->
+	<select id="selectEvntList" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO" resultType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		SELECT /* kr.go.culture.xr.admin.evntMgt.mapper.EvntMapper.selectEvntList */ 
+			XTEI.EVNT_ID
+			, ROW_NUMBER()OVER(ORDER BY EVNT_ID ASC) AS LIST_NO
+			, XTEI.EVNT_TYPE_CD
+			, XTEI.EVNT_TTL
+			, XTEI.BGNG_YMD
+			, XTEI.BGNG_TM
+			, XTEI.END_YMD
+			, XTEI.END_TM
+			, XTEI.EVNT_STTS_CD
+			, XTEI.MENUAL_EVNT_STTS_CD
+			, XTEI.RPRS_IMG_GROUP_ID
+			, XTEI.IMG_STRG_PATH_NM
+			, XTEI.EVNT_CN
+			, XTEI.PIC_NM
+			, XTEI.PIC_TELNO
+			, XTEI.APRV_YN
+			, XTEI.AUTZR_ID
+			, XTEI.APRV_DT
+			, XTEI.USE_YN
+			, XTEI.FRST_RGTR_ID
+			, XTEI.REG_INST_NM
+			, XTEI.FRST_REG_DT
+			, XTEI.LAST_MDFR_ID
+			, XTEI.LAST_MDFCN_DT
+			, XTEI.SLCTN_NTC_YMD
+			, XTEI.INQ_CNT
+			, XTEI.SLCTN_MTHD_CD
+		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingHeader" />
+		FROM
+		(
+			SELECT 
+				EVNT_ID
+				, EVNT_TYPE_CD
+				, EVNT_TTL_NM AS EVNT_TTL
+				, TO_CHAR(CAST(BGNG_YMD AS DATE), 'YYYY-MM-DD') AS BGNG_YMD
+				, BGNG_TM
+				, TO_CHAR(CAST(END_YMD AS DATE), 'YYYY-MM-DD') AS END_YMD
+				, END_TM
+				, (CASE
+		               WHEN CAST(BGNG_YMD AS DATE) - CURRENT_DATE  <![CDATA[>]]> 0 AND EVNT_STTS_CD ='E01'  THEN 'E01'<!-- 미래 -->
+		               WHEN CAST(END_YMD AS DATE) - CURRENT_DATE <![CDATA[>]]> 0 AND EVNT_STTS_CD <![CDATA[<>]]> 'E03' THEN 'E02'  <!--진행중--> 
+		               WHEN CAST(END_YMD AS DATE) - CURRENT_DATE <![CDATA[<]]> 0 THEN 'E03' <!--종료-->
+		               ELSE  EVNT_STTS_CD  
+		           END) AS EVNT_STTS_CD
+	            , EVNT_STTS_CD AS MENUAL_EVNT_STTS_CD
+				, RPRS_IMG_GROUP_ID
+				, IMG_STRG_PATH_NM
+				, EVNT_CN
+				, PIC_NM
+				, PIC_TELNO
+				, APRV_YN
+				, AUTZR_ID
+				, APRV_DT
+				, USE_YN
+				, TEI.FRST_RGTR_ID
+				, (SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = (SELECT INST_ID FROM TX_USER_INFO WHERE USER_ID = TEI.FRST_RGTR_ID)) AS REG_INST_NM
+				, FRST_REG_DT
+				, LAST_MDFR_ID
+				, LAST_MDFCN_DT
+				, SLCTN_NTC_YMD
+				, INQ_CNT
+				, SLCTN_MTHD_CD
+			FROM TX_EVNT_INFO TEI
+			WHERE 1=1
+		) XTEI
+		WHERE 1=1
+			AND APRV_YN = 'Y'
+		<if test="evntTtl != '' and evntTtl != null">
+			AND REPLACE(TRIM(EVNT_TTL), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{evntTtl}),' ',''), '%')
+		</if>
+		<if test="evntCn != '' and evntCn != null">
+			AND REPLACE(TRIM(EVNT_CN), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{evntCn}),' ',''), '%')
+		</if>
+		<if test="srchEvntSttsCd != '' and srchEvntSttsCd != null">
+			AND EVNT_STTS_CD = #{srchEvntSttsCd}
+		</if>
+<!-- 		<if test="userInstId != '' and userInstId != null">
+			AND REG_INST_NM = (SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = #{userInstId} )
+		</if> 이벤트 메뉴 기관관리자 접속 못한다고 하여 주석처리-->
+		ORDER BY LIST_NO DESC
+		<include refid="kr.go.culture.xr.admin.cmmn.mapper.BaseMapper.sqlPagingFooter" />
+	</select>
+
+	<!-- 리스트 수 집계 -->
+	<select id="selectEvntListCnt" resultType="Integer">
+		SELECT /*kr.go.culture.xr.admin.evntMgt.mapper.EvntMapper.selectEvntListCnt*/
+			COUNT(XTEI.EVNT_ID) AS TOT_LIST_CNT
+		FROM
+		(
+			SELECT
+				EVNT_ID AS EVNT_ID
+				,EVNT_TTL_NM AS EVNT_TTL
+				,EVNT_CN AS EVNT_CN
+				,APRV_YN AS APRV_YN
+			    ,(CASE
+	                 WHEN CAST(BGNG_YMD AS DATE) - CURRENT_DATE  <![CDATA[>]]> 0 AND EVNT_STTS_CD ='E01'  THEN 'E01'<!-- 미래 -->
+	                 WHEN CAST(END_YMD AS DATE) - CURRENT_DATE <![CDATA[>]]> 0 AND EVNT_STTS_CD <![CDATA[<>]]> 'E03' THEN 'E02'  <!--진행중--> 
+	                 WHEN CAST(END_YMD AS DATE) - CURRENT_DATE <![CDATA[<]]> 0 THEN 'E03' <!--종료-->
+	                 ELSE  EVNT_STTS_CD  
+	             END) AS EVNT_STTS_CD
+	            , (SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = (SELECT INST_ID FROM TX_USER_INFO WHERE USER_ID = TEI.FRST_RGTR_ID)) AS REG_INST_NM 
+		    FROM TX_EVNT_INFO TEI
+		    WHERE 1 = 1
+			AND APRV_YN = 'Y'
+			<if test="evntTtl != '' and evntTtl != null">
+				AND REPLACE(TRIM(EVNT_TTL_NM), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{evntTtl}),' ',''), '%')
+			</if>
+			<if test="evntCn != '' and evntCn != null">
+				AND REPLACE(TRIM(EVNT_CN), ' ', '') LIKE CONCAT('%', REPLACE(TRIM(#{evntCn}),' ',''), '%')
+			</if>
+		) XTEI
+		WHERE 1=1
+		<if test="srchEvntSttsCd != '' and srchEvntSttsCd != null">
+			AND XTEI.EVNT_STTS_CD = #{srchEvntSttsCd}
+		</if>
+		<!-- 		<if test="userInstId != '' and userInstId != null">
+			AND REG_INST_NM = (SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = #{userInstId} )
+		</if> 이벤트 메뉴 기관관리자 접속 못한다고 하여 주석처리-->
+	</select>
+	
+	<!-- 이벤트 당첨글 조회 -->
+	<select id="selectWinnerList" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO" resultType="kr.go.culture.xr.admin.bbsMgt.vo.BbsInfoVO">
+		 SELECT  /*kr.go.culture.xr.admin.evntMgt.mapper.EvntMapper.selectWinnerList*/
+           T01.PST_TTL_NM AS PST_TTL                              	
+           , T01.PST_CN                              	
+	       , T01.ATCH_FILE_GROUP_ID      
+		   , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				<property name="paramInfoCd" value="'OPATH'"/>
+				<property name="paramAtchFileGroupId" value="T01.ATCH_FILE_GROUP_ID "/>
+			  </include>) AS FILE_PATH
+		   , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+			 	<property name="paramInfoCd" value="'ORGNM'"/>
+			 	<property name="paramAtchFileGroupId" value="T01.ATCH_FILE_GROUP_ID "/>
+			  </include>) AS ORGNL_ATCH_FILE_NM
+		   , (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+				<property name="paramInfoCd" value="'STRGNM'"/> 
+			 	<property name="paramAtchFileGroupId" value="T01.ATCH_FILE_GROUP_ID "/>
+			  </include>) AS STRG_FILE_NM               
+	       , T01.INQ_CNT                                
+	       , T01.PRGRS_AUTZR_ID                         
+	       , T01.FRST_RGTR_ID                           
+	       , T01.WRTR_ID       
+	       , (SELECT USER_NM FROM TX_USER_INFO WHERE USER_ID = T01.WRTR_ID) AS WRTR_NM                        
+	       , T01.NTC_PSTG_YN                            
+	       , T01.LNKG_CONTS_ID                          
+	       , T01.FRST_RGTR_ID      
+	       , T01.FRST_REG_DT   
+		   , TO_CHAR(CAST(T01.FRST_REG_DT AS DATE), 'YYYY-MM-DD') AS FRST_REG_DT_V10
+		   , T01.LAST_MDFCN_DT   
+		   , TO_CHAR(CAST(T01.LAST_MDFCN_DT AS DATE), 'YYYY-MM-DD') AS LAST_MDFCN_DT_V10
+	       , T02.APRV_YN                                 
+	       , TO_CHAR(CAST(T02.SLCTN_NTC_YMD AS DATE), 'YYYY-MM-DD') AS SLCTN_NTC_YMD
+	   FROM TX_BBS_INFO T01 
+	   JOIN  TX_EVNT_INFO T02 
+	   ON T01.LNKG_CONTS_ID = T02.EVNT_ID
+	   WHERE 1 = 1
+	   AND T01.NTC_PSTG_YN = 'Y'
+	   AND T01.DEL_YN = 'N'
+	   AND T02.APRV_YN = 'Y'
+	   AND T01.BBS_ID LIKE 'WNR'
+	   AND T01.LNKG_CONTS_ID = #{srchEvntId}
+	</select>
+	
+	<!-- 이벤트 정보 상세조회 -->
+	<select id="selectEvntDtl" resultType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		SELECT /*kr.go.culture.xr.admin.evntMgt.mapper.EvntMapper.selectEvntDtl*/
+			XTEI.EVNT_ID AS EVNT_ID
+			, XTEI.EVNT_TYPE_CD AS EVNT_TYPE_CD
+			, XTEI.EVNT_TTL AS EVNT_TTL
+			, XTEI.BGNG_YMD AS BGNG_YMD
+			, XTEI.BGNG_TM AS BGNG_TM
+			, XTEI.END_YMD AS END_YMD
+			, XTEI.END_TM AS END_TM
+			, XTEI.EVNT_STTS_CD AS EVNT_STTS_CD
+			, XTEI.RPRS_IMG_GROUP_ID AS RPRS_IMG_GROUP_ID
+			, XTEI.FILE_PATH AS FILE_PATH
+ 			, XTEI.ORGNL_ATCH_FILE_NM AS ORGNL_ATCH_FILE_NM
+ 			, XTEI.STRG_FILE_NM AS STRG_FILE_NM
+			, XTEI.IMG_STRG_PATH_NM AS IMG_STRG_PATH_NM
+			, XTEI.EVNT_CN AS EVNT_CN
+			, XTEI.PIC_NM AS PIC_NM
+			, XTEI.PIC_TELNO AS PIC_TELNO
+			, XTEI.APRV_YN AS APRV_YN
+			, XTEI.AUTZR_ID AS AUTZR_ID
+			, XTEI.APRV_DT AS APRV_DT
+			, XTEI.USE_YN AS USE_YN
+			, XTEI.FRST_RGTR_ID AS FRST_RGTR_ID
+			, XTEI.REG_INST_NM AS REG_INST_NM
+			, XTEI.FRST_REG_DT AS FRST_REG_DT
+			, XTEI.FRST_REG_DT_V19 AS FRST_REG_DT_V19
+			, XTEI.LAST_MDFR_ID AS LAST_MDFR_ID
+			, XTEI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+			, XTEI.LAST_MDFCN_DT_V19 AS LAST_MDFCN_DT_V19
+			, XTEI.SLCTN_NTC_YMD
+			, XTEI.INQ_CNT
+			, XTEI.SLCTN_MTHD_CD
+		FROM
+		(
+			SELECT 
+				TEI.EVNT_ID AS EVNT_ID
+				, TEI.EVNT_TYPE_CD AS EVNT_TYPE_CD
+				, TEI.EVNT_TTL_NM AS EVNT_TTL
+				, TO_CHAR(CAST(BGNG_YMD AS DATE), 'YYYY-MM-DD') AS BGNG_YMD
+				, TO_CHAR(CAST(END_YMD AS DATE), 'YYYY-MM-DD') AS END_YMD
+				, TEI.BGNG_TM AS BGNG_TM
+				, TEI.END_TM AS END_TM
+				, (CASE
+		               WHEN CAST(BGNG_YMD AS DATE) - CURRENT_DATE  <![CDATA[>]]> 0 AND EVNT_STTS_CD ='E01'  THEN 'E01'<!-- 미래 -->
+		               WHEN CAST(END_YMD AS DATE) - CURRENT_DATE <![CDATA[>]]> 0 AND EVNT_STTS_CD <![CDATA[<>]]> 'E03' THEN 'E02'  <!--진행중--> 
+		               WHEN CAST(END_YMD AS DATE) - CURRENT_DATE <![CDATA[<]]> 0 THEN 'E03' <!--종료-->
+		               ELSE  EVNT_STTS_CD  
+		           END) AS EVNT_STTS_CD
+				, TEI.RPRS_IMG_GROUP_ID AS RPRS_IMG_GROUP_ID
+				, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+	 				 		<property name="paramInfoCd" value="'OPATH'"/>
+	 				 		<property name="paramAtchFileGroupId" value="TEI.RPRS_IMG_GROUP_ID"/>
+	 					</include>) AS FILE_PATH
+	 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+	 			 		<property name="paramInfoCd" value="'ORGNM'"/>
+	 			 		<property name="paramAtchFileGroupId" value="TEI.RPRS_IMG_GROUP_ID"/>
+	 				</include>) AS ORGNL_ATCH_FILE_NM
+	 			, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getRprsImgPathInfo">
+	 					<property name="paramInfoCd" value="'STRGNM'"/> 
+	 			 		<property name="paramAtchFileGroupId" value="TEI.RPRS_IMG_GROUP_ID"/>
+	 				</include>) AS STRG_FILE_NM
+				, TEI.IMG_STRG_PATH_NM AS IMG_STRG_PATH_NM
+				, TEI.EVNT_CN AS EVNT_CN
+				, TEI.PIC_NM AS PIC_NM
+				, TEI.PIC_TELNO AS PIC_TELNO
+				, TEI.APRV_YN AS APRV_YN
+				, TEI.AUTZR_ID AS AUTZR_ID
+				, TEI.APRV_DT AS APRV_DT
+				, TEI.USE_YN AS USE_YN
+				, TEI.FRST_RGTR_ID AS FRST_RGTR_ID
+				, (SELECT INST_NM FROM TX_INST_INFO WHERE INST_ID = (SELECT INST_ID FROM TX_USER_INFO WHERE USER_ID = TEI.FRST_RGTR_ID)) AS REG_INST_NM
+				, TEI.FRST_REG_DT AS FRST_REG_DT
+				, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+						<property name="paramDateFormat" value="'CHAR19'"/>
+						<property name="paramDate" value="TEI.FRST_REG_DT"/>
+					</include>) AS FRST_REG_DT_V19
+				, TEI.LAST_MDFR_ID AS LAST_MDFR_ID
+				, TEI.LAST_MDFCN_DT AS LAST_MDFCN_DT
+				, (<include refid="kr.go.culture.xr.admin.com.mapper.CmmnFcMapper.getTimestampToChar">
+						<property name="paramDateFormat" value="'CHAR19'"/>
+						<property name="paramDate" value="TEI.LAST_MDFCN_DT"/>
+					</include>) AS LAST_MDFCN_DT_V19
+				, TO_CHAR(CAST(SLCTN_NTC_YMD AS DATE), 'YYYY-MM-DD') AS SLCTN_NTC_YMD
+				, TEI.INQ_CNT
+				, TEI.SLCTN_MTHD_CD
+			FROM TX_EVNT_INFO TEI
+			WHERE EVNT_ID = #{srchEvntId}
+		) XTEI
+	</select>
+	
+	<!-- 기관명 체크 -->
+	<select id="checkInstNm" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO" resultType="Integer">
+		SELECT
+			COUNT(INST_ID)
+		FROM TX_INST_INFO
+		WHERE INST_NM = #{instNm}
+	</select>
+	
+	<!-- 이벤트 등록 -->
+	<insert id="insertEvnt" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		INSERT INTO TX_EVNT_INFO /* kr.go.culture.xr.admin.evntMgt.mapper.EvntMgtMapper.insertWinner */
+			(
+				EVNT_ID
+				, EVNT_TYPE_CD
+				, EVNT_TTL_NM
+				, BGNG_YMD
+				, BGNG_TM
+				, END_YMD
+				, END_TM
+				, EVNT_STTS_CD
+				, RPRS_IMG_GROUP_ID
+				, IMG_STRG_PATH_NM
+				, EVNT_CN
+				, PIC_NM
+				, PIC_TELNO
+				, APRV_YN
+				, AUTZR_ID
+				, APRV_DT
+				, USE_YN
+				, FRST_RGTR_ID
+				, FRST_REG_DT
+				, LAST_MDFR_ID
+				, LAST_MDFCN_DT
+				, SLCTN_NTC_YMD
+				, INQ_CNT
+				, SLCTN_MTHD_CD
+			)
+		VALUES
+			(
+				CONCAT('EVT',LPAD(CAST(NEXTVAL('sq_tx_evnt_info_01') AS TEXT),7,'0'))
+				, '' 
+				, #{evntTtl}
+				, #{bgngYmd}
+				, '000000'
+				, #{endYmd}
+				, '000000'
+				, 'E01'
+				, #{rprsImgGroupId}
+				, ''
+				, #{evntCn}
+				, #{picNm}
+				, #{picTelno}
+				, 'Y'
+				, ''
+				, null
+				, 'Y'
+				, #{userId}
+				, NOW()
+				, #{userId}
+				, NOW()
+				, #{slctnNtcYmd}
+				, '0'
+				, ''
+			);
+	</insert>
+	<!-- 이벤트 항목 수정 쿼리 -->
+	<update id="updateEvnt" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		UPDATE TX_EVNT_INFO /*  */
+		SET 
+			EVNT_TTL_NM = #{evntTtl}
+			, RPRS_IMG_GROUP_ID = #{rprsImgGroupId}
+			, SLCTN_NTC_YMD = #{slctnNtcYmd}
+			, BGNG_YMD = #{bgngYmd}
+			, END_YMD = #{endYmd}
+			, EVNT_CN= #{evntCn}
+			, EVNT_STTS_CD = #{evntSttsCd}
+			, PIC_NM = #{picNm}
+			, PIC_TELNO = #{picTelno}
+			, LAST_MDFR_ID = #{userId}
+			, LAST_MDFCN_DT = NOW()
+		WHERE EVNT_ID = #{srchEvntId}
+	</update>
+	<!-- 이벤트 당첨자 등록 쿼리 -->
+	<insert id="insertWinner" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		INSERT INTO /* kr.go.culture.xr.admin.evntMgt.mapper.EvntMgtMapper.insertWinner */
+			   TX_BBS_INFO
+			   (
+				   BBS_ID
+				 , PST_ID
+				 , CLSF_CD
+				 , UP_PST_ID
+				 , PST_STEP_NO
+				 , PST_ORD_NO
+				 , PST_TTL_NM
+				 , PST_CN
+				 , WRT_INST_ID
+				 , WRTR_ID
+				 , WRTR_NM
+				 , PRVT_YN
+				 , ATCH_FILE_GROUP_ID 
+				 , INQ_CNT
+				 , NTC_PSTG_YN
+				 , LNKG_CONTS_ID
+				 , NTFC_TRGT_INST_ID
+				 , NTFC_RGTR_ID
+				 , NTFC_YN
+				 , NTFC_DT
+				 , IDNTY_YN
+				 , IDFR_ID
+				 , IDNTY_DT
+				 , PRGRS_STTS_CD
+				 , PRGRS_AUTZR_ID
+				 , PRGRS_DCSN_DT
+				 , PRGRS_DCSN_CN
+				 , RTNG_SCR
+				 , RCMDTN_CNT
+				 , OPSE_CNT
+				 , FRST_RGTR_ID
+				 , FRST_REG_DT
+				 , LAST_MDFR_ID
+				 , LAST_MDFCN_DT
+			   )
+		VALUES (
+			   	 'WNR'
+				 , (SELECT CONCAT('WNR',LPAD(CAST(NEXTVAL('sq_tx_bbs_info_01') AS TEXT),7,'0')))
+				 , ''
+				 , ''
+				 , 0
+				 , (SELECT MAX(PST_ORD_NO)+1 FROM TX_BBS_INFO)
+				 , #{evntTtl}
+				 , #{evntCn}
+				 , ''
+				 , #{userId}
+				 , (SELECT USER_NM FROM TX_USER_INFO WHERE USER_ID = #{userId})
+				 , 'N'
+				 , #{rprsImgGroupId}
+				 , 0
+				 , 'Y'
+				 , #{srchEvntId}
+				 , ''
+				 , ''
+				 , 'N'
+				 , null
+				 , 'N'
+				 , ''
+				 , null
+				 , ''
+				 , ''
+				 , null
+				 , ''
+				 , null
+				 , 0
+				 , 0
+				 , #{userId}
+				 , NOW()
+				 , #{userId}
+				 , NOW()
+			   )
+	</insert>
+	<!-- 당첨자 수정 쿼리 -->
+	<update id="updateWinner" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		UPDATE TX_BBS_INFO /* kr.go.culture.xr.admin.evntMgt.mapper.EvntMgtMapper.updateWinner */
+		SET 
+			PST_TTL_NM = #{evntTtl}
+			, PST_CN = #{evntCn}
+			, ATCH_FILE_GROUP_ID = #{rprsImgGroupId}
+			, LAST_MDFR_ID = #{userId}
+			, LAST_MDFCN_DT = NOW()
+		WHERE LNKG_CONTS_ID = #{srchEvntId}
+	</update>
+	
+	<!-- 이벤트 승인여부 N으로 변경 쿼리(리스트에 조회되지 않음) -->
+	<update id="deleteEvnt" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		UPDATE TX_EVNT_INFO /*  */
+		SET 
+			APRV_YN = 'N'
+		WHERE EVNT_ID = #{srchEvntId}
+	</update>
+	
+	<!-- 당첨글 삭제 쿼리(del_yn 변경) -->
+	<update id="deleteWinner" parameterType="kr.go.culture.xr.admin.evntMgt.vo.EvntVO">
+		UPDATE TX_BBS_INFO /* kr.go.culture.xr.admin.evntMgt.mapper.EvntMgtMapper.updateWinner */
+		SET 
+			DEL_YN = 'Y'
+		WHERE LNKG_CONTS_ID = #{srchEvntId}
+	</update>
+	
+</mapper>

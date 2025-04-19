@@ -1,0 +1,50 @@
+package com.proj.calendar.service.impl;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.proj.calendar.dao.CalendarGoDAO;
+import com.proj.calendar.service.CalendarGoService;
+import com.proj.calendar.vo.CalendarGoVO;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class CalendarGoServiceImpl  implements CalendarGoService {
+	private final CalendarGoDAO calendarGoDAO;
+
+	@Override
+	public List<CalendarGoVO> selectCalendarGoList(CalendarGoVO calendarGoVO) {
+		return calendarGoDAO.selectCalendarGoList(calendarGoVO);
+	}
+
+	@Override
+	public int insertCalendarGo(CalendarGoVO calendarGoVO) {
+		int saveCnt = calendarGoDAO.insertCalendarGo(calendarGoVO);
+		return saveCnt;
+	}
+	
+	@Override
+	public int editCalendarGo(CalendarGoVO calendarGoVO) {
+		int editCnt = calendarGoDAO.editCalendarGo(calendarGoVO);
+		return editCnt;
+	}
+	
+	@Override
+	public int deleteCalendarGo(CalendarGoVO calendarGoVO) {
+		int delCnt = calendarGoDAO.deleteCalendarGo(calendarGoVO);
+		return delCnt;
+	}
+
+	@Override
+	public CalendarGoVO selectAnvYn(CalendarGoVO calendarGoVO) {
+		return calendarGoDAO.selectAnvYn(calendarGoVO);
+	}
+	
+	@Override
+	public List<CalendarGoVO> selectAnvYnList(CalendarGoVO calendarGoVO) {
+		return calendarGoDAO.selectAnvYnList(calendarGoVO);
+	}
+}

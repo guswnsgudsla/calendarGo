@@ -1,0 +1,110 @@
+package com.proj.calendar.controller;
+
+import java.util.List;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.proj.calendar.service.CalendarGoService;
+import com.proj.calendar.vo.CalendarGoVO;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+
+@Controller
+@RequiredArgsConstructor
+public class CalendarGoController {
+
+	private final CalendarGoService calendarGoService;
+	
+	@GetMapping("/calendarGo.do")
+	public String calendarList(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			ModelMap model
+	)throws Exception {
+		
+		List<CalendarGoVO> calList = calendarGoService.selectCalendarGoList(calendarGoVO);
+		model.addAttribute("calList", calList);
+		
+		return "jsp/calendarGo";
+	}
+
+	@PostMapping("/calendarAdd.do")
+	@ResponseBody
+	public String calendarAdd(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			HttpServletRequest request
+			,ModelMap model
+	)throws Exception {
+//		System.out.println("=======");
+//		System.out.println(calendarGoVO.getVStrDt());
+//		System.out.println(calendarGoVO.getVEndDt());
+//		System.out.println(calendarGoVO.getVCont());
+//		System.out.println("=======");
+		
+		//성공YN
+		String succYn = "";
+		int cnt = calendarGoService.insertCalendarGo(calendarGoVO);
+		if (cnt > 0) {
+			succYn = "success";
+		}else {
+			succYn = "fail";
+		}
+		
+		return succYn;
+	}
+	
+	@PostMapping("/calendarEdit.do")
+	@ResponseBody
+	public String calendarEdit(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			HttpServletRequest request
+			,ModelMap model
+	)throws Exception {
+//		System.out.println("=======");
+//		System.out.println(calendarGoVO.getVCalId());
+//		System.out.println(calendarGoVO.getVStrDt());
+//		System.out.println(calendarGoVO.getVEndDt());
+//		System.out.println(calendarGoVO.getVCont());
+//		System.out.println("=======");
+		
+		//성공YN
+		String succYn = "";
+		int cnt = calendarGoService.editCalendarGo(calendarGoVO);
+		if (cnt > 0) {
+			succYn = "success";
+		}else {
+			succYn = "fail";
+		}
+		
+		return succYn;
+	}
+	
+	@PostMapping("/calendarDel.do")
+	@ResponseBody
+	public String calendarDel(
+			@ModelAttribute("calVO") CalendarGoVO calendarGoVO, 
+			HttpServletRequest request
+			,ModelMap model
+			)throws Exception {
+		System.out.println("=======");
+		System.out.println(calendarGoVO.getVCalId());
+		System.out.println("=======");
+		
+		//성공YN
+		String succYn = "";
+		int cnt = calendarGoService.deleteCalendarGo(calendarGoVO);
+		if (cnt > 0) {
+			succYn = "success";
+		}else {
+			succYn = "fail";
+		}
+		
+		return succYn;
+	}
+	
+}

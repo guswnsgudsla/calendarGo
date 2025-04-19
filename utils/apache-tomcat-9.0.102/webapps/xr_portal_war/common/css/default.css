@@ -1,0 +1,153 @@
+@charset "UTF-8";
+
+@import url("comm.css");
+@import url("main.css");
+@import url("sub.css");
+
+@import url('https://fonts.googleapis.com/css?family=Nanum+Gothic|Nanum+Myeongjo&display=swap&subset=korean');
+
+/* 배스킨라빈스 체 */
+@font-face {
+	font-family: '배스킨라빈스 B';
+	font-style: normal;
+    src: local('배스킨라빈스 B');
+    src: url(../fonts/배스킨라빈스 B.eot);
+    src: url(../fonts/배스킨라빈스 B?#iefix) format('embedded-opentype'),
+    url(../fonts/배스킨라빈스 B.woff2) format('woff2'),
+    url(../fonts/BRB.woff) format('woff'),
+    url(../fonts/배스킨라빈스 B.ttf) format('truetype'),
+    url(../fonts/BRB.otf) format('opentype'),
+    url(../fonts/BRB.svg#BRB) format('svg');
+}
+@font-face {
+	font-family: '배스킨라빈스 R';
+	font-style: normal;
+    src: local('배스킨라빈스 R');
+    src: url(../fonts/배스킨라빈스 R.eot);
+    src: url(../fonts/배스킨라빈스 R?#iefix) format('embedded-opentype'),
+    url(../fonts/배스킨라빈스 R.woff2) format('woff2'),
+    url(../fonts/BRR.woff) format('woff'),
+    url(../fonts/배스킨라빈스 R.ttf) format('truetype'),
+    url(../fonts/BRR.otf) format('opentype'),
+    url(../fonts/BRR.svg#BRB) format('svg');
+}
+
+/* 에스코어 드림 체 */
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 100;
+    src: local('S-Core Dream 1');
+    src: url(../fonts/S-CoreDream-1Thin.eot);
+    src: url(../fonts/S-CoreDream-1Thin?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-1Thin.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-1Thin.woff) format('woff'),
+    url(../fonts/S-CoreDream-1Thin.ttf) format('truetype'),
+    url(../fonts/SCDream1.otf) format('opentype'),
+    url(../fonts/S-CoreDream-1Thin.svg#S-CoreDream-1Thin) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 200;
+    src: local('S-Core Dream 2');
+    src: url(../fonts/S-CoreDream-2ExtraLight.eot);
+    src: url(../fonts/S-CoreDream-2ExtraLight?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-2ExtraLight.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-2ExtraLight.woff) format('woff'),
+    url(../fonts/S-CoreDream-2ExtraLight.ttf) format('truetype'),
+    url(../fonts/SCDream2.otf) format('opentype'),
+    url(../fonts/S-CoreDream-2ExtraLight.svg#S-CoreDream-2ExtraLight) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 300;
+    src: local('S-Core Dream 3');
+    src: url(../fonts/S-CoreDream-3Light.eot);
+    src: url(../fonts/S-CoreDream-3Light?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-3Light.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-3Light.woff) format('woff'),
+    url(../fonts/S-CoreDream-3Light.ttf) format('truetype'),
+    url(../fonts/SCDream3.otf) format('opentype'),
+    url(../fonts/S-CoreDream-3Light.svg#S-CoreDream-3Light) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 400;
+    src: local('S-Core Dream 4');
+    src: url(../fonts/S-CoreDream-4Regular.eot);
+    src: url(../fonts/S-CoreDream-4Regular?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-4Regular.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-4Regular.woff) format('woff'),
+    url(../fonts/S-CoreDream-4Regular.ttf) format('truetype'),
+    url(../fonts/SCDream4.otf) format('opentype'),
+    url(../fonts/S-CoreDream-4Regular.svg#S-CoreDream-4Regular) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 500;
+    src: local('S-Core Dream 1');
+    src: url(../fonts/S-CoreDream-5Medium.eot);
+    src: url(../fonts/S-CoreDream-5Medium?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-5Medium.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-5Medium.woff) format('woff'),
+    url(../fonts/S-CoreDream-5Medium.ttf) format('truetype'),
+    url(../fonts/SCDream5.otf) format('opentype'),
+    url(../fonts/S-CoreDream-5Medium.svg#S-CoreDream-5Medium) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 600;
+    src: local('S-Core Dream 1');
+    src: url(../fonts/S-CoreDream-6Bold.eot);
+    src: url(../fonts/S-CoreDream-6Bold?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-6Bold.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-6Bold.woff) format('woff'),
+    url(../fonts/S-CoreDream-6Bold.ttf) format('truetype'),
+    url(../fonts/SCDream6.otf) format('opentype'),
+    url(../fonts/S-CoreDream-6Bold.svg#S-CoreDream-6Bold) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 700;
+    src: local('S-Core Dream 1');
+    src: url(../fonts/S-CoreDream-7ExtraBold.eot);
+    src: url(../fonts/S-CoreDream-7ExtraBold?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-7ExtraBold.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-7ExtraBold.woff) format('woff'),
+    url(../fonts/S-CoreDream-7ExtraBold.ttf) format('truetype'),
+    url(../fonts/SCDream7.otf) format('opentype'),
+    url(../fonts/S-CoreDream-7ExtraBold.svg#S-CoreDream-7ExtraBold) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 800;
+    src: local('S-Core Dream 1');
+    src: url(../fonts/S-CoreDream-8Heavy.eot);
+    src: url(../fonts/S-CoreDream-8Heavy?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-8Heavy.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-8Heavy.woff) format('woff'),
+    url(../fonts/S-CoreDream-8Heavy.ttf) format('truetype'),
+    url(../fonts/SCDream8.otf) format('opentype'),
+    url(../fonts/S-CoreDream-8Heavy.svg#S-CoreDream-8Heavy) format('svg');
+}
+@font-face {
+	font-family: 'S-Core';
+	font-style: normal;
+    font-weight: 900;
+    src: local('S-Core Dream 1');
+    src: url(../fonts/S-CoreDream-9Black.eot);
+    src: url(../fonts/S-CoreDream-9Black?#iefix) format('embedded-opentype'),
+    url(../fonts/S-CoreDream-9Black.woff2) format('woff2'),
+    url(../fonts/S-CoreDream-9Black.woff) format('woff'),
+    url(../fonts/S-CoreDream-9Black.ttf) format('truetype'),
+    url(../fonts/SCDream9.otf) format('opentype'),
+    url(../fonts/S-CoreDream-9Black.svg#S-CoreDream-9Black) format('svg');
+}
+
