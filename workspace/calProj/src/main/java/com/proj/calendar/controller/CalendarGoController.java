@@ -52,7 +52,7 @@ public class CalendarGoController {
 			CalendarGoVO calVo = new CalendarGoVO();
 			calVo.setYearList(iYear+i);
 			
-			if(selAnvYnList.getCalAnvYear().contains((iYear+i)+"")) {
+			if(selAnvYnList != null && selAnvYnList.getCalAnvYear().contains((iYear+i)+"")) {
 				calVo.setYearYn("Y");
 			}else {
 				calVo.setYearYn("N");

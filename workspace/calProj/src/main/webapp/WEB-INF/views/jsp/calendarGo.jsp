@@ -168,6 +168,8 @@
 				alert('일정 종료일이 일정 시작일보다 먼저입니다.');
 				return false;
 			}
+			
+			return true;
 		}
 		
 		//일정_전송
@@ -190,59 +192,67 @@
 		//일정추가
 		$('#addCalendar').click( function(){
 			//일정_validation
-			calValidation();
+			var result = calValidation();
 			
 			//일정_전송
-			var data = {
-				vStrDt: vStrDt,
-				vEndDt: vEndDt,
-				vCont: vCont
-			};
-			sendCalendar('/calendarAdd.do', data, '등록');
+			if (result) {
+				var data = {
+					vStrDt: vStrDt,
+					vEndDt: vEndDt,
+					vCont: vCont
+				};
+				sendCalendar('/calendarAdd.do', data, '등록');
+			}
 		});
 		
 		//일정수정
 		$('#editCalendar').click( function(){
 			//일정_validation
-			calValidation();
+			var result = calValidation();
 			
 			//일정_전송
-			var data = {
-				vCalId: vId,
-				vStrDt: vStrDt,
-				vEndDt: vEndDt,
-				vCont: vCont
-			};
-			sendCalendar('/calendarEdit.do', data, '수정');
+			if (result) {
+				var data = {
+					vCalId: vId,
+					vStrDt: vStrDt,
+					vEndDt: vEndDt,
+					vCont: vCont
+				};
+				sendCalendar('/calendarEdit.do', data, '수정');
+			}
 		});
 		
 		//일정삭제
 		$('#delCalendar').click( function(){
-			calValidation();
+			var result = calValidation();
 			
-			var answer = confirm("일정을 삭제하시겠습니까?");
-			if(answer) {
-				var data = {
-					vCalId: vId
-				};
-				sendCalendar('/calendarDel.do', data, '삭제');
-			} else {
-				return false;
+			if (result) {
+				var answer = confirm("일정을 삭제하시겠습니까?");
+				if(answer) {
+					var data = {
+						vCalId: vId
+					};
+					sendCalendar('/calendarDel.do', data, '삭제');
+				} else {
+					return false;
+				}
 			}
 		});
 		
 		//일정공유
 		$('#shareCalendar').click( function(){
-			calValidation();
+			var result = calValidation();
 			
-			var vShareText = '[' + vStrDt + ' ~ ' + vEndDt + '] ' + vCont;
-			Kakao.Share.sendDefault({
-				objectType: 'text',
-				text: vShareText,
-				link: {
-					webUrl: 'http://localhost:8008'
-				}
-			});
+			if (result) {
+				var vShareText = '[' + vStrDt + ' ~ ' + vEndDt + '] ' + vCont;
+				Kakao.Share.sendDefault({
+					objectType: 'text',
+					text: vShareText,
+					link: {
+						webUrl: 'http://localhost:8008'
+					}
+				});
+			}
 		});
 		
 		//공휴일 추가
